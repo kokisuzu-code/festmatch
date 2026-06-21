@@ -31,5 +31,5 @@ export default async function ReviewPage() {
         .order('uploaded_at', { ascending: true })
     : { data: [] }
 
-  return <ReviewClient cars={cars ?? []} documents={documents ?? []} />
+  return <ReviewClient cars={(cars ?? []) as any[]} documents={documents ?? []} />
 }

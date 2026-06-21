@@ -12,7 +12,7 @@ type Car = {
   verified_status: string
   reject_reason: string | null
   verified_at: string | null
-  profiles: { name: string | null; prefecture: string | null } | null
+  profiles: { name: string | null } | null
 }
 
 type Document = {
@@ -147,7 +147,7 @@ export default function ReviewClient({ cars, documents }: { cars: Car[]; documen
                     </span>
                   </div>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {car.profiles?.name} · {car.profiles?.prefecture} · {car.genre ?? 'ジャンル未設定'}
+                    {car.profiles?.name} · {car.genre ?? 'ジャンル未設定'}
                   </p>
                 </div>
               </div>
