@@ -29,7 +29,7 @@ export default function PlanCheckoutButton({ planType, userId, disabled, label, 
         const res = await fetch('/api/stripe/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plan_type: planType, user_id: userId }),
+          body: JSON.stringify({ plan: planType }),
         })
         const data = await res.json()
         if (data.url) window.location.href = data.url
