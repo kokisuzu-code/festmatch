@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 type Car = { id: string; name: string; genre: string[] }
-type App = { id: string; status: string; kitchen_car_id: string } | null
+type App = { id: string; status: string; vendor_id: string } | null
 type Slot = { genre: string; max_count: number; approved_count: number }
 
 const statusLabel: Record<string, { label: string; color: string }> = {
@@ -68,7 +68,7 @@ export default function ApplyButton({
 
     const { error: err } = await supabase.from('applications').insert({
       event_id: eventId,
-      kitchen_car_id: selectedCar,
+      vendor_id: selectedCar,
       genre: selectedGenre,
       appeal_text: appealText.trim() || null,
     })

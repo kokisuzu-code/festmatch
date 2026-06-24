@@ -38,7 +38,7 @@ async function OrganizerDashboard({ user, profile, supabase }: any) {
   const { data: applications } = eventIds.length > 0
     ? await supabase
         .from('applications')
-        .select('id, status, event_id, applied_at, kitchen_cars(name, genre, profiles(name))')
+        .select('id, status, event_id, applied_at, vendors(name, genre, profiles(name))')
         .in('event_id', eventIds)
         .order('applied_at', { ascending: false })
     : { data: [] }
@@ -60,7 +60,7 @@ async function OrganizerDashboard({ user, profile, supabase }: any) {
 
   // 審査待ちキッチンカー数
   const { count: pendingReviewCount } = await supabase
-    .from('kitchen_cars')
+    .from('vendors')
     .select('id', { count: 'exact', head: true })
     .eq('verified_status', 'pending')
 
@@ -181,7 +181,7 @@ async function OrganizerDashboard({ user, profile, supabase }: any) {
               ) : (
                 <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
                   {pending.slice(0, 5).map((app: any) => {
-                    const car = app.kitchen_cars
+                    const car = app.vendors
                     const ownerName = car?.profiles?.name ?? car?.name ?? 'オーナー'
                     const initChar = ownerName[0] ?? '？'
                     const evTitle = events?.find((e: any) => e.id === app.event_id)?.title ?? ''
@@ -215,7 +215,7 @@ async function OrganizerDashboard({ user, profile, supabase }: any) {
 
 async function VendorDashboard({ user, profile, supabase }: any) {
   const { data: myCars } = await supabase
-    .from('kitchen_cars')
+    .from('vendors')
     .select('id, name, genre, verified_status, reject_reason')
     .eq('owner_id', user.id)
 
@@ -225,7 +225,7 @@ async function VendorDashboard({ user, profile, supabase }: any) {
     ? await supabase
         .from('applications')
         .select('id, status, applied_at, events(title, date, prefecture)')
-        .in('kitchen_car_id', carIds)
+        .in('vendor_id', carIds)
         .order('applied_at', { ascending: false })
     : { data: [] }
 

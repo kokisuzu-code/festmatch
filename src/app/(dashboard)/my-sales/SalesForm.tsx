@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 type Application = {
   id: string
   events: { title: string; date: string } | null
-  kitchen_car_id: string
+  vendor_id: string
 }
 
 export default function SalesForm({
@@ -54,7 +54,7 @@ export default function SalesForm({
     const linkedApp = linked ? applications.find(a => a.id === linked) : null
     const { error: err } = await supabase.from('sales_records').insert({
       owner_id: userId,
-      kitchen_car_id: linkedApp?.kitchen_car_id ?? defaultKitchenCarId,
+      vendor_id: linkedApp?.vendor_id ?? defaultKitchenCarId,
       application_id: linked || null,
       event_name: eventName,
       event_date: eventDate,

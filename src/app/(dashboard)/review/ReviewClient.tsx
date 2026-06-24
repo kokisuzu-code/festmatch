@@ -17,7 +17,7 @@ type Car = {
 
 type Document = {
   id: string
-  kitchen_car_id: string
+  vendor_id: string
   doc_type: string
   file_url: string
   file_name: string | null
@@ -51,11 +51,11 @@ export default function ReviewClient({ cars, documents }: { cars: Car[]; documen
     rejected: cars.filter(c => c.verified_status === 'rejected').length,
   }
 
-  const getDocsForCar = (carId: string) => documents.filter(d => d.kitchen_car_id === carId)
+  const getDocsForCar = (carId: string) => documents.filter(d => d.vendor_id === carId)
 
   const approve = async (carId: string) => {
     setProcessing(carId)
-    await supabase.from('kitchen_cars').update({
+    await supabase.from('vendors').update({
       verified_status: 'approved',
       verified_at: new Date().toISOString(),
       reject_reason: null,
@@ -68,7 +68,7 @@ export default function ReviewClient({ cars, documents }: { cars: Car[]; documen
     const reason = rejectReason[carId]?.trim()
     if (!reason) return
     setProcessing(carId)
-    await supabase.from('kitchen_cars').update({
+    await supabase.from('vendors').update({
       verified_status: 'rejected',
       reject_reason: reason,
     }).eq('id', carId)

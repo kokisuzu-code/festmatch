@@ -31,14 +31,14 @@ export default async function MessagesPage() {
     if (eventIds.length > 0) {
       const { data } = await supabase
         .from('applications')
-        .select('id, status, events(title, date), kitchen_cars(name, profiles(name))')
+        .select('id, status, events(title, date), vendors(name, profiles(name))')
         .in('event_id', eventIds)
         .order('applied_at', { ascending: false })
       applications = data ?? []
     }
   } else {
     const { data: myCars } = await supabase
-      .from('kitchen_cars')
+      .from('vendors')
       .select('id')
       .eq('owner_id', user.id)
 
@@ -47,8 +47,8 @@ export default async function MessagesPage() {
     if (carIds.length > 0) {
       const { data } = await supabase
         .from('applications')
-        .select('id, status, events(title, date, organizer_id, profiles(name)), kitchen_cars(name)')
-        .in('kitchen_car_id', carIds)
+        .select('id, status, events(title, date, organizer_id, profiles(name)), vendors(name)')
+        .in('vendor_id', carIds)
         .order('applied_at', { ascending: false })
       applications = data ?? []
     }
@@ -119,7 +119,7 @@ export default async function MessagesPage() {
                 {approvedSorted.map((app: any) => {
                   const lastMsg = lastMessageMap[app.id]
                   const event = app.events
-                  const car = app.kitchen_cars
+                  const car = app.vendors
                   const partnerName = (car?.profiles as any)?.name ?? car?.name ?? 'キッチンカーオーナー'
                   const subtitle = `${event?.title ?? ''}`
                   let preview = 'メッセージはまだありません'
@@ -192,7 +192,7 @@ export default async function MessagesPage() {
             {sorted.map(app => {
               const lastMsg = lastMessageMap[app.id]
               const event = app.events
-              const car = app.kitchen_cars
+              const car = app.vendors
               const partnerName = '主催者'
               const subtitle = event?.title ?? ''
               let preview = 'メッセージはまだありません'

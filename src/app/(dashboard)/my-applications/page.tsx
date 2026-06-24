@@ -17,7 +17,7 @@ export default async function MyApplicationsPage() {
   if (!user) redirect('/login')
 
   const { data: myCars } = await supabase
-    .from('kitchen_cars')
+    .from('vendors')
     .select('id')
     .eq('owner_id', user.id)
 
@@ -26,8 +26,8 @@ export default async function MyApplicationsPage() {
   const { data: applications } = carIds.length > 0
     ? await supabase
         .from('applications')
-        .select('*, events(title, date, location, prefecture), kitchen_cars(name)')
-        .in('kitchen_car_id', carIds)
+        .select('*, events(title, date, location, prefecture), vendors(name)')
+        .in('vendor_id', carIds)
         .order('applied_at', { ascending: false })
     : { data: [] }
 
@@ -92,7 +92,7 @@ export default async function MyApplicationsPage() {
 function AppCard({ app }: { app: any }) {
   const s = statusConfig[app.status] ?? statusConfig.pending
   const event = app.events
-  const car = app.kitchen_cars
+  const car = app.vendors
 
   return (
     <div className="bg-slate-800 rounded-2xl border border-slate-700 p-4">

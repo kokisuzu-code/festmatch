@@ -8,7 +8,7 @@ export default async function DocumentsPage() {
   if (!user) redirect('/login')
 
   const { data: car } = await supabase
-    .from('kitchen_cars')
+    .from('vendors')
     .select('id, name, verified_status, reject_reason')
     .eq('owner_id', user.id)
     .single()
@@ -16,9 +16,9 @@ export default async function DocumentsPage() {
   if (!car) redirect('/kitchen-cars/new')
 
   const { data: documents } = await supabase
-    .from('kitchen_car_documents')
+    .from('vendor_documents')
     .select('*')
-    .eq('kitchen_car_id', car.id)
+    .eq('vendor_id', car.id)
     .order('uploaded_at', { ascending: false })
 
   return (

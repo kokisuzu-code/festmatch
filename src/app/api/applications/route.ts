@@ -1,102 +1,119 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 
-export async function POST(request: NextRequest) {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
+
+const PAY_PER_APPLY_PRICES: Record<string, number> = {
+  S: 10000, A: 5000, B: 3000, C: 1000,
+}
+
+function calcTier(visitors: number, fee: number): { tier: string; costWeight: number } {
+  const byVisitors =
+    visitors >= 10000 ? { tier: 'S', costWeight: 10 } :
+    visitors >= 3000  ? { tier: 'A', costWeight: 5  } :
+    visitors >= 1000  ? { tier: 'B', costWeight: 3  } :
+                        { tier: 'C', costWeight: 1  }
+  const byFee =
+    fee >= 50000 ? { tier: 'S', costWeight: 10 } :
+    fee >= 30000 ? { tier: 'A', costWeight: 5  } :
+    fee >= 20000 ? { tier: 'B', costWeight: 3  } :
+                   { tier: 'C', costWeight: 1  }
+  return byVisitors.costWeight >= byFee.costWeight ? byVisitors : byFee
+}
+
+export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { event_id, slot_id, vendor_id, message } = await request.json()
+  const { event_id, vendor_id, genre } = await req.json()
 
-  const admin = createAdminClient()
-
-  // ベンダーのサブスク有効チェック
-  const { data: sub } = await admin
-    .from('subscriptions')
-    .select('status')
-    .eq('user_id', vendor_id)
-    .eq('status', 'active')
-    .single()
-
-  if (!sub) {
-    return NextResponse.json(
-      { success: false, error: 'SUBSCRIPTION_REQUIRED', message: '有効なサブスクリプションが必要です' },
-      { status: 403 }
-    )
-  }
-
-  // イベントの申請受付期間チェック
-  const { data: event } = await admin
+  // イベント情報からティア・コスト重みを計算
+  const { data: event } = await supabase
     .from('events')
-    .select('application_deadline, status')
+    .select('expected_visitors, fee, cost_weight, tier')
     .eq('id', event_id)
     .single()
+  if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 })
 
-  if (!event || event.status === 'closed' || (event.application_deadline && new Date(event.application_deadline) < new Date())) {
+  const { tier, costWeight } = calcTier(event.expected_visitors ?? 0, event.fee ?? 0)
+
+  // タイムセール後のコスト重みを確認
+  const { data: slot } = await supabase
+    .from('event_genre_slots')
+    .select('max_count, approved_count, current_cost_weight, discount_active')
+    .eq('event_id', event_id)
+    .eq('genre', genre)
+    .single()
+
+  const effectiveCost = slot?.discount_active && slot?.current_cost_weight
+    ? slot.current_cost_weight : costWeight
+
+  // サブスクの状態を確認
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('cost_limit, cost_used, carry_over_cost, status, plan')
+    .eq('user_id', user.id)
+    .single()
+
+  const isSubscriber   = sub?.status === 'active' && sub?.plan !== 'free'
+  const totalAvailable = (sub?.cost_limit ?? 0) - (sub?.cost_used ?? 0) + (sub?.carry_over_cost ?? 0)
+  const hasEnoughCost  = isSubscriber && totalAvailable >= effectiveCost
+  const isWaitlist     = slot ? slot.approved_count >= slot.max_count : false
+
+  // サブスク加入者かつコスト十分：コスト消費で応募
+  if (hasEnoughCost) {
+    const { data: application, error } = await supabase
+      .from('applications')
+      .insert({ event_id, vendor_id, genre, status: 'pending', is_waitlist: isWaitlist, charge_type: 'subscription' })
+      .select().single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+    // 繰り越し分から先に消費
+    const carryOver = sub?.carry_over_cost ?? 0
+    const used      = sub?.cost_used ?? 0
+    if (carryOver >= effectiveCost) {
+      await supabase.from('subscriptions').update({ carry_over_cost: carryOver - effectiveCost }).eq('user_id', user.id)
+    } else {
+      await supabase.from('subscriptions').update({ carry_over_cost: 0, cost_used: used + (effectiveCost - carryOver) }).eq('user_id', user.id)
+    }
+    return NextResponse.json({ application, charge_type: 'subscription', cost_consumed: effectiveCost })
+  }
+
+  // 無料ユーザー or コスト不足：従量課金で応募
+  const payPerApplyAmount = PAY_PER_APPLY_PRICES[tier] ?? 1000
+
+  const { data: profile } = await supabase
+    .from('profiles').select('stripe_customer_id').eq('id', user.id).single()
+
+  if (!profile?.stripe_customer_id) {
     return NextResponse.json(
-      { success: false, error: 'EVENT_CLOSED', message: '申請受付期間外です' },
+      { error: 'カード情報が登録されていません。先にお支払い方法を登録してください。' },
       { status: 400 }
     )
   }
 
-  // 重複申請チェック
-  const { data: existing } = await admin
-    .from('applications')
-    .select('id')
-    .eq('slot_id', slot_id)
-    .eq('vendor_id', vendor_id)
-    .single()
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: payPerApplyAmount,
+    currency: 'jpy',
+    customer: profile.stripe_customer_id,
+    confirm: true,
+    automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
+    metadata: { event_id, vendor_id, genre, tier, charge_type: 'pay_per_apply' },
+  })
 
-  if (existing) {
-    return NextResponse.json(
-      { success: false, error: 'ALREADY_APPLIED', message: 'すでにこのスロットに申請済みです' },
-      { status: 409 }
-    )
-  }
-
-  // スロット情報取得（SELECT FOR UPDATE は Supabase RPC で代替）
-  const { data: slot } = await admin
-    .from('event_slots')
-    .select('max_applications, current_applications_count')
-    .eq('id', slot_id)
-    .single()
-
-  if (!slot) {
-    return NextResponse.json({ error: 'Slot not found' }, { status: 404 })
-  }
-
-  if (slot.current_applications_count >= slot.max_applications) {
-    return NextResponse.json(
-      { success: false, error: 'SLOT_FULL', message: 'このスロットはすでに申請上限に達しています' },
-      { status: 409 }
-    )
-  }
-
-  // 申請INSERT + カウントインクリメント
-  const { data: application, error: insertError } = await admin
+  const { data: application, error } = await supabase
     .from('applications')
     .insert({
-      event_id,
-      slot_id,
-      vendor_id,
-      message: message ?? null,
-      status: 'pending',
+      event_id, vendor_id, genre, status: 'pending', is_waitlist: isWaitlist,
+      charge_type: 'pay_per_apply',
+      pay_per_apply_amount: payPerApplyAmount,
+      stripe_payment_intent_id: paymentIntent.id,
     })
-    .select('id')
-    .single()
+    .select().single()
 
-  if (insertError) {
-    console.error('[applications] insert error', insertError)
-    return NextResponse.json({ error: 'Failed to create application' }, { status: 500 })
-  }
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
-  await admin
-    .from('event_slots')
-    .update({ current_applications_count: slot.current_applications_count + 1 })
-    .eq('id', slot_id)
-
-  return NextResponse.json({ success: true, application_id: application.id, status: 'pending' })
+  return NextResponse.json({ application, charge_type: 'pay_per_apply', amount: payPerApplyAmount, tier })
 }

@@ -2,49 +2,52 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
 
-const PRICE_MAP: Record<string, string> = {
-  organizer_annual: process.env.STRIPE_PRICE_ORGANIZER_ANNUAL!,
-  organizer_spot: process.env.STRIPE_PRICE_ORGANIZER_SPOT!,
-  vendor_light: process.env.STRIPE_PRICE_VENDOR_LIGHT!,
-  vendor_standard: process.env.STRIPE_PRICE_VENDOR_STANDARD!,
-  vendor_pro: process.env.STRIPE_PRICE_VENDOR_PRO!,
-}
+const PLANS = {
+  light:    { priceId: process.env.STRIPE_PRICE_LIGHT!,    costLimit: 10  },
+  standard: { priceId: process.env.STRIPE_PRICE_STANDARD!, costLimit: 30  },
+  pro:      { priceId: process.env.STRIPE_PRICE_PRO!,       costLimit: 999 },
+} as const
 
-export async function POST(request: NextRequest) {
+export type PlanKey = keyof typeof PLANS
+
+export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await request.json()
-  const { plan_type, user_id, event_id } = body
+  const { plan } = await req.json() as { plan: PlanKey }
+  if (!PLANS[plan as PlanKey]) return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
 
-  const price_id = PRICE_MAP[plan_type]
-  if (!price_id) {
-    return NextResponse.json({ error: 'Invalid plan_type' }, { status: 400 })
-  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('stripe_customer_id, name, email')
+    .eq('id', user.id)
+    .single()
 
-  const base_url = process.env.NEXT_PUBLIC_BASE_URL!
-
-  try {
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      line_items: [{ price: price_id, quantity: 1 }],
-      success_url: `${base_url}/dashboard?checkout=success`,
-      cancel_url: `${base_url}/dashboard?checkout=cancel`,
-      metadata: {
-        user_id,
-        plan_type,
-        ...(event_id ? { event_id } : {}),
-      },
+  let customerId = profile?.stripe_customer_id
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: profile?.email ?? user.email,
+      name: profile?.name ?? undefined,
+      metadata: { supabase_user_id: user.id },
     })
-
-    return NextResponse.json({ url: session.url })
-  } catch (error) {
-    console.error('[stripe/checkout]', error)
-    return NextResponse.json({ error: 'Stripe API error' }, { status: 500 })
+    customerId = customer.id
+    await supabase.from('profiles').update({ stripe_customer_id: customerId }).eq('id', user.id)
   }
+
+  const planConfig = PLANS[plan as PlanKey]
+  const session = await stripe.checkout.sessions.create({
+    customer: customerId,
+    mode: 'subscription',
+    payment_method_types: ['card'],
+    line_items: [{ price: planConfig.priceId, quantity: 1 }],
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_BASE_URL}/dashboard?upgrade=success`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_BASE_URL}/plan`,
+    metadata: { supabase_user_id: user.id, plan },
+    subscription_data: { metadata: { supabase_user_id: user.id, plan } },
+  })
+
+  return NextResponse.json({ url: session.url })
 }

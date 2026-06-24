@@ -21,7 +21,7 @@ export default function AppCard({ app, eventId, slots, genreApprovedCount, reado
 }) {
   const [showProfile, setShowProfile] = useState(false)
 
-  const car = app.kitchen_cars
+  const car = app.vendors
   const owner = car?.profiles
   const s = statusBadge[app.status] ?? statusBadge.pending
 

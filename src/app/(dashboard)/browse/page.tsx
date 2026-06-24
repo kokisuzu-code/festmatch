@@ -15,7 +15,7 @@ export default async function BrowsePage() {
     .order('date', { ascending: true })
 
   const { data: myCars } = await supabase
-    .from('kitchen_cars')
+    .from('vendors')
     .select('id')
     .eq('owner_id', user.id)
 
@@ -24,7 +24,7 @@ export default async function BrowsePage() {
     ? await supabase
         .from('applications')
         .select('event_id')
-        .in('kitchen_car_id', carIds)
+        .in('vendor_id', carIds)
     : { data: [] }
 
   const appliedEventIds = new Set(myApplications?.map(a => a.event_id) ?? [])

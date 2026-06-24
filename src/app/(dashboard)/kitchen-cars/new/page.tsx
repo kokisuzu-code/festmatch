@@ -61,7 +61,7 @@ export default function NewKitchenCarPage() {
     if (!user) { router.push('/login'); return }
 
     // まずキッチンカーを作成
-    const { data: car, error: carErr } = await supabase.from('kitchen_cars').insert({
+    const { data: car, error: carErr } = await supabase.from('vendors').insert({
       owner_id: user.id,
       name,
       genre: selectedGenres,
@@ -86,7 +86,7 @@ export default function NewKitchenCarPage() {
         .upload(path, photoFile, { upsert: true })
       if (uploaded) {
         const { data: { publicUrl } } = supabase.storage.from('kitchen-car-photos').getPublicUrl(uploaded.path)
-        await supabase.from('kitchen_cars').update({ photo_url: publicUrl }).eq('id', car.id)
+        await supabase.from('vendors').update({ photo_url: publicUrl }).eq('id', car.id)
       }
     }
 

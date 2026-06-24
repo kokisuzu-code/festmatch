@@ -1,8 +1,16 @@
 {
   "crons": [
     {
-      "path": "/api/cron/time-sale",
+      "path": "/api/cron/check-slots",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/notifications/reminder",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/reset-costs",
+      "schedule": "0 0 1 * *"
     }
   ]
 }

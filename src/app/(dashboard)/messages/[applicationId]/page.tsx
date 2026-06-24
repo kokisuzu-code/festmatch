@@ -15,7 +15,7 @@ export default async function ChatPage({ params }: { params: Promise<{ applicati
     .select(`
       *,
       events(id, title, date, organizer_id),
-      kitchen_cars(id, name, owner_id, profiles(name))
+      vendors(id, name, owner_id, profiles(name))
     `)
     .eq('id', applicationId)
     .single()
@@ -23,7 +23,7 @@ export default async function ChatPage({ params }: { params: Promise<{ applicati
   if (!application) notFound()
 
   const isOrganizer = application.events?.organizer_id === user.id
-  const isOwner = application.kitchen_cars?.owner_id === user.id
+  const isOwner = application.vendors?.owner_id === user.id
   if (!isOrganizer && !isOwner) notFound()
 
   // 既存メッセージ取得
@@ -34,7 +34,7 @@ export default async function ChatPage({ params }: { params: Promise<{ applicati
     .order('created_at', { ascending: true })
 
   const partnerName = isOrganizer
-    ? (application.kitchen_cars?.profiles as any)?.name ?? 'キッチンカーオーナー'
+    ? (application.vendors?.profiles as any)?.name ?? 'キッチンカーオーナー'
     : '主催者'
 
   const backHref = isOrganizer
@@ -53,7 +53,7 @@ export default async function ChatPage({ params }: { params: Promise<{ applicati
         <div>
           <p className="font-semibold text-slate-100 text-sm">{partnerName}</p>
           <p className="text-xs text-slate-400 truncate max-w-[240px]">
-            {application.events?.title} · {application.kitchen_cars?.name}
+            {application.events?.title} · {application.vendors?.name}
           </p>
         </div>
       </header>

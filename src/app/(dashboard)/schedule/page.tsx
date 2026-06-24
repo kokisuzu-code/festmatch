@@ -9,7 +9,7 @@ export default async function SchedulePage() {
 
   // 自分のキッチンカー
   const { data: myCars } = await supabase
-    .from('kitchen_cars')
+    .from('vendors')
     .select('id')
     .eq('owner_id', user.id)
 
@@ -20,7 +20,7 @@ export default async function SchedulePage() {
     ? await supabase
         .from('applications')
         .select('id, status, events(id, title, date, start_time, end_time, location, prefecture, fee, has_power, has_water)')
-        .in('kitchen_car_id', carIds)
+        .in('vendor_id', carIds)
         .in('status', ['approved', 'pending'])
         .order('applied_at', { ascending: false })
     : { data: [] }

@@ -16,7 +16,7 @@ export default async function ReviewPage() {
   if (profile?.role !== 'organizer') redirect('/dashboard')
 
   const { data: cars } = await supabase
-    .from('kitchen_cars')
+    .from('vendors')
     .select('id, name, genre, verified_status, reject_reason, verified_at, profiles(name)')
     .in('verified_status', ['pending', 'approved', 'rejected'])
     .order('verified_status', { ascending: true })
@@ -25,9 +25,9 @@ export default async function ReviewPage() {
 
   const { data: documents } = carIds.length > 0
     ? await supabase
-        .from('kitchen_car_documents')
+        .from('vendor_documents')
         .select('*')
-        .in('kitchen_car_id', carIds)
+        .in('vendor_id', carIds)
         .order('uploaded_at', { ascending: true })
     : { data: [] }
 

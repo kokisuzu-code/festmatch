@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
+
+const COST_LIMITS: Record<string, number> = {
+  light: 10, standard: 30, pro: 999,
+}
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text()
@@ -61,9 +65,16 @@ export async function POST(request: NextRequest) {
           stripe_customer_id: session.customer as string,
           stripe_sub_id: session.subscription as string,
           status: 'active',
+          cost_limit: COST_LIMITS[plan_type] ?? 10,
+          cost_used: 0,
           period_start: new Date(stripeSub.current_period_start * 1000).toISOString().split('T')[0],
           period_end: new Date(stripeSub.current_period_end * 1000).toISOString().split('T')[0],
         }, { onConflict: 'user_id' })
+
+        // profilesにもplan・stripe_customer_idを反映
+        await supabase.from('profiles')
+          .update({ plan: plan_type, stripe_customer_id: session.customer as string })
+          .eq('id', user_id)
       }
       break
     }

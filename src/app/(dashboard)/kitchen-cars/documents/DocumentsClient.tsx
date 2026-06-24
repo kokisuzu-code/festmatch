@@ -75,13 +75,13 @@ export default function DocumentsClient({ car, documents, userId }: {
       .getPublicUrl(uploaded.path)
 
     // 既存の同タイプを削除して新規挿入
-    await supabase.from('kitchen_car_documents')
+    await supabase.from('vendor_documents')
       .delete()
-      .eq('kitchen_car_id', car.id)
+      .eq('vendor_id', car.id)
       .eq('doc_type', docType)
 
-    await supabase.from('kitchen_car_documents').insert({
-      kitchen_car_id: car.id,
+    await supabase.from('vendor_documents').insert({
+      vendor_id: car.id,
       doc_type: docType,
       file_url: publicUrl,
       file_name: file.name,
@@ -102,7 +102,7 @@ export default function DocumentsClient({ car, documents, userId }: {
     }
 
     setSubmitting(true)
-    await supabase.from('kitchen_cars')
+    await supabase.from('vendors')
       .update({ verified_status: 'pending' })
       .eq('id', car.id)
 

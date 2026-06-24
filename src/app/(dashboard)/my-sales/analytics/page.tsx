@@ -12,14 +12,14 @@ export default async function SalesAnalyticsPage() {
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
   const { data: records } = await supabase
     .from('sales_records')
-    .select('*, kitchen_cars(genre)')
+    .select('*, vendors(genre)')
     .eq('owner_id', user.id)
     .gte('event_date', oneYearAgo.toISOString().split('T')[0])
     .order('event_date', { ascending: false })
 
   // メインのキッチンカーのジャンル
   const { data: myCars } = await supabase
-    .from('kitchen_cars')
+    .from('vendors')
     .select('genre')
     .eq('owner_id', user.id)
     .limit(1)

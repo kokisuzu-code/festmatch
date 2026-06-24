@@ -18,7 +18,7 @@ export default function VendorBottomNav() {
 
       // 自分のキッチンカーの応募IDを取得
       const { data: myCars } = await supabase
-        .from('kitchen_cars')
+        .from('vendors')
         .select('id')
         .eq('owner_id', user.id)
 
@@ -28,7 +28,7 @@ export default function VendorBottomNav() {
       const { data: apps } = await supabase
         .from('applications')
         .select('id')
-        .in('kitchen_car_id', carIds)
+        .in('vendor_id', carIds)
 
       const appIds = apps?.map((a: any) => a.id) ?? []
       if (!appIds.length) return

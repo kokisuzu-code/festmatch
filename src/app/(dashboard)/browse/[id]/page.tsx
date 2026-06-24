@@ -20,7 +20,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   // 自分のキッチンカーを取得
   const { data: myCars } = await supabase
-    .from('kitchen_cars')
+    .from('vendors')
     .select('*')
     .eq('owner_id', user.id)
 
@@ -29,9 +29,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const { data: existingApp } = carIds.length > 0
     ? await supabase
         .from('applications')
-        .select('id, status, kitchen_car_id')
+        .select('id, status, vendor_id')
         .eq('event_id', id)
-        .in('kitchen_car_id', carIds)
+        .in('vendor_id', carIds)
         .single()
     : { data: null }
 

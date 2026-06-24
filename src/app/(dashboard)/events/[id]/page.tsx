@@ -27,7 +27,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   const { data: applications } = await supabase
     .from('applications')
-    .select('*, kitchen_cars(name, genre, car_length_m, needs_power, photo_url, verified_status, description, profiles(name, avatar_url))')
+    .select('*, vendors(name, genre, car_length_m, needs_power, photo_url, verified_status, description, profiles(name, avatar_url))')
     .eq('event_id', id)
     .order('applied_at', { ascending: true })
 
@@ -39,7 +39,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const slots = event.event_genre_slots ?? []
   const genreApprovedCount: Record<string, number> = {}
   approved.forEach((a: any) => {
-    const g = a.genre ?? a.kitchen_cars?.genre ?? ''
+    const g = a.genre ?? a.vendors?.genre ?? ''
     if (g) genreApprovedCount[g] = (genreApprovedCount[g] ?? 0) + 1
   })
 
@@ -113,7 +113,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                 const fullGenres = slots
                   .filter((s: any) => (genreApprovedCount[s.genre] ?? 0) >= s.max_count)
                   .map((s: any) => s.genre)
-                const affected = pending.filter((a: any) => fullGenres.includes(a.genre ?? a.kitchen_cars?.genre))
+                const affected = pending.filter((a: any) => fullGenres.includes(a.genre ?? a.vendors?.genre))
                 if (!affected.length || !fullGenres.length) return null
                 return (
                   <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">

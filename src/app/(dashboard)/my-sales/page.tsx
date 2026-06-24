@@ -18,7 +18,7 @@ export default async function MySalesPage() {
 
   // 承認済みの応募（フォームのリンク候補）
   const { data: myCars } = await supabase
-    .from('kitchen_cars')
+    .from('vendors')
     .select('id, name')
     .eq('owner_id', user.id)
 
@@ -26,8 +26,8 @@ export default async function MySalesPage() {
   const { data: approvedApps } = carIds.length > 0
     ? await supabase
         .from('applications')
-        .select('id, kitchen_car_id, events(title, date)')
-        .in('kitchen_car_id', carIds)
+        .select('id, vendor_id, events(title, date)')
+        .in('vendor_id', carIds)
         .eq('status', 'approved')
         .order('applied_at', { ascending: false })
     : { data: [] }

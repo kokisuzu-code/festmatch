@@ -12,7 +12,7 @@ type SalesRecord = {
   customer_count: number | null
   weather: 'sunny' | 'cloudy' | 'rainy' | null
   notes: string | null
-  kitchen_cars?: { genre: string } | null
+  vendors?: { genre: string } | null
 }
 
 const PERIODS = [
@@ -93,10 +93,10 @@ export default function AnalyticsClient({ records, kitchenCarGenre }: { records:
   const rainyAvg = weatherMap.rainy.count > 0 ? weatherMap.rainy.total / weatherMap.rainy.count : 0
   const rainPct = sunnyAvg > 0 ? Math.round((rainyAvg / sunnyAvg) * 100) : null
 
-  // ジャンル別（kitchen_carsのgenreまたはevent_nameでざっくり）
+  // ジャンル別（vendorsのgenreまたはevent_nameでざっくり）
   const genreMap: Record<string, number> = {}
   for (const r of filtered) {
-    const genre = (r.kitchen_cars as any)?.genre ?? kitchenCarGenre ?? 'その他'
+    const genre = (r.vendors as any)?.genre ?? kitchenCarGenre ?? 'その他'
     genreMap[genre] = (genreMap[genre] ?? 0) + r.sales_amount
   }
   const genreEntries = Object.entries(genreMap).sort((a, b) => b[1] - a[1])
