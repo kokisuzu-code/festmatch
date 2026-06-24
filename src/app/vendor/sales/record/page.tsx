@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { fetchWeatherByLocation, getCurrentPosition } from '@/lib/weather'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchParams } from 'next/navigation'
@@ -14,7 +14,7 @@ type WeatherState = {
   longitude: number
 } | null
 
-export default function SalesRecordPage() {
+function SalesRecordContent() {
   const searchParams = useSearchParams()
   const applicationId = searchParams.get('application_id') ?? ''
 
@@ -185,5 +185,13 @@ export default function SalesRecordPage() {
         </button>
       </div>
     </div>
+  )
+}
+
+export default function SalesRecordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0F1F2E]" />}>
+      <SalesRecordContent />
+    </Suspense>
   )
 }
