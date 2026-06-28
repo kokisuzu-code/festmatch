@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, Suspense } from 'react'
 import { fetchWeatherByLocation, getCurrentPosition } from '@/lib/weather'
 import { createClient } from '@/lib/supabase/client'
