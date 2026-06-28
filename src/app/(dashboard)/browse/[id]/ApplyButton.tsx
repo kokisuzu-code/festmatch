@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import SpaceSelector from '@/components/SpaceSelector'
 
 type Car = { id: string; name: string; genre: string[] }
 type App = { id: string; status: string; vendor_id: string } | null
 type Slot = { genre: string; max_count: number; approved_count: number }
+type Space = { id: string; name: string; fee: number; max_count: number; approved_count: number; genre: string | null; description: string | null }
 
 const statusLabel: Record<string, { label: string; color: string }> = {
   pending:  { label: '審査中',   color: 'bg-yellow-900/30 text-yellow-300' },
@@ -32,6 +34,7 @@ export default function ApplyButton({
   const [showModal, setShowModal] = useState(false)
   const [selectedCar, setSelectedCar] = useState<string>(myCars[0]?.id ?? '')
   const [selectedGenre, setSelectedGenre] = useState<string>('')
+  const [selectedSpace, setSelectedSpace] = useState<Space | null>(null)
   const [appealText, setAppealText] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -70,6 +73,7 @@ export default function ApplyButton({
       event_id: eventId,
       vendor_id: selectedCar,
       genre: selectedGenre,
+      space_id: selectedSpace?.id ?? null,
       appeal_text: appealText.trim() || null,
     })
 
@@ -133,7 +137,7 @@ export default function ApplyButton({
                   <button
                     key={genre}
                     type="button"
-                    onClick={() => setSelectedGenre(genre)}
+                    onClick={() => { setSelectedGenre(genre); setSelectedSpace(null) }}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                       selectedGenre === genre
                         ? 'bg-green-600 text-white'
@@ -145,6 +149,15 @@ export default function ApplyButton({
                 ))}
               </div>
             </div>
+
+            {/* 区画選択（区画が設定されているイベントのみ表示） */}
+            {selectedGenre && (
+              <SpaceSelector
+                eventId={eventId}
+                genre={selectedGenre}
+                onSelect={setSelectedSpace}
+              />
+            )}
 
             {/* アピール文 */}
             <div>

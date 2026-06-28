@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import OrganizerSidebarNav from '@/components/OrganizerSidebarNav'
+import SpaceSettings from '@/components/organizer/SpaceSettings'
 
 const GENRES = [
   '唐揚げ・揚げ物',
@@ -521,6 +522,9 @@ export default function EditEventPage() {
                   )}
                 </div>
               </section>
+
+              {/* 区画設定 */}
+              <SpaceSettings eventId={eventId} />
 
               {error && (
                 <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
