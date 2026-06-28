@@ -10,18 +10,19 @@ export default async function PlanPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, role, stripe_customer_id')
-    .eq('id', user.id)
-    .single()
-
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('plan, status, period_end')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
+  const [{ data: profile }, { data: subscription }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('name, role, stripe_customer_id')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('subscriptions')
+      .select('plan, status, period_end')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .single(),
+  ])
 
   const nameChar = (profile?.name ?? user.email ?? '?')[0].toUpperCase()
   const currentPlan = subscription?.plan ?? 'free'

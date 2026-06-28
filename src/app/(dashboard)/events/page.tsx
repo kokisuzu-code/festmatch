@@ -17,15 +17,17 @@ export default async function EventsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+  // profile と events を並列取得
+  const [{ data: profile }, { data: events }] = await Promise.all([
+    supabase.from('profiles').select('name').eq('id', user.id).single(),
+    supabase
+      .from('events')
+      .select('*, event_genre_slots(*)')
+      .eq('organizer_id', user.id)
+      .order('date', { ascending: true }),
+  ])
+
   const nameChar = (profile?.name ?? user.email ?? '?')[0].toUpperCase()
-
-  const { data: events } = await supabase
-    .from('events')
-    .select('*, event_genre_slots(*)')
-    .eq('organizer_id', user.id)
-    .order('date', { ascending: true })
-
   const eventIds = events?.map(e => e.id) ?? []
   const { data: applications } = eventIds.length > 0
     ? await supabase

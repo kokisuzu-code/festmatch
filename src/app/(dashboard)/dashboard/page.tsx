@@ -27,11 +27,18 @@ export default async function DashboardPage() {
 }
 
 async function OrganizerDashboard({ user, profile, supabase }: any) {
-  const { data: events } = await supabase
-    .from('events')
-    .select('id, title, date, status, total_slots, event_genre_slots(*)')
-    .eq('organizer_id', user.id)
-    .order('date', { ascending: true })
+  // events と審査待ち数を並列取得
+  const [{ data: events }, { count: pendingReviewCount }] = await Promise.all([
+    supabase
+      .from('events')
+      .select('id, title, date, status, total_slots, event_genre_slots(*)')
+      .eq('organizer_id', user.id)
+      .order('date', { ascending: true }),
+    supabase
+      .from('vendors')
+      .select('id', { count: 'exact', head: true })
+      .eq('verified_status', 'pending'),
+  ])
 
   const eventIds = events?.map((e: any) => e.id) ?? []
 
@@ -57,12 +64,6 @@ async function OrganizerDashboard({ user, profile, supabase }: any) {
   const today = new Date().toISOString().split('T')[0]
   const upcoming = (events ?? []).filter((e: any) => e.date >= today && e.status === 'published').slice(0, 4)
   const nameChar = (profile?.name ?? user.email ?? '?')[0].toUpperCase()
-
-  // 審査待ちキッチンカー数
-  const { count: pendingReviewCount } = await supabase
-    .from('vendors')
-    .select('id', { count: 'exact', head: true })
-    .eq('verified_status', 'pending')
 
   return (
     <div className="light-theme flex h-screen overflow-hidden bg-gray-50">
@@ -214,10 +215,21 @@ async function OrganizerDashboard({ user, profile, supabase }: any) {
 
 
 async function VendorDashboard({ user, profile, supabase }: any) {
-  const { data: myCars } = await supabase
-    .from('vendors')
-    .select('id, name, genre, verified_status, reject_reason')
-    .eq('owner_id', user.id)
+  // myCars と売上を並列取得
+  const now = new Date()
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  const [{ data: myCars }, { data: salesRecords }] = await Promise.all([
+    supabase
+      .from('vendors')
+      .select('id, name, genre, verified_status, reject_reason')
+      .eq('owner_id', user.id),
+    supabase
+      .from('sales_records')
+      .select('sales_amount, event_date')
+      .eq('owner_id', user.id)
+      .gte('event_date', `${monthStr}-01`),
+  ])
 
   const carIds = myCars?.map((c: any) => c.id) ?? []
 
@@ -232,14 +244,6 @@ async function VendorDashboard({ user, profile, supabase }: any) {
   const pending  = applications?.filter((a: any) => a.status === 'pending')  ?? []
   const approved = applications?.filter((a: any) => a.status === 'approved') ?? []
 
-  // 今月の売上
-  const now = new Date()
-  const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const { data: salesRecords } = await supabase
-    .from('sales_records')
-    .select('sales_amount, event_date')
-    .eq('owner_id', user.id)
-    .gte('event_date', `${monthStr}-01`)
   const salesThisMonth = (salesRecords ?? []).reduce((s: number, r: any) => s + (r.sales_amount ?? 0), 0)
   const formatYen = (n: number) => n >= 10000 ? `${(n / 10000).toFixed(n % 10000 === 0 ? 0 : 1)}万円` : `¥${n.toLocaleString()}`
 

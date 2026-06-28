@@ -13,23 +13,25 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
-  const nameChar = (profile?.name ?? user.email ?? '?')[0].toUpperCase()
-
-  const { data: event } = await supabase
-    .from('events')
-    .select('*, event_genre_slots(*)')
-    .eq('id', id)
-    .eq('organizer_id', user.id)
-    .single()
+  // profile・event・applications を並列取得
+  const [{ data: profile }, { data: event }, { data: applications }] = await Promise.all([
+    supabase.from('profiles').select('name').eq('id', user.id).single(),
+    supabase
+      .from('events')
+      .select('*, event_genre_slots(*)')
+      .eq('id', id)
+      .eq('organizer_id', user.id)
+      .single(),
+    supabase
+      .from('applications')
+      .select('*, vendors(name, genre, car_length_m, needs_power, photo_url, verified_status, description, profiles(name, avatar_url))')
+      .eq('event_id', id)
+      .order('applied_at', { ascending: true }),
+  ])
 
   if (!event) notFound()
 
-  const { data: applications } = await supabase
-    .from('applications')
-    .select('*, vendors(name, genre, car_length_m, needs_power, photo_url, verified_status, description, profiles(name, avatar_url))')
-    .eq('event_id', id)
-    .order('applied_at', { ascending: true })
+  const nameChar = (profile?.name ?? user.email ?? '?')[0].toUpperCase()
 
   const pending  = applications?.filter(a => a.status === 'pending')  ?? []
   const approved = applications?.filter(a => a.status === 'approved') ?? []
