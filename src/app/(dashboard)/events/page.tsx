@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import OrganizerSidebarNav from '@/components/OrganizerSidebarNav'
+import EventCopyButton from './EventCopyButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,7 +76,7 @@ export default async function EventsPage() {
                     <th className="text-center px-4 py-2.5 text-xs font-medium text-gray-500">応募中</th>
                     <th className="text-center px-4 py-2.5 text-xs font-medium text-gray-500">承認済</th>
                     <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">ステータス</th>
-                    <th className="px-4 py-2.5 w-16"></th>
+                    <th className="px-4 py-2.5 w-24"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -114,12 +115,15 @@ export default async function EventsPage() {
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${s.color}`}>{s.label}</span>
                         </td>
                         <td className="px-4 py-3">
-                          <Link
-                            href={`/events/${event.id}`}
-                            className="text-xs text-gray-400 hover:text-gray-700 group-hover:text-gray-700 transition-colors font-medium"
-                          >
-                            管理 →
-                          </Link>
+                          <div className="flex items-center gap-1">
+                            <Link
+                              href={`/events/${event.id}`}
+                              className="text-xs text-gray-400 hover:text-gray-700 group-hover:text-gray-700 transition-colors font-medium"
+                            >
+                              管理 →
+                            </Link>
+                            <EventCopyButton eventId={event.id} eventTitle={event.title} />
+                          </div>
                         </td>
                       </tr>
                     )

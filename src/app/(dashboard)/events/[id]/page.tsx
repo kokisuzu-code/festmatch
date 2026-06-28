@@ -13,8 +13,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // profile・event・applications を並列取得
-  const [{ data: profile }, { data: event }, { data: applications }] = await Promise.all([
+  // profile・event・applications・bookmarks・blacklists を並列取得
+  const [{ data: profile }, { data: event }, { data: applications }, { data: bookmarks }, { data: blacklists }] = await Promise.all([
     supabase.from('profiles').select('name').eq('id', user.id).single(),
     supabase
       .from('events')
@@ -24,14 +24,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       .single(),
     supabase
       .from('applications')
-      .select('*, vendors(name, genre, car_length_m, needs_power, photo_url, verified_status, description, profiles(name, avatar_url))')
+      .select('*, vendors(id, name, genre, car_length_m, needs_power, photo_url, verified_status, description, profiles(name, avatar_url))')
       .eq('event_id', id)
       .order('applied_at', { ascending: true }),
+    supabase.from('vendor_bookmarks').select('vendor_id').eq('organizer_id', user.id),
+    supabase.from('vendor_blacklists').select('vendor_id').eq('organizer_id', user.id),
   ])
 
   if (!event) notFound()
 
   const nameChar = (profile?.name ?? user.email ?? '?')[0].toUpperCase()
+
+  const bookmarkedIds  = new Set(bookmarks?.map(b => b.vendor_id)  ?? [])
+  const blacklistedIds = new Set(blacklists?.map(b => b.vendor_id) ?? [])
 
   const pending  = applications?.filter(a => a.status === 'pending')  ?? []
   const approved = applications?.filter(a => a.status === 'approved') ?? []
@@ -126,7 +131,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
               <div className="space-y-2">
                 {pending.map((app: any) => (
-                  <AppCard key={app.id} app={app} eventId={id} slots={slots} genreApprovedCount={genreApprovedCount} />
+                  <AppCard key={app.id} app={app} eventId={id} slots={slots} genreApprovedCount={genreApprovedCount} organizerId={user.id} isBookmarked={bookmarkedIds.has(app.vendors?.id)} isBlacklisted={blacklistedIds.has(app.vendors?.id)} />
                 ))}
               </div>
             </section>
@@ -138,7 +143,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               <p className="text-xs font-medium text-gray-500 mb-2">承認済み（{approved.length}件）</p>
               <div className="space-y-2">
                 {approved.map((app: any) => (
-                  <AppCard key={app.id} app={app} eventId={id} slots={slots} genreApprovedCount={genreApprovedCount} readonly />
+                  <AppCard key={app.id} app={app} eventId={id} slots={slots} genreApprovedCount={genreApprovedCount} organizerId={user.id} isBookmarked={bookmarkedIds.has(app.vendors?.id)} isBlacklisted={blacklistedIds.has(app.vendors?.id)} readonly />
                 ))}
               </div>
             </section>
@@ -150,7 +155,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               <p className="text-xs font-medium text-gray-500 mb-2">見送り・その他（{others.length}件）</p>
               <div className="space-y-2">
                 {others.map((app: any) => (
-                  <AppCard key={app.id} app={app} eventId={id} slots={slots} genreApprovedCount={genreApprovedCount} readonly />
+                  <AppCard key={app.id} app={app} eventId={id} slots={slots} genreApprovedCount={genreApprovedCount} organizerId={user.id} isBookmarked={bookmarkedIds.has(app.vendors?.id)} isBlacklisted={blacklistedIds.has(app.vendors?.id)} readonly />
                 ))}
               </div>
             </section>
