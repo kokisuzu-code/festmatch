@@ -1,0 +1,123 @@
+/* festmap_toc_prototype.html の <style> を移植（.fm-festmap 配下にスコープ） */
+.fm-festmap {
+  --radius: 14px;
+  font-family: 'Noto Sans JP', sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.65;
+}
+.fm-festmap .heavy { font-weight: 900; letter-spacing: -.01em; font-feature-settings: 'palt'; }
+.fm-festmap a { text-decoration: none; color: inherit; }
+.fm-festmap button { font-family: inherit; cursor: pointer; }
+
+/* ===== header ===== */
+.fm-festmap header { position: sticky; top: 0; z-index: 200; background: rgba(253,251,246,.94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.fm-festmap .hwrap { max-width: 1440px; margin: 0 auto; padding: 0 20px; height: 60px; display: flex; align-items: center; gap: 18px; }
+.fm-festmap .logo { font-weight: 900; font-size: 20px; letter-spacing: -.01em; flex: none; }
+.fm-festmap .logo .dot { color: var(--shu); }
+.fm-festmap .logo small { font-size: 10px; font-weight: 700; color: var(--ink-soft); display: block; line-height: 1; letter-spacing: .08em; margin-top: 1px; }
+.fm-festmap .hsearch { flex: 1; max-width: 520px; display: flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid var(--line); border-radius: 999px; padding: 9px 16px; transition: border-color .15s; }
+.fm-festmap .hsearch:focus-within { border-color: var(--ink); }
+.fm-festmap .hsearch svg { flex: none; }
+.fm-festmap .hsearch input { border: none; outline: none; background: none; flex: 1; font-size: 14px; font-family: inherit; min-width: 0; }
+.fm-festmap .hlinks { margin-left: auto; display: flex; gap: 18px; align-items: center; font-size: 13px; font-weight: 700; }
+.fm-festmap .hlinks .biz { color: var(--ink-soft); font-weight: 500; }
+.fm-festmap .hlinks .biz b { color: var(--shu); }
+@media (max-width: 760px) { .fm-festmap .hlinks { display: none; } }
+
+/* ===== filter bar ===== */
+.fm-festmap .filters { border-bottom: 1px solid var(--line); background: var(--paper); }
+.fm-festmap .fwrap { max-width: 1440px; margin: 0 auto; padding: 12px 20px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.fm-festmap .fwrap::-webkit-scrollbar { display: none; }
+.fm-festmap .chip { flex: none; font-size: 13px; font-weight: 700; border: 1.5px solid var(--line); background: #fff; border-radius: 999px; padding: 8px 16px; color: var(--ink-soft); transition: all .15s; }
+.fm-festmap .chip:hover { border-color: var(--ink); color: var(--ink); }
+.fm-festmap .chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.fm-festmap .chip.date { border-color: var(--shu); color: var(--shu); }
+.fm-festmap .chip.date.on { background: var(--shu); color: #fff; }
+.fm-festmap .fdivider { flex: none; width: 1px; background: var(--line); margin: 2px 4px; }
+
+/* ===== split layout ===== */
+.fm-festmap .split { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: 1fr 420px; min-height: calc(100vh - 121px); }
+@media (max-width: 960px) {
+  .fm-festmap .split { grid-template-columns: 1fr; min-height: 0; }
+  .fm-festmap .map-side { position: relative; top: 0; height: 52vh; order: -1; }
+  .fm-festmap .list-side { border-left: none; }
+}
+
+/* --- list side --- */
+.fm-festmap .list-side { padding: 20px; border-left: 1px solid var(--line); overflow-y: auto; }
+.fm-festmap .list-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+.fm-festmap .list-head h1 { font-size: 16px; font-weight: 900; }
+.fm-festmap .list-head span { font-size: 12px; color: var(--ink-soft); }
+.fm-festmap .sort { font-size: 12px; font-weight: 700; color: var(--ink-soft); background: none; border: none; }
+
+.fm-festmap .fcard { display: grid; grid-template-columns: 120px 1fr; gap: 14px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; margin-bottom: 12px; transition: box-shadow .15s, transform .15s; position: relative; }
+.fm-festmap .fcard:hover { box-shadow: 0 10px 28px rgba(31,42,68,.12); transform: translateY(-2px); }
+.fm-festmap .fcard.active { border: 2px solid var(--shu); padding: 13px; }
+.fm-festmap .fthumb { aspect-ratio: 1; border-radius: 10px; position: relative; overflow: hidden; }
+.fm-festmap .fthumb .d { position: absolute; top: 6px; left: 6px; background: #fff; border-radius: 8px; padding: 3px 8px; text-align: center; line-height: 1.15; }
+.fm-festmap .fthumb .d b { display: block; font-size: 15px; font-weight: 900; color: var(--shu); }
+.fm-festmap .fthumb .d span { font-size: 9px; font-weight: 700; color: var(--ink-soft); }
+.fm-festmap .g1 { background: linear-gradient(140deg,#F3C97B,#E58E3C); }
+.fm-festmap .g2 { background: linear-gradient(140deg,#8FB8D8,#4A7BA6); }
+.fm-festmap .g3 { background: linear-gradient(140deg,#B7D0A8,#6E9E5B); }
+.fm-festmap .g4 { background: linear-gradient(140deg,#E5A0A0,#C05A6B); }
+.fm-festmap .g5 { background: linear-gradient(140deg,#C9B8E0,#8A6FB8); }
+.fm-festmap .fbody { min-width: 0; display: flex; flex-direction: column; }
+.fm-festmap .fbody .when { font-size: 11.5px; font-weight: 700; color: var(--shu); margin-bottom: 2px; }
+.fm-festmap .fbody h2 { font-size: 15px; font-weight: 900; line-height: 1.45; margin-bottom: 2px; }
+.fm-festmap .fbody .where { font-size: 12px; color: var(--ink-soft); }
+.fm-festmap .ftags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: auto; padding-top: 8px; }
+.fm-festmap .ftags span { font-size: 10.5px; font-weight: 700; background: var(--mist); color: var(--ink-soft); border-radius: 5px; padding: 3px 7px; }
+.fm-festmap .ftags .kc { background: #FDEEDD; color: #B4700F; }
+.fm-festmap .badge-today { position: absolute; top: -8px; right: 12px; background: var(--shu); color: #fff; font-size: 10px; font-weight: 900; border-radius: 999px; padding: 3px 10px; }
+
+.fm-festmap .ext-src { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: var(--ink-soft); margin-top: 6px; }
+.fm-festmap .ext-src svg { flex: none; }
+.fm-festmap .fcard.ext .fthumb { outline: 1.5px dashed var(--line); outline-offset: -1.5px; }
+.fm-festmap .list-note { font-size: 11px; color: var(--ink-soft); margin: 2px 0 14px; }
+.fm-festmap .load-more { width: 100%; padding: 13px; border: 1.5px solid var(--ink); border-radius: 999px; background: none; font-weight: 700; font-size: 13px; margin-top: 6px; }
+.fm-festmap .load-more:hover { background: var(--ink); color: #fff; }
+
+/* --- map side --- */
+.fm-festmap .map-side { position: sticky; top: 121px; height: calc(100vh - 121px); background: linear-gradient(160deg,#E9EEF5 0%,#DFE7F0 55%,#D6E4E4 100%); overflow: hidden; }
+.fm-festmap .map-loading { width: 100%; height: 100%; }
+
+/* Leaflet 提灯マーカー(divIcon) */
+.lantern-marker-wrap { background: transparent; border: none; }
+.lantern-marker-wrap .marker { position: relative; width: 22px; height: 26px; cursor: pointer; }
+.lantern-marker-wrap .marker .bulb { width: 17px; height: 21px; margin: 0 auto; background: radial-gradient(circle at 50% 35%,#FFD27A,var(--lantern) 70%); border-radius: 45% 45% 48% 48%; border: 1.5px solid #C77F0E; position: relative; animation: fm-sway 3.2s ease-in-out infinite; }
+.lantern-marker-wrap .marker .bulb::before { content: ""; position: absolute; top: -4px; left: 50%; transform: translateX(-50%); width: 8px; height: 3px; background: #8A5A0B; border-radius: 2px; }
+.lantern-marker-wrap .marker .glow { position: absolute; top: 2px; left: 50%; transform: translate(-50%,0); width: 36px; height: 36px; border-radius: 50%; background: var(--lantern-glow); filter: blur(6px); animation: fm-pulse 2.4s ease-in-out infinite; }
+.lantern-marker-wrap .marker.hot .bulb { background: radial-gradient(circle at 50% 35%,#FF9A8A,var(--shu) 70%); border-color: #8F1F14; }
+.lantern-marker-wrap .marker.hot .glow { background: rgba(217,58,43,.4); }
+@keyframes fm-pulse { 0%,100% { opacity: .55; transform: translate(-50%,0) scale(1); } 50% { opacity: 1; transform: translate(-50%,0) scale(1.25); } }
+@keyframes fm-sway { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@media (prefers-reduced-motion: reduce) { .lantern-marker-wrap .marker .bulb, .lantern-marker-wrap .marker .glow { animation: none; } }
+
+.fm-festmap .map-pop-inner .when { font-size: 11.5px; font-weight: 700; color: var(--shu); }
+.fm-festmap .map-pop-inner h3 { font-size: 15px; font-weight: 900; margin: 2px 0; }
+.fm-festmap .map-pop-inner p { font-size: 12px; color: var(--ink-soft); margin-bottom: 10px; }
+.fm-festmap .map-pop-inner a { display: inline-block; font-size: 12.5px; font-weight: 700; color: #fff; background: var(--ink); border-radius: 999px; padding: 7px 16px; }
+
+/* ===== SEO sections ===== */
+.fm-festmap .seo { border-top: 1px solid var(--line); background: #fff; }
+.fm-festmap .seo .wrap { max-width: 1440px; margin: 0 auto; padding: 44px 20px; }
+.fm-festmap .seo h2 { font-size: 16px; font-weight: 900; margin-bottom: 16px; }
+.fm-festmap .seo .links { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; }
+.fm-festmap .seo .links a { font-size: 13px; background: var(--mist); border-radius: 999px; padding: 7px 15px; color: var(--ink-soft); transition: all .15s; }
+.fm-festmap .seo .links a:hover { background: var(--lantern); color: var(--night); }
+
+/* ===== cross-sell ===== */
+.fm-festmap .biz-band { background: var(--night); color: #EDEFF6; }
+.fm-festmap .biz-band .wrap { max-width: 1440px; margin: 0 auto; padding: 40px 20px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.fm-festmap .biz-band h2 { font-size: 19px; font-weight: 900; margin-bottom: 4px; }
+.fm-festmap .biz-band p { font-size: 13.5px; color: #A9B0C6; }
+.fm-festmap .biz-band .btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.fm-festmap .biz-band a { font-size: 13.5px; font-weight: 700; border-radius: 999px; padding: 11px 22px; }
+.fm-festmap .biz-band .b1 { background: var(--lantern); color: var(--night); }
+.fm-festmap .biz-band .b2 { border: 1.5px solid #4A5670; color: #EDEFF6; }
+
+.fm-festmap footer { background: var(--night); color: #8B93AC; font-size: 12.5px; border-top: 1px solid #26304D; }
+.fm-festmap footer .wrap { max-width: 1440px; margin: 0 auto; padding: 26px 20px; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.fm-festmap footer a:hover { color: #fff; }

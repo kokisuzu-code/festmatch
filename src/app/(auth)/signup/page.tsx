@@ -2,19 +2,37 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 type Role = 'organizer' | 'kitchen_car_owner'
 
+// FestMatchトップ/FestMapのCTAは ?role=organizer / ?role=vendor で遷移してくる
+// (vendor は kitchen_car_owner のエイリアス)
+function roleFromParam(value: string | null): Role | null {
+  if (value === 'organizer') return 'organizer'
+  if (value === 'vendor' || value === 'kitchen_car_owner') return 'kitchen_car_owner'
+  return null
+}
+
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
+  )
+}
+
+function SignupForm() {
   const router = useRouter()
   const supabase = createClient()
+  const searchParams = useSearchParams()
+  const presetRole = roleFromParam(searchParams.get('role'))
 
-  const [step, setStep] = useState<1 | 2>(1)
-  const [role, setRole] = useState<Role | null>(null)
+  const [step, setStep] = useState<1 | 2>(presetRole ? 2 : 1)
+  const [role, setRole] = useState<Role | null>(presetRole)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

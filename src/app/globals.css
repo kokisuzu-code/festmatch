@@ -55,3 +55,26 @@ body {
 .light-theme input[type="radio"] {
   background-color: transparent !important;
 }
+
+/* ============================================================
+   マーケティングトップページ + FestMap 用デザイントークン
+   (既存トークンは変更せず追記のみ)
+   ============================================================ */
+:root {
+  --paper: #FDFBF6;
+  --ink: #1F2A44;
+  --ink-soft: #4A5670;
+  --shu: #D93A2B;
+  --lantern: #F5A623;
+  --lantern-glow: rgba(245, 166, 35, .45);
+  --mist: #EEF1F6;
+  --line: #E3E0D8;
+  --night: #141B2D;
+  --night-soft: #1E2740;
+}
+
+.heavy {
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  font-feature-settings: "palt";
+}
