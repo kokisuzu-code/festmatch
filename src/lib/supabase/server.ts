@@ -11,9 +11,14 @@ export async function createClient() {
       cookies: {
         getAll() { return cookieStore.getAll() },
         setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options as never)
-          )
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options as never)
+            )
+          } catch {
+            // Server Componentから呼ばれた場合はここに来る。
+            // ミドルウェアがセッションのリフレッシュを担うため無視してよい。
+          }
         },
       },
     }
