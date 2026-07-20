@@ -6,11 +6,11 @@ import Link from 'next/link'
 import VendorBottomNav from '@/components/VendorBottomNav'
 
 const statusConfig: Record<string, { label: string; color: string; icon: string }> = {
-  pending:  { label: '審査中',   color: 'bg-yellow-900/30 text-yellow-300', icon: '⏳' },
-  approved: { label: '承認済み', color: 'bg-green-900/30 text-green-400',  icon: '✅' },
-  declined: { label: '見送り',   color: 'bg-red-900/30 text-red-400',     icon: '❌' },
-  cancelled:{ label: 'キャンセル', color: 'bg-slate-700 text-slate-400', icon: '🚫' },
-  waitlist: { label: '補欠',     color: 'bg-blue-900/30 text-blue-400',   icon: '📋' },
+  pending:  { label: '審査中',   color: 'bg-yellow-900/30 text-yellow-300', icon: '・' },
+  approved: { label: '承認済み', color: 'bg-green-900/30 text-green-400',  icon: '・' },
+  declined: { label: '見送り',   color: 'bg-red-900/30 text-red-400',     icon: '・' },
+  cancelled:{ label: 'キャンセル', color: 'bg-slate-700 text-slate-400', icon: '・' },
+  waitlist: { label: '補欠',     color: 'bg-blue-900/30 text-blue-400',   icon: '・' },
 }
 
 export default async function MyApplicationsPage() {

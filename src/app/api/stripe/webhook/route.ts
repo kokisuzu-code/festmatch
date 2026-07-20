@@ -1,120 +1,117 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getStripe } from '@/lib/stripe'
+import { updateVendorBilling } from '@/lib/stripe/vendor-billing'
+import { updateOrganizerBilling } from '@/lib/stripe/organizer-billing'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
+export const runtime = 'nodejs'
 
-const COST_LIMITS: Record<string, number> = {
-  light: 10, standard: 30, pro: 999,
+function isSubscriptionActive(status: string) {
+  return status === 'active' || status === 'trialing'
 }
 
-export async function POST(request: NextRequest) {
-  const rawBody = await request.text()
-  const signature = request.headers.get('stripe-signature')!
+async function activateOrganizerSpotContract(admin: ReturnType<typeof createAdminClient>, session: Stripe.Checkout.Session) {
+  const metadata = session.metadata ?? {}
+  if (metadata.kind !== 'organizer_spot' || !metadata.organizer_id || !metadata.event_id) return
+  if (session.payment_status !== 'paid') return
+
+  const { error } = await admin
+    .from('organizer_spot_contracts')
+    .update({
+      status: 'active',
+      stripe_checkout_session_id: session.id,
+      stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null,
+      activated_at: new Date().toISOString(),
+    })
+    .eq('organizer_id', metadata.organizer_id)
+    .eq('event_id', metadata.event_id)
+    .eq('status', 'pending')
+  if (error) throw error
+}
+
+export async function POST(request: Request) {
+  const stripe = getStripe()
+  const secret = process.env.STRIPE_WEBHOOK_SECRET
+  if (!stripe || !secret) return NextResponse.json({ error: 'Stripe webhookが設定されていません。' }, { status: 503 })
+
+  const signature = request.headers.get('stripe-signature')
+  if (!signature) return NextResponse.json({ error: '署名がありません。' }, { status: 400 })
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET!)
-  } catch (err) {
-    console.error('[webhook] signature verification failed', err)
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+    event = stripe.webhooks.constructEvent(await request.text(), signature, secret)
+  } catch {
+    return NextResponse.json({ error: '署名を検証できません。' }, { status: 400 })
   }
 
-  const supabase = createAdminClient()
+  const admin = createAdminClient()
 
-  // 冪等性チェック
-  const { data: existing } = await supabase
-    .from('stripe_events')
-    .select('id')
-    .eq('stripe_event_id', event.id)
-    .single()
-
-  if (existing) {
-    return NextResponse.json({ received: true })
-  }
-
-  await supabase.from('stripe_events').insert({ stripe_event_id: event.id })
-
-  switch (event.type) {
-    case 'checkout.session.completed': {
+  try {
+    if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       const session = event.data.object as Stripe.Checkout.Session
-      const { user_id, plan_type } = session.metadata ?? {}
+      const metadata = session.metadata ?? {}
 
-      if (user_id && session.subscription && plan_type) {
-        const stripeSub = await stripe.subscriptions.retrieve(session.subscription as string)
-
-        // スポットプランは3ヶ月で自動キャンセル
-        if (plan_type === 'organizer_spot') {
-          const cancelAt = new Date(stripeSub.current_period_start * 1000)
-          cancelAt.setMonth(cancelAt.getMonth() + 3)
-          await stripe.subscriptions.update(session.subscription as string, {
-            cancel_at: Math.floor(cancelAt.getTime() / 1000),
-          })
-        }
-
-        // profiles.stripe_customer_id を更新
-        await supabase
-          .from('profiles')
-          .update({ stripe_customer_id: session.customer as string })
-          .eq('id', user_id)
-
-        // subscriptions に登録（upsert で重複防止）
-        await supabase.from('subscriptions').upsert({
-          user_id,
-          plan: plan_type,
-          stripe_customer_id: session.customer as string,
-          stripe_sub_id: session.subscription as string,
-          status: 'active',
-          cost_limit: COST_LIMITS[plan_type] ?? 10,
-          cost_used: 0,
-          period_start: new Date(stripeSub.current_period_start * 1000).toISOString().split('T')[0],
-          period_end: new Date(stripeSub.current_period_end * 1000).toISOString().split('T')[0],
-        }, { onConflict: 'user_id' })
-
-        // profilesにもplan・stripe_customer_idを反映
-        await supabase.from('profiles')
-          .update({ plan: plan_type, stripe_customer_id: session.customer as string })
-          .eq('id', user_id)
-      }
-      break
-    }
-
-    case 'invoice.payment_succeeded': {
-      const invoice = event.data.object as Stripe.Invoice
-      if (invoice.subscription) {
-        const sub = await stripe.subscriptions.retrieve(invoice.subscription as string)
-        await supabase
-          .from('subscriptions')
+      if (event.type === 'checkout.session.completed' && metadata.kind === 'application_payment' && metadata.application_id) {
+        const { error } = await admin
+          .from('applications')
           .update({
-            status: 'active',
-            period_start: new Date(sub.current_period_start * 1000).toISOString().split('T')[0],
-            period_end: new Date(sub.current_period_end * 1000).toISOString().split('T')[0],
+            status: 'paid',
+            stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null,
           })
-          .eq('stripe_sub_id', invoice.subscription)
+          .eq('id', metadata.application_id)
+          .eq('status', 'approved')
+        if (error) throw error
       }
-      break
+
+      if (event.type === 'checkout.session.completed' && metadata.kind === 'vendor_subscription' && metadata.vendor_id && metadata.tier) {
+        const { error } = await admin.from('vendors').update({ subscription_tier: metadata.tier }).eq('id', metadata.vendor_id)
+        if (error) throw error
+        await updateVendorBilling(metadata.vendor_id, {
+          stripe_customer_id: typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null,
+          stripe_subscription_id: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id ?? null,
+          subscription_status: session.payment_status,
+        })
+      }
+
+      if (event.type === 'checkout.session.completed' && metadata.kind === 'organizer_annual' && metadata.organizer_id) {
+        await updateOrganizerBilling(metadata.organizer_id, {
+          stripe_customer_id: typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null,
+          stripe_subscription_id: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id ?? null,
+          billing_plan: 'annual',
+          billing_status: 'active',
+        })
+      }
+
+      await activateOrganizerSpotContract(admin, session)
     }
 
-    case 'invoice.payment_failed': {
-      const invoice = event.data.object as Stripe.Invoice
-      if (invoice.subscription) {
-        await supabase
-          .from('subscriptions')
-          .update({ status: 'past_due' })
-          .eq('stripe_sub_id', invoice.subscription)
+    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object as Stripe.Subscription
+      const active = event.type !== 'customer.subscription.deleted' && isSubscriptionActive(subscription.status)
+      const { data: vendorBilling } = await admin.from('vendor_billing').select('vendor_id').eq('stripe_subscription_id', subscription.id).maybeSingle()
+      if (vendorBilling?.vendor_id) {
+        const tier = active ? subscription.metadata.tier ?? 'free' : 'free'
+        const { error } = await admin.from('vendors').update({ subscription_tier: tier }).eq('id', vendorBilling.vendor_id)
+        if (error) throw error
+        await updateVendorBilling(vendorBilling.vendor_id, {
+          stripe_subscription_id: active ? subscription.id : null,
+          subscription_status: subscription.status,
+        })
       }
-      break
+
+      const { data: organizer } = await admin.from('organizers').select('id').eq('stripe_subscription_id', subscription.id).maybeSingle()
+      if (organizer?.id) {
+        await updateOrganizerBilling(organizer.id, {
+          stripe_subscription_id: active ? subscription.id : null,
+          billing_status: subscription.status,
+          billing_plan: 'annual',
+        })
+      }
     }
 
-    case 'customer.subscription.deleted': {
-      const sub = event.data.object as Stripe.Subscription
-      await supabase
-        .from('subscriptions')
-        .update({ status: 'cancelled' })
-        .eq('stripe_sub_id', sub.id)
-      break
-    }
+    return NextResponse.json({ received: true })
+  } catch {
+    return NextResponse.json({ error: 'Webhookを処理できませんでした。' }, { status: 500 })
   }
-
-  return NextResponse.json({ received: true })
 }

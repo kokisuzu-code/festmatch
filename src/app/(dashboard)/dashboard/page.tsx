@@ -266,7 +266,7 @@ async function VendorDashboard({ user, profile, supabase }: any) {
       <header className="bg-slate-800 border-b border-slate-700 px-4 py-4 flex items-center justify-between sticky top-0 z-10">
         <div>
           <h1 className="text-lg font-bold text-green-400">FestMatch</h1>
-          <p className="text-xs text-slate-400">キッチンカーオーナー</p>
+          <p className="text-xs text-slate-400">ベンダー</p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/dev" className="text-xs text-slate-500 hover:text-slate-300 border border-slate-700 rounded px-2 py-0.5">Dev</Link>
@@ -355,7 +355,7 @@ async function VendorDashboard({ user, profile, supabase }: any) {
         {(!myCars || myCars.length === 0) && (
           <Link href="/kitchen-cars/new"
             className="flex items-center gap-3 bg-green-950/40 border border-green-200 rounded-2xl px-4 py-3">
-            <span className="text-xl">🚚</span>
+            <span className="text-xl" aria-hidden="true">出店</span>
             <div>
               <p className="text-sm font-medium text-green-400">キッチンカーを登録しましょう</p>
               <p className="text-xs text-green-400">登録するとイベントに応募できます</p>

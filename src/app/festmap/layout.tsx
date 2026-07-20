@@ -1,16 +1,7 @@
-import { Noto_Sans_JP } from "next/font/google";
-import "./festmap.css";
+import Link from "next/link"
+import BrandMark from "@/components/BrandMark"
+import "./public.css"
 
-const notoSansJP = Noto_Sans_JP({
-  subsets: ["latin"],
-  weight: ["400", "500", "700", "900"],
-  display: "swap",
-});
-
-export default function FestMapLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <div className={`fm-festmap ${notoSansJP.className}`}>{children}</div>;
+export default function FestMapLayout({ children }: { children: React.ReactNode }) {
+  return <div className="festmap-page"><header className="festmap-header"><BrandMark href="/festmap" /><nav><Link href="/festmap">イベントを探す</Link><Link href="/signup?role=vendor">ベンダー登録</Link><Link href="/signup?role=organizer">主催者登録</Link></nav></header>{children}<footer className="festmap-footer"><BrandMark href="/" /><span>FestMatch の一般公開イベントディレクトリ</span></footer></div>
 }

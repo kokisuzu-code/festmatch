@@ -20,7 +20,7 @@ export default function VendorBottomNav() {
       const { data: myCars } = await supabase
         .from('vendors')
         .select('id')
-        .eq('owner_id', user.id)
+        .eq('profile_id', user.id)
 
       const carIds = myCars?.map((c: any) => c.id) ?? []
       if (!carIds.length) return

@@ -82,10 +82,10 @@ export default function NewKitchenCarPage() {
       const ext = photoFile.name.split('.').pop()
       const path = `${car.id}/profile.${ext}`
       const { data: uploaded } = await supabase.storage
-        .from('kitchen-car-photos')
+        .from('vendor-photos')
         .upload(path, photoFile, { upsert: true })
       if (uploaded) {
-        const { data: { publicUrl } } = supabase.storage.from('kitchen-car-photos').getPublicUrl(uploaded.path)
+        const { data: { publicUrl } } = supabase.storage.from('vendor-photos').getPublicUrl(uploaded.path)
         await supabase.from('vendors').update({ photo_url: publicUrl }).eq('id', car.id)
       }
     }

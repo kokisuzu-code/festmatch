@@ -1,32 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
-import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
+import { getStripe } from "@/lib/stripe"
+import { APP_URL } from "@/lib/app"
+import { getVendorBilling } from "@/lib/stripe/vendor-billing"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-
-export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const { user_id } = await request.json()
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('stripe_customer_id')
-    .eq('id', user_id)
-    .single()
-
-  if (!profile?.stripe_customer_id) {
-    return NextResponse.json({ error: 'stripe_customer_id not found' }, { status: 404 })
-  }
-
-  const portalSession = await stripe.billingPortal.sessions.create({
-    customer: profile.stripe_customer_id,
-    return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard`,
-  })
-
-  return NextResponse.json({ url: portalSession.url })
+export async function POST() {
+  const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 })
+  const { data: vendor } = await supabase.from("vendors").select("id").eq("profile_id", user.id).maybeSingle()
+  if (!vendor) return NextResponse.json({ error: "ベンダープロフィールがありません。" }, { status: 403 })
+  const billing = await getVendorBilling(vendor.id)
+  if (!billing?.stripe_customer_id) return NextResponse.json({ error: "有効なStripe顧客情報がありません。" }, { status: 409 })
+  const stripe = getStripe(); if (!stripe) return NextResponse.json({ error: "Stripeが設定されていません。" }, { status: 503 })
+  const session = await stripe.billingPortal.sessions.create({ customer: billing.stripe_customer_id, return_url: `${APP_URL}/vendor/settings` })
+  return NextResponse.json({ url: session.url })
 }

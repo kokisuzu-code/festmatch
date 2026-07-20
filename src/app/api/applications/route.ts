@@ -1,119 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
-import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
+import { isApplicationClosed } from "@/lib/events"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { notifyOrganizerOfApplication, notifyVendorOfApplicationReceived } from "@/lib/notifications"
+import { findGenreSlotAvailability, getGenreSlotAvailability } from '@/lib/slots'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
-
-const PAY_PER_APPLY_PRICES: Record<string, number> = {
-  S: 10000, A: 5000, B: 3000, C: 1000,
-}
-
-function calcTier(visitors: number, fee: number): { tier: string; costWeight: number } {
-  const byVisitors =
-    visitors >= 10000 ? { tier: 'S', costWeight: 10 } :
-    visitors >= 3000  ? { tier: 'A', costWeight: 5  } :
-    visitors >= 1000  ? { tier: 'B', costWeight: 3  } :
-                        { tier: 'C', costWeight: 1  }
-  const byFee =
-    fee >= 50000 ? { tier: 'S', costWeight: 10 } :
-    fee >= 30000 ? { tier: 'A', costWeight: 5  } :
-    fee >= 20000 ? { tier: 'B', costWeight: 3  } :
-                   { tier: 'C', costWeight: 1  }
-  return byVisitors.costWeight >= byFee.costWeight ? byVisitors : byFee
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { event_id, vendor_id, genre } = await req.json()
-
-  // イベント情報からティア・コスト重みを計算
-  const { data: event } = await supabase
-    .from('events')
-    .select('expected_visitors, fee, cost_weight, tier')
-    .eq('id', event_id)
-    .single()
-  if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 })
-
-  const { tier, costWeight } = calcTier(event.expected_visitors ?? 0, event.fee ?? 0)
-
-  // タイムセール後のコスト重みを確認
-  const { data: slot } = await supabase
-    .from('event_genre_slots')
-    .select('max_count, approved_count, current_cost_weight, discount_active')
-    .eq('event_id', event_id)
-    .eq('genre', genre)
-    .single()
-
-  const effectiveCost = slot?.discount_active && slot?.current_cost_weight
-    ? slot.current_cost_weight : costWeight
-
-  // サブスクの状態を確認
-  const { data: sub } = await supabase
-    .from('subscriptions')
-    .select('cost_limit, cost_used, carry_over_cost, status, plan')
-    .eq('user_id', user.id)
-    .single()
-
-  const isSubscriber   = sub?.status === 'active' && sub?.plan !== 'free'
-  const totalAvailable = (sub?.cost_limit ?? 0) - (sub?.cost_used ?? 0) + (sub?.carry_over_cost ?? 0)
-  const hasEnoughCost  = isSubscriber && totalAvailable >= effectiveCost
-  const isWaitlist     = slot ? slot.approved_count >= slot.max_count : false
-
-  // サブスク加入者かつコスト十分：コスト消費で応募
-  if (hasEnoughCost) {
-    const { data: application, error } = await supabase
-      .from('applications')
-      .insert({ event_id, vendor_id, genre, status: 'pending', is_waitlist: isWaitlist, charge_type: 'subscription' })
-      .select().single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-
-    // 繰り越し分から先に消費
-    const carryOver = sub?.carry_over_cost ?? 0
-    const used      = sub?.cost_used ?? 0
-    if (carryOver >= effectiveCost) {
-      await supabase.from('subscriptions').update({ carry_over_cost: carryOver - effectiveCost }).eq('user_id', user.id)
-    } else {
-      await supabase.from('subscriptions').update({ carry_over_cost: 0, cost_used: used + (effectiveCost - carryOver) }).eq('user_id', user.id)
-    }
-    return NextResponse.json({ application, charge_type: 'subscription', cost_consumed: effectiveCost })
+  if (!user) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 })
+  let body: { event_id?: string; message?: string }
+  try { body = await request.json() as { event_id?: string; message?: string } } catch { return NextResponse.json({ error: "送信内容を確認してください。" }, { status: 400 }) }
+  if (!body.event_id || !/^[a-f0-9-]{36}$/i.test(body.event_id)) return NextResponse.json({ error: "イベントが指定されていません。" }, { status: 400 })
+  const message = body.message?.trim() || null
+  if (message && message.length > 2_000) return NextResponse.json({ error: "応募メッセージは2,000文字以内で入力してください。" }, { status: 400 })
+  const [{ data: vendor }, { data: event }] = await Promise.all([
+    supabase.from("vendors").select("id, name, genre").eq("profile_id", user.id).maybeSingle(),
+    supabase.from("events").select("id, organizer_id, title, starts_at, ends_at, application_deadline_at, status").eq("id", body.event_id).maybeSingle(),
+  ])
+  if (!vendor) return NextResponse.json({ error: "ベンダープロフィールを設定してください。" }, { status: 403 })
+  if (event?.status !== 'published' || isApplicationClosed(event)) return NextResponse.json({ error: "このイベントは現在応募を受け付けていません。" }, { status: 409 })
+  const slotsByEvent = await getGenreSlotAvailability([event.id])
+  const matchingSlot = findGenreSlotAvailability(slotsByEvent.get(event.id), vendor.genre)
+  if (matchingSlot?.isFull) return NextResponse.json({ error: `${matchingSlot.genre}枠は満了です。` }, { status: 409 })
+  const { error } = await supabase.from("applications").insert({ event_id: event.id, vendor_id: vendor.id, message })
+  if (error) {
+    const slotFull = /genre|slot|capacity|満了/i.test(error.message)
+    return NextResponse.json({ error: error.code === "23505" ? "すでに応募済みです。" : slotFull ? 'このジャンルの枠は満了です。' : "応募を送信できませんでした。" }, { status: slotFull ? 409 : 400 })
   }
-
-  // 無料ユーザー or コスト不足：従量課金で応募
-  const payPerApplyAmount = PAY_PER_APPLY_PRICES[tier] ?? 1000
-
-  const { data: profile } = await supabase
-    .from('profiles').select('stripe_customer_id').eq('id', user.id).single()
-
-  if (!profile?.stripe_customer_id) {
-    return NextResponse.json(
-      { error: 'カード情報が登録されていません。先にお支払い方法を登録してください。' },
-      { status: 400 }
-    )
-  }
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: payPerApplyAmount,
-    currency: 'jpy',
-    customer: profile.stripe_customer_id,
-    confirm: true,
-    automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
-    metadata: { event_id, vendor_id, genre, tier, charge_type: 'pay_per_apply' },
-  })
-
-  const { data: application, error } = await supabase
-    .from('applications')
-    .insert({
-      event_id, vendor_id, genre, status: 'pending', is_waitlist: isWaitlist,
-      charge_type: 'pay_per_apply',
-      pay_per_apply_amount: payPerApplyAmount,
-      stripe_payment_intent_id: paymentIntent.id,
-    })
-    .select().single()
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-
-  return NextResponse.json({ application, charge_type: 'pay_per_apply', amount: payPerApplyAmount, tier })
+  const { data: organizer } = await createAdminClient().from("organizers").select("profile_id").eq("id", event.organizer_id).maybeSingle()
+  if (organizer?.profile_id) void notifyOrganizerOfApplication({ organizerOwnerId: organizer.profile_id, eventTitle: event.title, vendorName: vendor.name }).catch(() => undefined)
+  void notifyVendorOfApplicationReceived({ vendorOwnerId: user.id, eventTitle: event.title }).catch(() => undefined)
+  return NextResponse.json({ ok: true })
 }

@@ -36,7 +36,7 @@ export default async function ChatPage({ params }: { params: Promise<{ applicati
     .order('created_at', { ascending: true })
 
   const partnerName = isOrganizer
-    ? (application.vendors?.profiles as any)?.name ?? 'キッチンカーオーナー'
+    ? (application.vendors?.profiles as any)?.name ?? 'ベンダー'
     : '主催者'
 
   const backHref = isOrganizer

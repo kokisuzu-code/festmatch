@@ -1,211 +1,53 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { Suspense, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import BrandMark from '@/components/BrandMark'
 import { createClient } from '@/lib/supabase/client'
-
-type Role = 'organizer' | 'kitchen_car_owner'
-
-// FestMatchトップ/FestMapのCTAは ?role=organizer / ?role=vendor で遷移してくる
-// (vendor は kitchen_car_owner のエイリアス)
-function roleFromParam(value: string | null): Role | null {
-  if (value === 'organizer') return 'organizer'
-  if (value === 'vendor' || value === 'kitchen_car_owner') return 'kitchen_car_owner'
-  return null
-}
+import { APP_URL } from '@/lib/app'
 
 export default function SignupPage() {
-  return (
-    <Suspense fallback={null}>
-      <SignupForm />
-    </Suspense>
-  )
+  return <Suspense fallback={null}><SignupForm /></Suspense>
 }
 
 function SignupForm() {
-  const router = useRouter()
-  const supabase = createClient()
-  const searchParams = useSearchParams()
-  const presetRole = roleFromParam(searchParams.get('role'))
-
-  const [step, setStep] = useState<1 | 2>(presetRole ? 2 : 1)
-  const [role, setRole] = useState<Role | null>(presetRole)
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const params = useSearchParams()
+  const claim = params.get('claim')
+  const role = claim || params.get('role') === 'vendor' ? 'vendor' : 'organizer'
+  const [email, setEmail] = useState(params.get('email') ?? '')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [confirmation, setConfirmation] = useState('')
+  const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!role) return
-    setLoading(true)
-    setError(null)
-
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name, role },
-      },
-    })
-
-    if (signUpError) {
-      setError(signUpError.message)
-      setLoading(false)
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (password.length < 12) {
+      setMessage('パスワードは12文字以上で設定してください。')
       return
     }
-
-    if (data.user) {
-      // profilesテーブルに登録
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        role,
-        name,
-        email,
-      })
-
-      if (profileError) {
-        setError('プロフィールの作成に失敗しました')
-        setLoading(false)
-        return
-      }
+    if (password !== confirmation) {
+      setMessage('確認用パスワードが一致しません。')
+      return
     }
-
-    router.push('/dashboard')
-    router.refresh()
+    setSubmitting(true)
+    setMessage('')
+    const query = new URLSearchParams({ role })
+    if (claim) query.set('claim', claim)
+    const callbackUrl = `${APP_URL}/auth/callback?${query.toString()}`
+    const { data, error } = await createClient().auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl } })
+    setSubmitting(false)
+    if (error) {
+      setMessage('アカウントを作成できませんでした。入力内容を確認して、もう一度お試しください。')
+      return
+    }
+    if (data.session) {
+      window.location.assign(`/onboarding?${query.toString()}`)
+      return
+    }
+    setMessage('確認メールを送信しました。メール内のリンクを開いて登録を完了してください。')
   }
 
-  return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="bg-slate-800 rounded-2xl shadow-sm border border-slate-700 w-full max-w-md p-8">
-        {/* ロゴ */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-green-400">FestMatch</h1>
-          <p className="text-slate-400 text-sm mt-1">フェスとキッチンカーをつなぐ</p>
-        </div>
-
-        <h2 className="text-xl font-semibold text-slate-100 mb-6">新規登録</h2>
-
-        {/* Step 1: ロール選択 */}
-        {step === 1 && (
-          <div className="space-y-4">
-            <p className="text-sm text-slate-300 mb-4">あなたの役割を選んでください</p>
-
-            <button
-              onClick={() => { setRole('organizer'); setStep(2) }}
-              className={`w-full border-2 rounded-xl p-5 text-left transition-all ${
-                role === 'organizer'
-                  ? 'border-green-500 bg-green-950/40'
-                  : 'border-slate-700 hover:border-green-300'
-              }`}
-            >
-              <div className="text-2xl mb-2">🎪</div>
-              <div className="font-semibold text-slate-100">フェス主催者</div>
-              <div className="text-sm text-slate-400 mt-1">
-                イベントを開催してキッチンカーを募集する
-              </div>
-            </button>
-
-            <button
-              onClick={() => { setRole('kitchen_car_owner'); setStep(2) }}
-              className={`w-full border-2 rounded-xl p-5 text-left transition-all ${
-                role === 'kitchen_car_owner'
-                  ? 'border-green-500 bg-green-950/40'
-                  : 'border-slate-700 hover:border-green-300'
-              }`}
-            >
-              <div className="text-2xl mb-2">🚚</div>
-              <div className="font-semibold text-slate-100">キッチンカーオーナー</div>
-              <div className="text-sm text-slate-400 mt-1">
-                フェスに出店申請をする
-              </div>
-            </button>
-          </div>
-        )}
-
-        {/* Step 2: 情報入力 */}
-        {step === 2 && (
-          <form onSubmit={handleSignup} className="space-y-4">
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="text-sm text-slate-400 hover:text-slate-200 mb-2 flex items-center gap-1"
-            >
-              ← 戻る
-            </button>
-
-            <div className="bg-green-950/40 rounded-lg px-4 py-2 text-sm text-green-400 font-medium mb-4">
-              {role === 'organizer' ? '🎪 フェス主催者として登録' : '🚚 キッチンカーオーナーとして登録'}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-1">
-                お名前 / 屋号
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full border border-slate-600 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="山田 太郎"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-1">
-                メールアドレス
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full border border-slate-600 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="example@email.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-1">
-                パスワード（8文字以上）
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                className="w-full border border-slate-600 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="••••••••"
-              />
-            </div>
-
-            {error && (
-              <p className="text-red-400 text-sm">{error}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg transition-colors"
-            >
-              {loading ? '登録中...' : 'アカウントを作成'}
-            </button>
-          </form>
-        )}
-
-        <p className="text-center text-sm text-slate-400 mt-6">
-          すでにアカウントをお持ちの方は{' '}
-          <Link href="/login" className="text-green-400 font-medium hover:underline">
-            ログイン
-          </Link>
-        </p>
-      </div>
-    </div>
-  )
+  return <div className="auth-page"><header className="auth-header"><BrandMark /></header><section className="auth-card"><p className="eyebrow">ACCOUNT SETUP</p><h1>FestMatch を始める</h1><p>メールアドレスとパスワードを設定します。確認メールを開くと、表示名と利用区分の設定へ進みます。</p><form className="form-stack" onSubmit={submit}><label className="field">メールアドレス<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label><label className="field">パスワード<input required type="password" autoComplete="new-password" minLength={12} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="12文字以上" /></label><label className="field">パスワード（確認）<input required type="password" autoComplete="new-password" minLength={12} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="もう一度入力" /></label>{message && <p className="form-message" role="status">{message}</p>}<button className="button button-primary" disabled={submitting}>{submitting ? '作成中' : 'アカウントを作成'}</button></form><p className="form-subtle">すでに登録済みですか？ <Link href="/login">ログイン</Link></p></section></div>
 }
