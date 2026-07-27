@@ -10,7 +10,7 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://festmatch-pink.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://festmatch-pink.vercel.app"),
   title: { default: "FestMatch | 主催者自走型の出店管理SaaS", template: "%s | FestMatch" },
   description: "FestMatchは、イベント主催者とベンダーを直接つなぐ主催者自走型の出店管理SaaSです。",
   openGraph: { type: "website", locale: "ja_JP", siteName: "FestMatch", title: "FestMatch | 主催者自走型の出店管理SaaS", description: "募集から応募、決済までを主催者自身で完結できます。" },

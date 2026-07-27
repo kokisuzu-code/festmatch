@@ -1,7 +1,7 @@
 import Link from "next/link"
 import BrandMark from "@/components/BrandMark"
 
-const organizerLinks = [["/organizer", "概要"], ["/organizer/events", "イベント"], ["/organizer/settings", "設定"]] as const
+const organizerLinks = [["/organizer", "概要"], ["/organizer/vendors", "ベンダー管理"], ["/organizer/events", "イベント"], ["/organizer/settings", "設定"]] as const
 const vendorLinks = [["/vendor", "概要"], ["/vendor/events", "イベントを探す"], ["/vendor/applications", "応募状況"], ["/vendor/messages", "チャット"], ["/vendor/sales", "売上記録"], ["/vendor/settings", "プロフィール"]] as const
 
 export default function RoleShell({ role, children }: { role: "organizer" | "vendor"; children: React.ReactNode }) {

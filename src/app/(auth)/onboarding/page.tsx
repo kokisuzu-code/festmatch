@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { Suspense, useActionState, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import BrandMark from '@/components/BrandMark'
 import { createInitialAccount } from './actions'
@@ -8,6 +8,14 @@ import { createInitialAccount } from './actions'
 const initialState: { error?: string } = {}
 
 export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div className="auth-page" aria-busy="true" />}>
+      <OnboardingContent />
+    </Suspense>
+  )
+}
+
+function OnboardingContent() {
   const params = useSearchParams()
   const claim = params.get('claim') ?? ''
   const [role, setRole] = useState<'organizer' | 'vendor'>(params.get('role') === 'vendor' || claim ? 'vendor' : 'organizer')
