@@ -8,6 +8,12 @@ function redirectWithAuthCookies(url: URL, authResponse: NextResponse) {
   return response
 }
 
+function isExpiredSessionError(error: { code?: string } | null) {
+  return error?.code === 'refresh_token_not_found'
+    || error?.code === 'refresh_token_already_used'
+    || error?.code === 'session_expired'
+}
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -36,7 +42,7 @@ export async function proxy(request: NextRequest) {
   const protectedPath = pathname.startsWith('/dashboard') || pathname.startsWith('/organizer') || pathname.startsWith('/vendor') || pathname.startsWith('/admin')
   if (!user && protectedPath) {
     const loginUrl = new URL('/login', request.url)
-    if (authError) loginUrl.searchParams.set('reason', 'session_expired')
+    if (isExpiredSessionError(authError)) loginUrl.searchParams.set('reason', 'session_expired')
     return redirectWithAuthCookies(loginUrl, supabaseResponse)
   }
   if (user && (pathname === '/login' || pathname === '/signup')) return redirectWithAuthCookies(new URL('/dashboard', request.url), supabaseResponse)
