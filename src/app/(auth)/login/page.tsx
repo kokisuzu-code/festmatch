@@ -17,6 +17,7 @@ function claimToken(value: string | null) {
 function LoginForm() {
   const params = useSearchParams()
   const claim = claimToken(params.get("claim"))
+  const sessionExpired = params.get("reason") === "session_expired"
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [message, setMessage] = useState("")
@@ -38,5 +39,5 @@ function LoginForm() {
   const signupHref = claim ? `/signup?claim=${encodeURIComponent(claim)}` : "/signup"
   const forgotPasswordHref = claim ? `/forgot-password?claim=${encodeURIComponent(claim)}` : "/forgot-password"
 
-  return <div className="auth-page"><header className="auth-header"><BrandMark /></header><section className="auth-card"><p className="eyebrow">WELCOME BACK</p><h1>ログイン</h1><p>メールアドレスとパスワードでログインします。</p><form className="form-stack" onSubmit={submit}><label className="field">メールアドレス<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label><label className="field">パスワード<input required type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="パスワードを入力" /></label>{message && <p className="form-message" role="alert">{message}</p>}<button className="button button-primary" disabled={submitting}>{submitting ? "ログイン中" : "ログイン"}</button></form><p className="form-subtle"><Link href={forgotPasswordHref}>パスワードを忘れた場合</Link></p><p className="form-subtle">初めてですか？ <Link href={signupHref}>アカウントを作成</Link></p></section></div>
+  return <div className="auth-page"><header className="auth-header"><BrandMark /></header><section className="auth-card"><p className="eyebrow">WELCOME BACK</p><h1>ログイン</h1><p>メールアドレスとパスワードでログインします。</p>{sessionExpired && <p className="form-message" role="status">セッションの有効期限が切れました。もう一度ログインしてください。</p>}<form className="form-stack" onSubmit={submit}><label className="field">メールアドレス<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label><label className="field">パスワード<input required type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="パスワードを入力" /></label>{message && <p className="form-message" role="alert">{message}</p>}<button className="button button-primary" disabled={submitting}>{submitting ? "ログイン中" : "ログイン"}</button></form><p className="form-subtle"><Link href={forgotPasswordHref}>パスワードを忘れた場合</Link></p><p className="form-subtle">初めてですか？ <Link href={signupHref}>アカウントを作成</Link></p></section></div>
 }

@@ -2,6 +2,12 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/env'
 
+function redirectWithAuthCookies(url: URL, authResponse: NextResponse) {
+  const response = NextResponse.redirect(url)
+  authResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie))
+  return response
+}
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -18,31 +24,35 @@ export async function proxy(request: NextRequest) {
     },
   })
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
   const retiredApi = ['/api/cron/', '/api/notifications/', '/api/notify/']
   if (retiredApi.some((prefix) => pathname.startsWith(prefix)) || pathname === '/api/events/copy' || pathname === '/api/stripe/invoice' || pathname === '/api/stripe/checkout') return new NextResponse(null, { status: 410 })
 
   const legacyDashboardPaths = ['/events', '/browse', '/messages', '/review', '/schedule', '/my-applications', '/my-sales', '/kitchen-cars', '/plan', '/dev']
-  if (legacyDashboardPaths.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) return NextResponse.redirect(new URL(user ? '/dashboard' : '/login', request.url))
-  if (pathname === '/vendor/sales/record') return NextResponse.redirect(new URL('/vendor/sales', request.url))
+  if (legacyDashboardPaths.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) return redirectWithAuthCookies(new URL(user ? '/dashboard' : '/login', request.url), supabaseResponse)
+  if (pathname === '/vendor/sales/record') return redirectWithAuthCookies(new URL('/vendor/sales', request.url), supabaseResponse)
 
   const protectedPath = pathname.startsWith('/dashboard') || pathname.startsWith('/organizer') || pathname.startsWith('/vendor') || pathname.startsWith('/admin')
-  if (!user && protectedPath) return NextResponse.redirect(new URL('/login', request.url))
-  if (user && (pathname === '/login' || pathname === '/signup')) return NextResponse.redirect(new URL('/dashboard', request.url))
-  if (!user && pathname === '/onboarding') return NextResponse.redirect(new URL('/login', request.url))
+  if (!user && protectedPath) {
+    const loginUrl = new URL('/login', request.url)
+    if (authError) loginUrl.searchParams.set('reason', 'session_expired')
+    return redirectWithAuthCookies(loginUrl, supabaseResponse)
+  }
+  if (user && (pathname === '/login' || pathname === '/signup')) return redirectWithAuthCookies(new URL('/dashboard', request.url), supabaseResponse)
+  if (!user && pathname === '/onboarding') return redirectWithAuthCookies(new URL('/login', request.url), supabaseResponse)
 
   if (user && (pathname.startsWith('/organizer') || pathname.startsWith('/vendor') || pathname === '/dashboard')) {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-    if (!profile) return NextResponse.redirect(new URL('/onboarding', request.url))
-    if (pathname === '/dashboard') return NextResponse.redirect(new URL(profile.role === 'organizer' || profile.role === 'admin' ? '/organizer' : '/vendor', request.url))
-    if (profile.role === 'organizer' && pathname.startsWith('/vendor')) return NextResponse.redirect(new URL('/organizer', request.url))
-    if (profile.role === 'vendor' && pathname.startsWith('/organizer')) return NextResponse.redirect(new URL('/vendor', request.url))
+    if (!profile) return redirectWithAuthCookies(new URL('/onboarding', request.url), supabaseResponse)
+    if (pathname === '/dashboard') return redirectWithAuthCookies(new URL(profile.role === 'organizer' || profile.role === 'admin' ? '/organizer' : '/vendor', request.url), supabaseResponse)
+    if (profile.role === 'organizer' && pathname.startsWith('/vendor')) return redirectWithAuthCookies(new URL('/organizer', request.url), supabaseResponse)
+    if (profile.role === 'vendor' && pathname.startsWith('/organizer')) return redirectWithAuthCookies(new URL('/vendor', request.url), supabaseResponse)
   }
 
   if (user && pathname.startsWith('/admin')) {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-    if (profile?.role !== 'admin') return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (profile?.role !== 'admin') return redirectWithAuthCookies(new URL('/dashboard', request.url), supabaseResponse)
   }
 
   if (pathname.startsWith('/embed/events/')) {
