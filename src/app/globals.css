@@ -192,6 +192,49 @@ button, input, select, textarea { font: inherit; }
   .developer-grid { grid-template-columns: 1fr; }
 }
 
+/* Organizer portal shell — aligned with the migrated chatgpt.site workspace. */
+.organizer-console { min-height: 100vh; background: #f5f6f2; color: #181b19; }
+.organizer-sidebar { background: #151816; color: #fff; display: flex; flex-direction: column; height: 100vh; left: 0; padding: 22px 14px 16px; position: fixed; top: 0; width: 238px; z-index: 50; }
+.organizer-brand-row { align-items: center; display: flex; justify-content: space-between; padding: 0 8px; }
+.organizer-brand { align-items: center; display: flex; font-size: 17px; gap: 10px; letter-spacing: -.02em; }
+.organizer-brand > span { align-items: center; background: #ddf44c; border-radius: 9px; color: #181b19; display: flex; font-size: 15px; font-weight: 800; height: 32px; justify-content: center; width: 32px; }
+.organizer-brand strong { font-weight: 800; }
+.organizer-mobile-close { background: none; border: 0; color: #fff; display: none; font-size: 22px; }
+.organizer-role-pill { background: #242825; border: 1px solid #303531; border-radius: 9px; margin: 25px 5px 23px; padding: 3px; }
+.organizer-role-pill span { background: #fff; border-radius: 6px; color: #181b19; display: block; font-size: 11px; font-weight: 700; padding: 8px; text-align: center; }
+.organizer-side-nav { display: flex; flex-direction: column; gap: 3px; }
+.organizer-side-nav p { color: #646b65; font-size: 8px; font-weight: 800; letter-spacing: .18em; margin: 0 11px 7px; }
+.organizer-side-nav a { align-items: center; border-radius: 7px; color: #aeb4ae; display: flex; font-size: 11px; gap: 10px; padding: 9px 10px; }
+.organizer-side-nav a:hover, .organizer-side-nav a.active { background: #282c29; color: #fff; }
+.organizer-side-nav a.active { box-shadow: inset 2px 0 #ddf44c; }
+.organizer-side-nav a > span { align-items: center; color: #929991; display: flex; font-size: 14px; height: 18px; justify-content: center; width: 18px; }
+.organizer-side-nav a.active > span { color: #ddf44c; }
+.organizer-account { align-items: center; border-top: 1px solid #2a2e2b; display: grid; gap: 9px; grid-template-columns: 33px 1fr; margin-top: auto; padding: 16px 6px 0; }
+.organizer-account > span { align-items: center; background: #e9dfc7; border-radius: 50%; color: #594d38; display: flex; font-size: 9px; font-weight: 800; height: 33px; justify-content: center; width: 33px; }
+.organizer-account > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.organizer-account strong { font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.organizer-account small { color: #787f79; font-size: 8px; }
+.organizer-account form { grid-column: 1 / -1; }
+.organizer-account button { background: transparent; border: 0; color: #929991; cursor: pointer; font-size: 9px; padding: 3px 0; text-align: left; }
+.organizer-account button:hover { color: #fff; }
+.organizer-workspace { margin-left: 238px; min-height: 100vh; }
+.organizer-topbar { align-items: center; background: rgba(255,255,255,.95); border-bottom: 1px solid #e3e6e1; display: flex; height: 62px; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 30; backdrop-filter: blur(12px); }
+.organizer-topbar > div { align-items: center; display: flex; font-size: 11px; font-weight: 700; gap: 10px; }
+.organizer-topbar button { background: none; border: 0; display: none; font-size: 17px; padding: 4px; }
+.organizer-verified { background: #e7f4ed; border-radius: 99px; color: #0c5840; font-size: 9px; font-weight: 700; padding: 6px 9px; }
+.organizer-content { margin: 0 auto; max-width: 1260px; padding: 34px 34px 70px; }
+.organizer-mobile-backdrop { display: none; }
+
+@media (max-width: 760px) {
+  .organizer-sidebar { transform: translateX(-100%); transition: transform .25s; }
+  .organizer-sidebar.mobile-open { transform: translateX(0); }
+  .organizer-mobile-close, .organizer-topbar button { display: block; }
+  .organizer-mobile-backdrop { background: #0008; border: 0; display: block; inset: 0; position: fixed; z-index: 40; }
+  .organizer-workspace { margin-left: 0; }
+  .organizer-topbar { padding: 0 15px; }
+  .organizer-content { padding: 25px 14px 55px; }
+}
+
 /* ============================================================
    Shared public visual language — mirrors the FestMatch homepage
    ============================================================ */

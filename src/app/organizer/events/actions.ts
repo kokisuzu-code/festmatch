@@ -50,6 +50,31 @@ function eventPayload(formData: FormData) {
   }
 }
 
+async function uploadEventCover(
+  supabase: Awaited<ReturnType<typeof requireRole>>['supabase'],
+  eventId: string,
+  formData: FormData,
+) {
+  const file = formData.get('cover_photo')
+  if (!(file instanceof File) || file.size === 0) return null
+  const extensionByType: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  }
+  const extension = extensionByType[file.type]
+  if (!extension) throw new Error('イベント写真はJPG・PNG・WebP形式で選択してください。')
+  if (file.size > 6 * 1024 * 1024) throw new Error('イベント写真は6MB以下にしてください。')
+  const path = `${eventId}/cover-${crypto.randomUUID()}.${extension}`
+  const { error } = await supabase.storage.from('event-images').upload(path, file, {
+    cacheControl: '3600',
+    contentType: file.type,
+    upsert: false,
+  })
+  if (error) throw new Error('イベント写真を保存できませんでした。')
+  return path
+}
+
 async function ensureEventPublicationEntitlement(supabase: Awaited<ReturnType<typeof requireRole>>['supabase'], organizerId: string, eventId: string, status: string) {
   if (status !== 'published') return
   if (!await hasEventPublicationEntitlement(supabase, organizerId, eventId)) {
@@ -66,6 +91,19 @@ export async function createEvent(formData: FormData) {
   if (payload.status === 'published') throw new Error('新規イベントは下書きで保存してください。公開はイベント詳細から開始できます。')
   const { data, error } = await supabase.from("events").insert({ ...payload, organizer_id: organizer.id, slug: createEventSlug(payload.title) }).select("id").single()
   if (error || !data) throw new Error("イベントを保存できませんでした。")
+  try {
+    const coverPath = await uploadEventCover(supabase, data.id, formData)
+    if (coverPath) {
+      const { error: coverError } = await supabase.from('events').update({ cover_photo_path: coverPath }).eq('id', data.id)
+      if (coverError) {
+        await supabase.storage.from('event-images').remove([coverPath])
+        throw coverError
+      }
+    }
+  } catch {
+    await supabase.from('events').delete().eq('id', data.id)
+    throw new Error('イベント写真を保存できなかったため、イベント作成を中止しました。もう一度お試しください。')
+  }
   redirect(`/organizer/events/${data.id}`)
 }
 
@@ -76,8 +114,12 @@ export async function updateEvent(eventId: string, formData: FormData) {
   const { data: organizer } = await supabase.from('organizers').select('id').eq('profile_id', user.id).maybeSingle()
   if (!organizer) throw new Error('主催者プロフィールが見つかりません。')
   await ensureEventPublicationEntitlement(supabase, organizer.id, eventId, payload.status)
-  const { error } = await supabase.from("events").update(payload).eq("id", eventId)
-  if (error) throw new Error("イベントを更新できませんでした。")
+  const coverPath = await uploadEventCover(supabase, eventId, formData)
+  const { error } = await supabase.from("events").update(coverPath ? { ...payload, cover_photo_path: coverPath } : payload).eq("id", eventId)
+  if (error) {
+    if (coverPath) await supabase.storage.from('event-images').remove([coverPath])
+    throw new Error("イベントを更新できませんでした。")
+  }
   revalidatePath(`/organizer/events/${eventId}`)
   redirect(`/organizer/events/${eventId}`)
 }
