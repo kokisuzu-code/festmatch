@@ -6,6 +6,7 @@ import { useState } from 'react'
 
 const links = [
   { href: '/organizer', label: 'ホーム', symbol: '⌂', exact: true },
+  { href: '/day-console', label: '当日運営', symbol: '●', exact: false },
   { href: '/organizer/events', label: 'イベント管理', symbol: '□', exact: false },
   { href: '/organizer/applications', label: '応募一覧・承認', symbol: '◎', exact: false },
   { href: '/organizer/genres', label: 'ジャンル枠管理', symbol: '▦', exact: false },
