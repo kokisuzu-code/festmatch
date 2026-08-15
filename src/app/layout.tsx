@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP } from "next/font/google";
+import { Geist, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 
 const notoSansJP = Noto_Sans_JP({
@@ -7,6 +7,12 @@ const notoSansJP = Noto_Sans_JP({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-noto-sans-jp",
+});
+
+const geistSans = Geist({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-geist-sans",
 });
 
 export const metadata: Metadata = {
@@ -22,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className={`${notoSansJP.variable} h-full`} data-scroll-behavior="smooth">
+    <html lang="ja" className={`${notoSansJP.variable} ${geistSans.variable} h-full`} data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
