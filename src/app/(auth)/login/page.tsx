@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import AuthShell from "@/components/auth/AuthShell"
 import { createClient } from "@/lib/supabase/client"
 import styles from "./login.module.css"
 
@@ -40,43 +41,14 @@ function LoginForm() {
   const forgotPasswordHref = claim ? `/forgot-password?claim=${encodeURIComponent(claim)}` : "/forgot-password"
 
   return (
-    <main className={styles.page}>
-      <section className={styles.story} aria-label="FestMatchの紹介">
-        <Link className={styles.brand} href="/" aria-label="FestMatch ホーム">
-          <span className={styles.brandIcon}>F</span>
-          <span>FestMatch</span>
-        </Link>
-
-        <div className={styles.storyCopy}>
-          <p className={styles.kicker}>EVENT OPERATIONS, SIMPLIFIED.</p>
-          <h1>イベント運営を、<br />ひとつの場所で。</h1>
-          <p>募集・応募・出店管理まで。<br />現場の判断が、もっと速くなる。</p>
-        </div>
-
-        <div className={styles.storyFooter}>
-          <span>01　募集をつくる</span>
-          <span>02　応募を選ぶ</span>
-          <span>03　当日を動かす</span>
-        </div>
-        <div className={styles.glow} aria-hidden="true" />
-      </section>
-
-      <section className={styles.access}>
-        <div className={styles.mobileBrand}>
-          <span className={styles.brandIcon}>F</span>
-          <span>FestMatch</span>
-        </div>
-
-        <div className={styles.formWrap}>
-          <header className={styles.heading}>
-            <p>WELCOME BACK</p>
-            <h2>ログイン</h2>
-            <span>登録したアカウント情報を入力してください。</span>
-          </header>
-
-          {sessionExpired && <p className={styles.message} role="status">セッションの有効期限が切れました。もう一度ログインしてください。</p>}
-
-          <form className={styles.form} onSubmit={submit}>
+    <AuthShell
+      eyebrow="WELCOME BACK"
+      title="ログイン"
+      description="登録したアカウント情報を入力してください。"
+      footer={<>アカウントをお持ちでない方は <Link href={signupHref}>新規登録</Link></>}
+    >
+      {sessionExpired && <p className={styles.message} role="status">セッションの有効期限が切れました。もう一度ログインしてください。</p>}
+      <form className={styles.form} onSubmit={submit}>
             <label>
               <span>メールアドレス</span>
               <input
@@ -105,13 +77,7 @@ function LoginForm() {
               <span>{submitting ? "ログイン中…" : "ログイン"}</span>
               {!submitting && <span aria-hidden="true">→</span>}
             </button>
-          </form>
-
-          <p className={styles.signup}>アカウントをお持ちでない方は <Link href={signupHref}>新規登録</Link></p>
-        </div>
-
-        <footer className={styles.legal}>© 2026 FestMatch</footer>
-      </section>
-    </main>
+      </form>
+    </AuthShell>
   )
 }
