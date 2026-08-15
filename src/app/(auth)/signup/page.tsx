@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import AuthShell from '@/components/auth/AuthShell'
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import { createClient } from '@/lib/supabase/client'
 import { APP_URL } from '@/lib/app'
 import styles from '../login/login.module.css'
@@ -57,6 +58,7 @@ function SignupForm() {
       description="メールアドレスとパスワードを設定してください。"
       footer={<>すでに登録済みですか？ <Link href="/login">ログイン</Link></>}
     >
+      <GoogleAuthButton claim={claim} role={role} label="Googleで新規登録" />
       <form className={styles.form} onSubmit={submit}>
         <label><span>メールアドレス</span><input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label>
         <label><span>パスワード</span><input required type="password" autoComplete="new-password" minLength={12} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="12文字以上" /></label>
