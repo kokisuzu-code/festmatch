@@ -3,8 +3,8 @@
 import { Suspense, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import BrandMark from "@/components/BrandMark"
 import { createClient } from "@/lib/supabase/client"
+import styles from "./login.module.css"
 
 export default function LoginPage() {
   return <Suspense fallback={null}><LoginForm /></Suspense>
@@ -39,5 +39,79 @@ function LoginForm() {
   const signupHref = claim ? `/signup?claim=${encodeURIComponent(claim)}` : "/signup"
   const forgotPasswordHref = claim ? `/forgot-password?claim=${encodeURIComponent(claim)}` : "/forgot-password"
 
-  return <div className="auth-page"><header className="auth-header"><BrandMark /></header><section className="auth-card"><p className="eyebrow">WELCOME BACK</p><h1>ログイン</h1><p>メールアドレスとパスワードでログインします。</p>{sessionExpired && <p className="form-message" role="status">セッションの有効期限が切れました。もう一度ログインしてください。</p>}<form className="form-stack" onSubmit={submit}><label className="field">メールアドレス<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label><label className="field">パスワード<input required type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="パスワードを入力" /></label>{message && <p className="form-message" role="alert">{message}</p>}<button className="button button-primary" disabled={submitting}>{submitting ? "ログイン中" : "ログイン"}</button></form><p className="form-subtle"><Link href={forgotPasswordHref}>パスワードを忘れた場合</Link></p><p className="form-subtle">初めてですか？ <Link href={signupHref}>アカウントを作成</Link></p></section></div>
+  return (
+    <main className={styles.page}>
+      <section className={styles.story} aria-label="FestMatchの紹介">
+        <Link className={styles.brand} href="/" aria-label="FestMatch ホーム">
+          <span className={styles.brandIcon}>F</span>
+          <span>FestMatch</span>
+        </Link>
+
+        <div className={styles.storyCopy}>
+          <p className={styles.kicker}>EVENT OPERATIONS, SIMPLIFIED.</p>
+          <h1>イベント運営を、<br />ひとつの場所で。</h1>
+          <p>募集・応募・出店管理まで。<br />現場の判断が、もっと速くなる。</p>
+        </div>
+
+        <div className={styles.storyFooter}>
+          <span>01　募集をつくる</span>
+          <span>02　応募を選ぶ</span>
+          <span>03　当日を動かす</span>
+        </div>
+        <div className={styles.glow} aria-hidden="true" />
+      </section>
+
+      <section className={styles.access}>
+        <div className={styles.mobileBrand}>
+          <span className={styles.brandIcon}>F</span>
+          <span>FestMatch</span>
+        </div>
+
+        <div className={styles.formWrap}>
+          <header className={styles.heading}>
+            <p>WELCOME BACK</p>
+            <h2>ログイン</h2>
+            <span>登録したアカウント情報を入力してください。</span>
+          </header>
+
+          {sessionExpired && <p className={styles.message} role="status">セッションの有効期限が切れました。もう一度ログインしてください。</p>}
+
+          <form className={styles.form} onSubmit={submit}>
+            <label>
+              <span>メールアドレス</span>
+              <input
+                required
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="name@example.com"
+              />
+            </label>
+            <label>
+              <span>パスワード</span>
+              <input
+                required
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="パスワードを入力"
+              />
+            </label>
+            <div className={styles.passwordLink}><Link href={forgotPasswordHref}>パスワードを忘れた場合</Link></div>
+            {message && <p className={styles.message} role="alert">{message}</p>}
+            <button className={styles.submit} disabled={submitting}>
+              <span>{submitting ? "ログイン中…" : "ログイン"}</span>
+              {!submitting && <span aria-hidden="true">→</span>}
+            </button>
+          </form>
+
+          <p className={styles.signup}>アカウントをお持ちでない方は <Link href={signupHref}>新規登録</Link></p>
+        </div>
+
+        <footer className={styles.legal}>© 2026 FestMatch</footer>
+      </section>
+    </main>
+  )
 }
