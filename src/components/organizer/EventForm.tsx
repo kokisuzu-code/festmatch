@@ -30,6 +30,15 @@ const stepLabels = [
   ['確認・保存', '最終確認'],
 ] as const
 
+const initialGenreSlots = [
+  { genre: '唐揚げ・揚げ物', capacity: 2 },
+  { genre: 'クレープ・スイーツ', capacity: 2 },
+  { genre: 'カレー・スパイス料理', capacity: 2 },
+  { genre: 'タコス・メキシカン', capacity: 2 },
+  { genre: 'コーヒー・ドリンク', capacity: 1 },
+  { genre: 'その他', capacity: 1 },
+]
+
 function localDateTime(value?: string | null) {
   if (!value) return ''
   const date = new Date(value)
@@ -69,8 +78,10 @@ export default function EventForm({ action, event }: { action: (formData: FormDa
   const [startsAt, setStartsAt] = useState(localDateTime(event?.starts_at))
   const [endsAt, setEndsAt] = useState(localDateTime(event?.ends_at))
   const [deadline, setDeadline] = useState(localDateTime(event?.application_deadline_at))
-  const [capacity, setCapacity] = useState(String(event?.capacity ?? ''))
-  const [fee, setFee] = useState(String(event?.booth_fee_yen ?? 0))
+  const [capacity, setCapacity] = useState(String(event?.capacity ?? 10))
+  const [fee, setFee] = useState(String(event?.booth_fee_yen ?? 25000))
+  const [genreSlots, setGenreSlots] = useState(initialGenreSlots)
+  const [options, setOptions] = useState([true, false, true, true])
   const [description, setDescription] = useState(event?.description ?? '')
   const [published, setPublished] = useState(event?.status === 'published')
   const [coverPreview, setCoverPreview] = useState(coverUrl(event?.cover_photo_path))
@@ -81,6 +92,7 @@ export default function EventForm({ action, event }: { action: (formData: FormDa
   }, [coverPreview])
 
   const place = [prefecture, address].filter(Boolean).join(' ')
+  const genreTotal = genreSlots.reduce((sum, slot) => sum + slot.capacity, 0)
 
   function selectCover(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -165,9 +177,34 @@ export default function EventForm({ action, event }: { action: (formData: FormDa
 
           <div className={styles.formSection} hidden={step !== 2}>
             <div className={styles.formHeading}><span>02</span><div><h2>出店設定</h2><p>募集枠と出店料金を設定します。</p></div></div>
+            <input name="genre_slots" type="hidden" value={JSON.stringify(genreSlots)} />
             <div className={styles.grid}>
               <label>出店枠（合計） <em>必須</em><input min="1" name="capacity" onChange={(e) => setCapacity(e.target.value)} required step="1" type="number" value={capacity} /></label>
               <label>出店料（円／台） <em>必須</em><input min="0" name="booth_fee_yen" onChange={(e) => setFee(e.target.value)} required step="1" type="number" value={fee} /></label>
+            </div>
+            <div className={styles.genreEditor}>
+              {genreSlots.map((slot, index) => (
+                <div key={slot.genre}>
+                  <span>{slot.genre}</span>
+                  <div>
+                    <button aria-label={`${slot.genre}を1台減らす`} onClick={() => setGenreSlots((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, capacity: Math.max(1, item.capacity - 1) } : item))} type="button">−</button>
+                    <strong>{slot.capacity}</strong>
+                    <button aria-label={`${slot.genre}を1台増やす`} onClick={() => setGenreSlots((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, capacity: item.capacity + 1 } : item))} type="button">＋</button>
+                    <small>台</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className={`${styles.slotNote} ${genreTotal !== Number(capacity) ? styles.slotWarning : ''}`}>
+              {genreTotal === Number(capacity) ? `✓ 全${capacity}台の枠を設定済み` : `設定 ${genreTotal}台 ／ 合計 ${capacity || 0}台`}
+            </p>
+            <div className={styles.optionGrid}>
+              {['電源提供あり', '給水設備あり', '補欠登録を受け付ける', 'キャンセルポリシー適用'].map((label, index) => (
+                <div className={styles.toggleRow} key={label}>
+                  <span>{label}</span>
+                  <button aria-pressed={options[index]} className={options[index] ? styles.on : ''} onClick={() => setOptions((current) => current.map((value, itemIndex) => itemIndex === index ? !value : value))} type="button"><i /></button>
+                </div>
+              ))}
             </div>
             {event ? <label className={styles.publishToggle}><input checked={published} name="status" onChange={(e) => setPublished(e.target.checked)} type="checkbox" value="published" /><span><strong>公開して募集を開始する</strong><small>公開には有効な年間契約またはスポット契約が必要です。</small></span></label> : <div className={styles.infoNote}><strong>まず下書きとして保存されます</strong><p>作成後のイベント詳細画面でジャンル別枠・出店区画を設定し、契約状況を確認してから公開できます。</p></div>}
           </div>
@@ -182,7 +219,7 @@ export default function EventForm({ action, event }: { action: (formData: FormDa
             </div>
             <div className={styles.checkList}>
               <span>✓ 基本情報を入力済み</span>
-              <span>✓ 募集枠・料金を設定済み</span>
+              <span>{genreTotal === Number(capacity) ? '✓ ジャンル枠を設定済み' : '○ ジャンル枠を確認してください'}</span>
               <span>{deadline ? '✓ 応募締切を設定済み' : '○ 応募締切は未設定'}</span>
             </div>
           </div>

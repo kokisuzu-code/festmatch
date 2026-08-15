@@ -50,6 +50,19 @@ function eventPayload(formData: FormData) {
   }
 }
 
+function genreSlotPayload(formData: FormData) {
+  const raw = stringValue(formData, 'genre_slots')
+  if (!raw) return []
+  let slots: GenreSlotInput[]
+  try {
+    slots = JSON.parse(raw) as GenreSlotInput[]
+  } catch {
+    throw new Error('ジャンル別枠の内容を確認してください。')
+  }
+  validateSlotInputs(slots)
+  return slots
+}
+
 async function uploadEventCover(
   supabase: Awaited<ReturnType<typeof requireRole>>['supabase'],
   eventId: string,
@@ -87,6 +100,7 @@ export async function createEvent(formData: FormData) {
   const { data: organizer } = await supabase.from("organizers").select("id").eq("profile_id", user.id).single()
   if (!organizer) throw new Error("主催者プロフィールが見つかりません。")
   const payload = eventPayload(formData)
+  const genreSlots = genreSlotPayload(formData)
   if (!payload.prefecture) throw new Error("都道府県を選択してください。")
   if (payload.status === 'published') throw new Error('新規イベントは下書きで保存してください。公開はイベント詳細から開始できます。')
   const { data, error } = await supabase.from("events").insert({ ...payload, organizer_id: organizer.id, slug: createEventSlug(payload.title) }).select("id").single()
@@ -100,9 +114,13 @@ export async function createEvent(formData: FormData) {
         throw coverError
       }
     }
+    if (genreSlots.length) {
+      const { error: slotError } = await supabase.from('event_genre_slots').insert(genreSlots.map((slot) => ({ event_id: data.id, genre: slot.genre, capacity: slot.capacity })))
+      if (slotError) throw slotError
+    }
   } catch {
     await supabase.from('events').delete().eq('id', data.id)
-    throw new Error('イベント写真を保存できなかったため、イベント作成を中止しました。もう一度お試しください。')
+    throw new Error('イベント情報を保存できなかったため、イベント作成を中止しました。もう一度お試しください。')
   }
   redirect(`/organizer/events/${data.id}`)
 }

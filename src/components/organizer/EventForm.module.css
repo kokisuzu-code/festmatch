@@ -1,7 +1,7 @@
-.eventForm { color: #181b19; }
+.eventForm { color: #181b19; font-family: var(--font-geist-sans), "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif; }
 .pageHeader { align-items: flex-end; display: flex; justify-content: space-between; margin-bottom: 26px; }
 .pageHeader p { color: #197a59; font-size: 8px; font-weight: 800; letter-spacing: .16em; margin: 0 0 7px; }
-.pageHeader h1 { font-size: clamp(25px, 3vw, 34px); letter-spacing: -.045em; line-height: 1.15; margin: 0 0 7px; }
+.pageHeader h1 { font-size: clamp(25px, 3vw, 34px); font-weight: 400; letter-spacing: -.045em; line-height: 1.15; margin: 0 0 7px; }
 .pageHeader div > span { color: #6d726d; font-size: 11px; line-height: 1.6; }
 .pageHeader > a { border: 1px solid transparent; border-radius: 8px; color: #6d726d; font-size: 10px; font-weight: 700; padding: 10px 14px; }
 .pageHeader > a:hover { background: #fff; border-color: #d3d7d1; }
@@ -12,7 +12,7 @@
 .steps li:not(:last-child)::after { background: #e3e6e1; content: ''; height: 17px; left: 11px; position: absolute; top: 31px; width: 1px; }
 .steps li > span { align-items: center; border: 1px solid currentColor; border-radius: 50%; display: flex; flex: 0 0 auto; font-size: 8px; height: 23px; justify-content: center; width: 23px; }
 .steps li div { display: flex; flex-direction: column; gap: 3px; }
-.steps strong { font-size: 10px; }
+.steps strong { font-size: 10px; font-weight: 650; }
 .steps small { font-size: 8px; }
 .steps .active { color: #181b19; }
 .steps .active > span { background: #181b19; border-color: #181b19; color: #fff; }
@@ -21,7 +21,7 @@
 .formSection[hidden] { display: none; }
 .formHeading { align-items: flex-start; display: flex; gap: 11px; margin-bottom: 21px; }
 .formHeading > span { color: #197a59; font-size: 9px; font-weight: 800; padding-top: 3px; }
-.formHeading h2 { font-size: 15px; margin: 0 0 4px; }
+.formHeading h2 { font-size: 15px; font-weight: 650; margin: 0 0 4px; }
 .formHeading p { color: #6d726d; font-size: 9px; margin: 0; }
 .formSection > label, .grid label { color: #555b56; display: block; font-size: 9px; font-weight: 650; margin-bottom: 15px; }
 .formSection label em { background: #fae9e6; border-radius: 99px; color: #a4433a; font-size: 7px; font-style: normal; margin-left: 5px; padding: 2px 5px; }
@@ -30,6 +30,21 @@
 .formSection textarea { line-height: 1.6; padding-block: 10px; resize: vertical; }
 .formSection input:focus, .formSection select:focus, .formSection textarea:focus { border-color: #197a59; box-shadow: 0 0 0 3px rgba(25,122,89,.1); }
 .grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+.genreEditor { border-bottom: 1px solid #e3e6e1; border-top: 1px solid #e3e6e1; margin-top: 4px; }
+.genreEditor > div { align-items: center; border-bottom: 1px solid #e3e6e1; display: flex; font-size: 10px; justify-content: space-between; padding: 10px 0; }
+.genreEditor > div:last-child { border-bottom: 0; }
+.genreEditor > div > div { align-items: center; display: flex; gap: 8px; }
+.genreEditor button { align-items: center; background: #fff; border: 1px solid #d3d7d1; border-radius: 50%; display: flex; height: 25px; justify-content: center; width: 25px; }
+.genreEditor strong { font-size: 10px; font-weight: 650; min-width: 12px; text-align: center; }
+.genreEditor small { color: #6d726d; font-size: 8px; }
+.slotNote { background: #e7f4ed; border-radius: 7px; color: #0c5840; font-size: 9px; margin: 12px 0; padding: 8px; }
+.slotWarning { background: #f8f0df; color: #a76618; }
+.optionGrid { display: grid; gap: 0 16px; grid-template-columns: 1fr 1fr; margin-bottom: 15px; }
+.toggleRow { align-items: center; border-bottom: 1px solid #e3e6e1; display: flex; font-size: 9px; justify-content: space-between; padding: 12px 0; }
+.toggleRow button { background: #d6dad5; border: 0; border-radius: 99px; height: 21px; padding: 2px; width: 38px; }
+.toggleRow button i { background: #fff; border-radius: 50%; box-shadow: 0 1px 3px #0003; display: block; height: 17px; transition: .2s; width: 17px; }
+.toggleRow button.on { background: #197a59; }
+.toggleRow button.on i { transform: translateX(17px); }
 .coverUpload { align-items: center; background: #f8f9f6; border: 1px dashed #bfc6be; border-radius: 10px; color: #6d726d; display: flex; flex-direction: column; height: 145px; justify-content: center; margin-top: 7px; overflow: hidden; position: relative; transition: .2s; }
 .coverUpload:hover { background-color: #f0f5f1; border-color: #197a59; }
 .coverUpload strong { color: #197a59; font-size: 11px; }
@@ -50,7 +65,7 @@
 .preview { background: #191c1a; border-radius: 11px; color: #fff; padding: 28px; }
 .previewWithCover { background-position: center; background-size: cover; min-height: 245px; }
 .preview > span { background: #e7f4ed; border-radius: 99px; color: #0c5840; display: inline-flex; font-size: 8px; font-weight: 700; padding: 5px 7px; }
-.preview h2 { color: #fff; font-size: 24px; letter-spacing: -.04em; margin: 22px 0 7px; }
+.preview h2 { color: #fff; font-size: 24px; font-weight: 500; letter-spacing: -.04em; margin: 22px 0 7px; }
 .preview p { color: #c0c6c1; font-size: 10px; }
 .preview > div { border-top: 1px solid #ffffff22; display: flex; flex-wrap: wrap; font-size: 10px; gap: 25px; margin-top: 20px; padding-top: 14px; }
 .checkList { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
@@ -74,6 +89,7 @@
   .pageHeader { align-items: flex-start; gap: 12px; }
   .pageHeader > a { padding-inline: 8px; }
   .grid { grid-template-columns: 1fr; }
+  .optionGrid { grid-template-columns: 1fr; }
   .checkList { flex-direction: column; }
   .preview { padding: 22px; }
   .preview h2 { font-size: 20px; }
