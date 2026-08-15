@@ -4,6 +4,7 @@ import { Suspense, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import AuthShell from "@/components/auth/AuthShell"
+import GoogleAuthButton from "@/components/auth/GoogleAuthButton"
 import { createClient } from "@/lib/supabase/client"
 import styles from "./login.module.css"
 
@@ -48,6 +49,7 @@ function LoginForm() {
       footer={<>アカウントをお持ちでない方は <Link href={signupHref}>新規登録</Link></>}
     >
       {sessionExpired && <p className={styles.message} role="status">セッションの有効期限が切れました。もう一度ログインしてください。</p>}
+      <GoogleAuthButton claim={claim} label="Googleでログイン" />
       <form className={styles.form} onSubmit={submit}>
             <label>
               <span>メールアドレス</span>
