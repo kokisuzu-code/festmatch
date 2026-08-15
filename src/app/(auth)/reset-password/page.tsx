@@ -3,8 +3,9 @@
 import { Suspense, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import BrandMark from "@/components/BrandMark"
+import AuthShell from "@/components/auth/AuthShell"
 import { createClient } from "@/lib/supabase/client"
+import styles from "../login/login.module.css"
 
 export default function ResetPasswordPage() {
   return <Suspense fallback={null}><ResetPasswordForm /></Suspense>
@@ -43,5 +44,19 @@ function ResetPasswordForm() {
     window.location.assign(claim ? `/claim?token=${encodeURIComponent(claim)}` : "/dashboard")
   }
 
-  return <div className="auth-page"><header className="auth-header"><BrandMark /></header><section className="auth-card"><p className="eyebrow">NEW PASSWORD</p><h1>新しいパスワード</h1><p>12文字以上の新しいパスワードを設定してください。</p><form className="form-stack" onSubmit={submit}><label className="field">新しいパスワード<input required type="password" autoComplete="new-password" minLength={12} value={password} onChange={(event) => setPassword(event.target.value)} /></label><label className="field">パスワード（確認）<input required type="password" autoComplete="new-password" minLength={12} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} /></label>{message && <p className="form-message" role="alert">{message}</p>}<button className="button button-primary" disabled={submitting}>{submitting ? "保存中" : "パスワードを設定"}</button></form><p className="form-subtle"><Link href="/login">ログインに戻る</Link></p></section></div>
+  return (
+    <AuthShell
+      eyebrow="NEW PASSWORD"
+      title="新しいパスワード"
+      description="12文字以上の新しいパスワードを設定してください。"
+      footer={<Link href="/login">ログインに戻る</Link>}
+    >
+      <form className={styles.form} onSubmit={submit}>
+        <label><span>新しいパスワード</span><input required type="password" autoComplete="new-password" minLength={12} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="12文字以上" /></label>
+        <label><span>パスワード（確認）</span><input required type="password" autoComplete="new-password" minLength={12} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="もう一度入力" /></label>
+        {message && <p className={styles.message} role="alert">{message}</p>}
+        <button className={styles.submit} disabled={submitting}><span>{submitting ? "保存中…" : "パスワードを設定"}</span>{!submitting && <span aria-hidden="true">→</span>}</button>
+      </form>
+    </AuthShell>
+  )
 }

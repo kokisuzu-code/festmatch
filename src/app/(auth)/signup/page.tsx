@@ -3,9 +3,10 @@
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import BrandMark from '@/components/BrandMark'
+import AuthShell from '@/components/auth/AuthShell'
 import { createClient } from '@/lib/supabase/client'
 import { APP_URL } from '@/lib/app'
+import styles from '../login/login.module.css'
 
 export default function SignupPage() {
   return <Suspense fallback={null}><SignupForm /></Suspense>
@@ -49,5 +50,21 @@ function SignupForm() {
     setMessage('確認メールを送信しました。メール内のリンクを開いて登録を完了してください。')
   }
 
-  return <div className="auth-page"><header className="auth-header"><BrandMark /></header><section className="auth-card"><p className="eyebrow">ACCOUNT SETUP</p><h1>FestMatch を始める</h1><p>メールアドレスとパスワードを設定します。確認メールを開くと、表示名と利用区分の設定へ進みます。</p><form className="form-stack" onSubmit={submit}><label className="field">メールアドレス<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label><label className="field">パスワード<input required type="password" autoComplete="new-password" minLength={12} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="12文字以上" /></label><label className="field">パスワード（確認）<input required type="password" autoComplete="new-password" minLength={12} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="もう一度入力" /></label>{message && <p className="form-message" role="status">{message}</p>}<button className="button button-primary" disabled={submitting}>{submitting ? '作成中' : 'アカウントを作成'}</button></form><p className="form-subtle">すでに登録済みですか？ <Link href="/login">ログイン</Link></p></section></div>
+  return (
+    <AuthShell
+      eyebrow="ACCOUNT SETUP"
+      title="アカウントを作成"
+      description="メールアドレスとパスワードを設定してください。"
+      footer={<>すでに登録済みですか？ <Link href="/login">ログイン</Link></>}
+    >
+      <form className={styles.form} onSubmit={submit}>
+        <label><span>メールアドレス</span><input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label>
+        <label><span>パスワード</span><input required type="password" autoComplete="new-password" minLength={12} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="12文字以上" /></label>
+        <label><span>パスワード（確認）</span><input required type="password" autoComplete="new-password" minLength={12} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="もう一度入力" /></label>
+        <p className={styles.hint}>12文字以上で設定してください。</p>
+        {message && <p className={styles.message} role="status">{message}</p>}
+        <button className={styles.submit} disabled={submitting}><span>{submitting ? '作成中…' : 'アカウントを作成'}</span>{!submitting && <span aria-hidden="true">→</span>}</button>
+      </form>
+    </AuthShell>
+  )
 }

@@ -1,13 +1,15 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import ClaimApplicationForm from "@/components/public/ClaimApplicationForm"
+import AuthShell from "@/components/auth/AuthShell"
+import styles from "@/app/(auth)/login/login.module.css"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "応募を完了", description: "FestMatchの未認証応募を正式応募へ変換します。" }
 
 export default async function ClaimPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const token = (await searchParams).token; const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser()
-  if (!token) return <main className="public-apply-page"><section className="claim-card"><h1>応募リンクが見つかりません</h1><p>メールに記載されたリンクをもう一度開いてください。</p></section></main>
-  if (!user) return <main className="public-apply-page"><section className="claim-card"><h1>ログインが必要です</h1><p>応募に使用したメールアドレスでログインしてください。</p><Link className="button button-primary" href={`/login?claim=${encodeURIComponent(token)}`}>ログインへ進む</Link></section></main>
-  return <main className="public-apply-page"><ClaimApplicationForm token={token} /></main>
+  if (!token) return <AuthShell eyebrow="APPLICATION CLAIM" title="応募リンクが見つかりません" description="メールに記載されたリンクをもう一度開いてください。"><Link className={styles.submit} href="/"><span>ホームへ戻る</span><span aria-hidden="true">→</span></Link></AuthShell>
+  if (!user) return <AuthShell eyebrow="APPLICATION CLAIM" title="ログインが必要です" description="応募に使用したメールアドレスでログインしてください。"><Link className={styles.submit} href={`/login?claim=${encodeURIComponent(token)}`}><span>ログインへ進む</span><span aria-hidden="true">→</span></Link></AuthShell>
+  return <AuthShell eyebrow="APPLICATION CLAIM" title="応募を完了する" description="アカウントと応募内容を確認して、正式応募へ進みます。"><ClaimApplicationForm token={token} /></AuthShell>
 }

@@ -2,14 +2,15 @@
 
 import { Suspense, useActionState, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import BrandMark from '@/components/BrandMark'
+import AuthShell from '@/components/auth/AuthShell'
 import { createInitialAccount } from './actions'
+import styles from '../login/login.module.css'
 
 const initialState: { error?: string } = {}
 
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={<div className="auth-page" aria-busy="true" />}>
+    <Suspense fallback={<div className={styles.loading} aria-busy="true" />}>
       <OnboardingContent />
     </Suspense>
   )
@@ -22,26 +23,25 @@ function OnboardingContent() {
   const [state, action, pending] = useActionState(createInitialAccount, initialState)
 
   return (
-    <div className="auth-page">
-      <header className="auth-header"><BrandMark /></header>
-      <section className="auth-card">
-        <p className="eyebrow">PROFILE SETUP</p>
-        <h1>プロフィールを設定</h1>
-        <p>最初に利用する立場と表示名を選択してください。登録後は利用区分を変更できません。</p>
-        <form action={action} className="form-stack">
-          <input type="hidden" name="claim" value={claim} />
-          <label className="field">表示名<input required name="display_name" maxLength={100} placeholder="団体名または屋号" /></label>
-          <fieldset className="field">
-            <legend>利用する立場</legend>
-            <span className="role-choice">
-              <label><input type="radio" name="role" value="organizer" checked={role === 'organizer'} disabled={Boolean(claim)} onChange={() => setRole('organizer')} /><span>主催者</span></label>
-              <label><input type="radio" name="role" value="vendor" checked={role === 'vendor'} onChange={() => setRole('vendor')} /><span>ベンダー</span></label>
-            </span>
-          </fieldset>
-          {state.error && <p className="form-message" role="alert">{state.error}</p>}
-          <button className="button button-primary" disabled={pending}>{pending ? '保存中' : '保存して続ける'}</button>
-        </form>
-      </section>
-    </div>
+    <AuthShell
+      eyebrow="PROFILE SETUP"
+      title="プロフィールを設定"
+      description="表示名と利用する立場を選択してください。"
+    >
+      <form action={action} className={styles.form}>
+        <input type="hidden" name="claim" value={claim} />
+        <label><span>表示名</span><input required name="display_name" maxLength={100} placeholder="団体名または屋号" /></label>
+        <fieldset className={styles.roleField}>
+          <legend>利用する立場</legend>
+          <div className={styles.roleChoice}>
+            <label><input type="radio" name="role" value="organizer" checked={role === 'organizer'} disabled={Boolean(claim)} onChange={() => setRole('organizer')} /><span><strong>主催者</strong><small>イベントを企画・運営する</small></span></label>
+            <label><input type="radio" name="role" value="vendor" checked={role === 'vendor'} onChange={() => setRole('vendor')} /><span><strong>出店者</strong><small>イベントへ応募・出店する</small></span></label>
+          </div>
+          <p className={styles.hint}>登録後は利用区分を変更できません。</p>
+        </fieldset>
+        {state.error && <p className={styles.message} role="alert">{state.error}</p>}
+        <button className={styles.submit} disabled={pending}><span>{pending ? '保存中…' : '保存して続ける'}</span>{!pending && <span aria-hidden="true">→</span>}</button>
+      </form>
+    </AuthShell>
   )
 }

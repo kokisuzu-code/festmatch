@@ -3,9 +3,10 @@
 import { Suspense, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import BrandMark from "@/components/BrandMark"
+import AuthShell from "@/components/auth/AuthShell"
 import { APP_URL } from "@/lib/app"
 import { createClient } from "@/lib/supabase/client"
+import styles from "../login/login.module.css"
 
 export default function ForgotPasswordPage() {
   return <Suspense fallback={null}><ForgotPasswordForm /></Suspense>
@@ -35,5 +36,18 @@ function ForgotPasswordForm() {
     setMessage(error ? "リンクを送信できませんでした。入力内容を確認して、もう一度お試しください。" : "登録済みの場合は、パスワード設定用のリンクを送信しました。メールをご確認ください。")
   }
 
-  return <div className="auth-page"><header className="auth-header"><BrandMark /></header><section className="auth-card"><p className="eyebrow">PASSWORD RESET</p><h1>パスワードを設定</h1><p>登録済みのメールアドレスへ、パスワード設定用リンクを送信します。</p><form className="form-stack" onSubmit={submit}><label className="field">メールアドレス<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label>{message && <p className="form-message" role="status">{message}</p>}<button className="button button-primary" disabled={submitting}>{submitting ? "送信中" : "設定リンクを送る"}</button></form><p className="form-subtle"><Link href="/login">ログインに戻る</Link></p></section></div>
+  return (
+    <AuthShell
+      eyebrow="PASSWORD RESET"
+      title="パスワードを再設定"
+      description="登録済みのメールアドレスへ設定用リンクを送信します。"
+      footer={<Link href="/login">ログインに戻る</Link>}
+    >
+      <form className={styles.form} onSubmit={submit}>
+        <label><span>メールアドレス</span><input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label>
+        {message && <p className={styles.message} role="status">{message}</p>}
+        <button className={styles.submit} disabled={submitting}><span>{submitting ? "送信中…" : "設定リンクを送る"}</span>{!submitting && <span aria-hidden="true">→</span>}</button>
+      </form>
+    </AuthShell>
+  )
 }
