@@ -92,7 +92,7 @@ export default async function MarketingPage() {
         <div className="fm-home-hero-copy">
           <p className="fm-home-overline">近くのイベントが、ここで見つかる。</p>
           <h1>今週末、<br /><span>どこ行こう。</span></h1>
-          <p className="fm-home-lead">マルシェも、音楽祭も、親子イベントも。<br />行きたい予定を、場所と日付からすぐに探せます。</p>
+          <p className="fm-home-lead">予定のない週末が、楽しみに変わる。<br />場所と日付から、近くのイベントをすぐに探せます。</p>
           <form className="fm-home-search" action="/festmap">
             <label htmlFor="home-event-search"><PinIcon /><span className="sr-only">駅名またはエリア名</span></label>
             <input id="home-event-search" name="q" placeholder="駅名・エリア名で探す" />
