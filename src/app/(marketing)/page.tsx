@@ -81,7 +81,7 @@ export default async function MarketingPage() {
         <BrandMark />
         <nav aria-label="メインナビゲーション">
           <Link href="/festmap">イベントを探す</Link>
-          <Link href="/signup?role=organizer">主催者の方</Link>
+          <Link href="/business">主催者の方</Link>
           <Link href="/signup?role=vendor">出店者の方</Link>
         </nav>
         <Link className="fm-home-publish" href="/signup?role=organizer"><span aria-hidden="true">⌁</span>イベントを掲載する</Link>
@@ -144,6 +144,6 @@ export default async function MarketingPage() {
 
     <section className="fm-home-final"><div className="fm-home-wrap"><p>次の週末を、近くから。</p><h2>気になる街を、のぞいてみよう。</h2><form action="/festmap"><label htmlFor="home-event-search-bottom">駅名・エリア名</label><div><input id="home-event-search-bottom" name="q" placeholder="駅名・エリア名を入力" /><button type="submit">イベントを探す <ArrowIcon /></button></div></form></div></section>
 
-    <footer className="fm-home-footer"><div className="fm-home-wrap"><div><BrandMark /><p>近くのイベントと、出会いやすく。</p></div><nav><Link href="/festmap">イベントを探す</Link><Link href="/signup?role=organizer">主催者の方</Link><Link href="/signup?role=vendor">出店者の方</Link></nav><small>© 2026 FestMatch</small></div></footer>
+    <footer className="fm-home-footer"><div className="fm-home-wrap"><div><BrandMark /><p>近くのイベントと、出会いやすく。</p></div><nav><Link href="/festmap">イベントを探す</Link><Link href="/business">主催者の方</Link><Link href="/signup?role=vendor">出店者の方</Link></nav><small>© 2026 FestMatch</small></div></footer>
   </main>
 }
