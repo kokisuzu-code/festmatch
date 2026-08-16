@@ -15,45 +15,45 @@ type StoryStep = {
 const storySteps: readonly StoryStep[] = [
   {
     time: "FRI 20:00",
-    title: "予定のない週末に、ひとつ候補ができる。",
-    body: "駅名やエリアを入れるだけ。近くで開かれるマルシェや音楽祭、親子イベントがまとまって見つかります。",
+    title: "金曜の夜、ふと予定を探す。",
+    body: "明日はまだ何も決めていない。駅名を入れると、近くのマルシェや音楽イベントが並びます。",
     image: "/story/discover-candid.webp",
     alt: "カフェのテーブルでスマートフォンを見る手元",
   },
   {
     time: "SAT 09:30",
-    title: "駅に着くころには、行き先が決まる。",
-    body: "日付と場所から候補を絞り込み。SNSを何度も見比べなくても、今日行ける予定がわかります。",
+    title: "気になるものを、ひとつ選ぶ。",
+    body: "日付、場所、開催時間。知りたいことだけを見比べて、行き先を決めます。",
     image: "/story/station-candid.webp",
     alt: "東京の駅構内でスマートフォンを見る人",
-    feature: "場所と日付で検索",
+    feature: "エリアと日付で探す",
   },
   {
     time: "SAT 10:15",
-    title: "駅を出たら、そのまま会場へ。",
-    body: "開催時間、会場、内容をひとつの画面に整理。迷う時間を減らして、街へ出かけられます。",
+    title: "駅を出たら、会場はすぐそこ。",
+    body: "地図と会場情報を見ながら、いつもの街を少しだけ違う方向へ。",
     image: "/reference/waterfront-market.webp",
     alt: "港沿いで開かれている朝市",
   },
   {
     time: "SAT 11:40",
-    title: "知らなかった店と、偶然出会う。",
-    body: "フード、音楽、ワークショップ。いつもの街にある、まだ知らない楽しみが見つかります。",
+    title: "知らなかった店に、足が止まる。",
+    body: "いい匂い、聞こえてくる音楽。画面では分からなかった楽しさに出会います。",
     image: "/reference/summer-festival.webp",
     alt: "地域の夏祭りを楽しむ人たち",
-    feature: "必要な情報をひとつに",
+    feature: "開催情報をひとつに",
   },
   {
     time: "SAT 14:20",
-    title: "見るだけだった週末が、体験に変わる。",
-    body: "家族でも、友人とでも、一人でも。気分に合うイベントから、次にやってみたいことへ。",
+    title: "やってみたかったことを、やってみる。",
+    body: "家族でも、友人とでも、一人でも。その日の気分のまま、イベントを楽しめます。",
     image: "/reference/craft-workshop.webp",
     alt: "地域イベントのクラフト体験",
   },
   {
     time: "SAT 17:30",
-    title: "帰り道には、もう次の予定がある。",
-    body: "気になるイベントを保存して、家族や友人に共有。次の週末も、近くから楽しめます。",
+    title: "帰り道、次の予定を保存する。",
+    body: "気になったイベントを残して、誰かに送る。次の週末も、近くから。",
     image: "/story/walk-home.webp",
     alt: "地域のマーケットから帰る二人",
     feature: "保存して、すぐ共有",
@@ -84,8 +84,8 @@ export default function FestMatchScrollStory() {
     <section className="fm-story" id="story" aria-labelledby="fm-story-title">
       <div className="fm-home-wrap fm-story-intro">
         <p>01 — A WEEKEND WITH FESTMATCH</p>
-        <h2 id="fm-story-title">予定のない金曜から、<br />満足した土曜の帰り道まで。</h2>
-        <span>スクロールして、FestMatchで見つかる週末を追ってみてください。</span>
+        <h2 id="fm-story-title">何も決めていない夜から、<br />少し満たされた帰り道まで。</h2>
+        <span>ひとつのイベントを見つけるだけで、いつもの週末は少し変わります。</span>
       </div>
 
       <div className="fm-story-grid">

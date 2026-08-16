@@ -91,9 +91,9 @@ export default async function MarketingPage() {
     <section className="fm-home-hero" id="top">
       <div className="fm-home-wrap fm-home-hero-grid">
         <div className="fm-home-hero-copy">
-          <p className="fm-home-overline">近くのイベントが、ここで見つかる。</p>
-          <h1>今週末、<br /><span>どこ行こう。</span></h1>
-          <p className="fm-home-lead">予定のない週末が、楽しみに変わる。<br />場所と日付から、近くのイベントをすぐに探せます。</p>
+          <p className="fm-home-overline">街の予定を、ひとつの場所に。</p>
+          <h1>近くで見つける、<br /><span>次の週末。</span></h1>
+          <p className="fm-home-lead">いつもの街にも、まだ知らない楽しみがある。<br />場所と日付から、ふらっと行ける予定を探せます。</p>
           <form className="fm-home-search" action="/festmap">
             <label htmlFor="home-event-search"><PinIcon /><span className="sr-only">駅名またはエリア名</span></label>
             <input id="home-event-search" name="q" placeholder="駅名・エリア名で探す" />
@@ -123,8 +123,8 @@ export default async function MarketingPage() {
 
     <section className="fm-home-events" id="events">
       <div className="fm-home-wrap">
-        <div className="fm-home-section-heading"><p>NEAR YOU</p><h2>近くで、今週末に見つかること。</h2><span>{visibleEvents.length ? `${visibleEvents.length}件を表示中` : "掲載イメージ"}</span></div>
-        <p className="fm-home-section-lead">気分や予定に合わせて、近くのイベントを絞り込めます。</p>
+        <div className="fm-home-section-heading"><p>NEAR YOU</p><h2>今週末、近くで開かれるイベント。</h2><span>{visibleEvents.length ? `${visibleEvents.length}件を表示中` : "掲載イメージ"}</span></div>
+        <p className="fm-home-section-lead">場所や気分から、行きたい予定を選べます。</p>
         <div className="fm-home-filter-row" aria-label="イベントカテゴリー"><span aria-hidden="true">☷</span>{["すべて", "グルメ", "親子", "音楽", "カルチャー", "体験"].map((label, index) => <Link key={label} className={index === 0 ? "is-active" : ""} href="/festmap">{label}</Link>)}<Link className="fm-home-map-toggle" href="/festmap" aria-label="地図でイベントを探す">⌖</Link></div>
         <div className="fm-home-event-grid">
           {cards.map((event, index) => <article className="fm-home-event-card" key={`${event.title}-${index}`}>
@@ -142,7 +142,7 @@ export default async function MarketingPage() {
       </div>
     </section>
 
-    <section className="fm-home-final"><div className="fm-home-wrap"><p>次の週末を、近くから。</p><h2>まずは街のイベントを探してみよう。</h2><form action="/festmap"><label htmlFor="home-event-search-bottom">駅名・エリア名</label><div><input id="home-event-search-bottom" name="q" placeholder="駅名・エリア名を入力" /><button type="submit">イベントを探す <ArrowIcon /></button></div></form></div></section>
+    <section className="fm-home-final"><div className="fm-home-wrap"><p>次の週末を、近くから。</p><h2>気になる街を、のぞいてみよう。</h2><form action="/festmap"><label htmlFor="home-event-search-bottom">駅名・エリア名</label><div><input id="home-event-search-bottom" name="q" placeholder="駅名・エリア名を入力" /><button type="submit">イベントを探す <ArrowIcon /></button></div></form></div></section>
 
     <footer className="fm-home-footer"><div className="fm-home-wrap"><div><BrandMark /><p>近くのイベントと、出会いやすく。</p></div><nav><Link href="/festmap">イベントを探す</Link><Link href="/signup?role=organizer">主催者の方</Link><Link href="/signup?role=vendor">出店者の方</Link></nav><small>© 2026 FestMatch</small></div></footer>
   </main>
