@@ -90,29 +90,30 @@ export default async function MarketingPage() {
     <section className="fm-home-hero" id="top">
       <div className="fm-home-wrap fm-home-hero-grid">
         <div className="fm-home-hero-copy">
-          <p className="fm-home-overline">まちの週末が、もっと身近に。</p>
-          <h1>今日、近くで<br />なにやってる？</h1>
-          <p className="fm-home-lead">気になる街のイベントを、いちばん見つけやすく。</p>
+          <p className="fm-home-overline">近くのイベントが、ここで見つかる。</p>
+          <h1>今週末、<br /><span>どこ行こう。</span></h1>
+          <p className="fm-home-lead">マルシェも、音楽祭も、親子イベントも。<br />行きたい予定を、場所と日付からすぐに探せます。</p>
           <form className="fm-home-search" action="/festmap">
-            <label htmlFor="home-event-search"><PinIcon /><span className="sr-only">現在地または駅名</span></label>
-            <input id="home-event-search" name="q" placeholder="現在地・駅名から探す" />
-            <button type="submit"><SearchIcon />近くのイベントを探す <ArrowIcon /></button>
+            <label htmlFor="home-event-search"><PinIcon /><span className="sr-only">駅名またはエリア名</span></label>
+            <input id="home-event-search" name="q" placeholder="駅名・エリア名で探す" />
+            <button type="submit"><SearchIcon />イベントを探す <ArrowIcon /></button>
           </form>
-          <p className="fm-home-search-note">◎ 気になるエリア名からイベントを探せます</p>
+          <p className="fm-home-search-note">登録なしですぐに検索できます</p>
           <div className="fm-home-hero-links">
             <Link href="/signup?role=organizer">イベントを掲載する <ArrowIcon /></Link>
             <Link href="/signup?role=vendor">出店先を探す <ArrowIcon /></Link>
           </div>
         </div>
-        <div className="fm-home-hero-visual" aria-label="今週末のイベント掲載イメージ">
-          <p><span>⌁</span> 今週末のおすすめ</p>
-          <article className="fm-home-hero-card fm-home-card-market">
-            <Image src={homeImages[0]} alt="港沿いで開かれる朝市の様子" width={700} height={438} priority />
-            <div><span>今週末</span><h2>みなと朝市</h2><small>7/18(土)　みなとみらい</small></div>
+        <div className="fm-home-hero-visual" aria-label="近くで開催されるイベント">
+          <article className="fm-home-feature fm-home-feature-main">
+            <Image src={homeImages[0]} alt="港沿いで開かれる朝市の様子" width={700} height={520} priority />
+            <div><span>今週末</span><h2>みなと朝市</h2><p>7/18(土)・みなとみらい</p></div>
           </article>
-          <div className="fm-home-mini-map" aria-hidden="true"><i className="fm-home-map-pin pin-a" /><i className="fm-home-map-pin pin-b" /><i className="fm-home-map-pin pin-c" /><i className="fm-home-map-pin pin-d" /></div>
-          <article className="fm-home-hero-card fm-home-card-festival"><Image src={homeImages[1]} alt="夏のまちフェスの様子" width={700} height={438} /></article>
-          <article className="fm-home-hero-card fm-home-card-craft"><Image src={homeImages[2]} alt="親子クラフト市の様子" width={700} height={438} /><div><h2>親子クラフト市</h2><small>7/20(月祝)</small></div></article>
+          <article className="fm-home-feature fm-home-feature-mini">
+            <Image src={homeImages[1]} alt="夏のまちフェスの様子" width={420} height={300} />
+            <div><span>音楽</span><h2>夏のまちフェス</h2></div>
+          </article>
+          <div className="fm-home-feature-count"><strong>4</strong><span>近くで開催</span></div>
         </div>
       </div>
     </section>
