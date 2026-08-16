@@ -3,6 +3,7 @@ import Link from "next/link"
 import Image from "next/image"
 import BrandMark from "@/components/BrandMark"
 import AuthHomeRedirect from "@/components/AuthHomeRedirect"
+import FestMatchScrollStory from "./FestMatchScrollStory"
 import { createPublicClient } from "@/lib/supabase/public"
 import { listFestMapEvents } from "@/lib/festmap"
 import type { PublicEvent } from "@/components/festmap/PublicEventCard"
@@ -80,8 +81,8 @@ export default async function MarketingPage() {
         <BrandMark />
         <nav aria-label="メインナビゲーション">
           <Link href="/festmap">イベントを探す</Link>
-          <a href="#organizers">主催者の方</a>
-          <a href="#vendors">出店者の方</a>
+          <Link href="/signup?role=organizer">主催者の方</Link>
+          <Link href="/signup?role=vendor">出店者の方</Link>
         </nav>
         <Link className="fm-home-publish" href="/signup?role=organizer"><span aria-hidden="true">⌁</span>イベントを掲載する</Link>
       </div>
@@ -118,6 +119,8 @@ export default async function MarketingPage() {
       </div>
     </section>
 
+    <FestMatchScrollStory />
+
     <section className="fm-home-events" id="events">
       <div className="fm-home-wrap">
         <div className="fm-home-section-heading"><p>NEAR YOU</p><h2>近くで、今週末に見つかること。</h2><span>{visibleEvents.length ? `${visibleEvents.length}件を表示中` : "掲載イメージ"}</span></div>
@@ -139,19 +142,8 @@ export default async function MarketingPage() {
       </div>
     </section>
 
-    <section className="fm-home-why">
-      <div className="fm-home-wrap fm-home-why-grid">
-        <div><p>WHY FESTMATCH</p><h2>SNSを探し回らなくても、街の予定がわかる。</h2><span>主催者の投稿、出店者の告知、地域のイベント情報。散らばっていた情報を、場所と日付でひとつに整理します。</span></div>
-        <div className="fm-home-reason-list"><article><b>01</b><h3>近い順に見つかる</h3><p>現在地や駅名から、今日行けるイベントをすぐに探せます。</p></article><article><b>02</b><h3>必要な情報だけ見やすく</h3><p>開催日時、場所、料金、出店内容をひとつの画面に整理。</p></article><article><b>03</b><h3>気になる予定を保存</h3><p>家族や友人と共有して、週末の予定を決めやすくします。</p></article></div>
-      </div>
-    </section>
-
-    <section className="fm-home-paths">
-      <div className="fm-home-wrap"><p>FOR ORGANIZERS &amp; VENDORS</p><h2>人が集まる。その先の運営まで。</h2><span>利用者に見つけてもらう入口から、募集・応募・管理までFestMatchでつながります。</span><div className="fm-home-path-grid"><article id="organizers"><div className="fm-home-path-icon">⌁</div><p>イベント主催者の方へ</p><h3>掲載から出店者管理まで、ひとつの場所で。</h3><ul><li>イベントページの作成・公開</li><li>応募者の確認・承認</li><li>区画ごとの出店料設定</li><li>お知らせの一斉配信</li></ul><Link href="/signup?role=organizer">イベント掲載をはじめる <ArrowIcon /></Link></article><article id="vendors"><div className="fm-home-path-icon">▣</div><p>キッチンカー・出店者の方へ</p><h3>自分に合う出店先を、迷わず選べる。</h3><ul><li>条件に合うイベント検索</li><li>応募・スケジュール管理</li><li>営業許可書などの書類管理</li><li>売上記録と振り返り</li></ul><Link href="/signup?role=vendor">出店先を探してみる <ArrowIcon /></Link></article></div></div>
-    </section>
-
     <section className="fm-home-final"><div className="fm-home-wrap"><p>次の週末を、近くから。</p><h2>まずは街のイベントを探してみよう。</h2><form action="/festmap"><label htmlFor="home-event-search-bottom">駅名・エリア名</label><div><input id="home-event-search-bottom" name="q" placeholder="駅名・エリア名を入力" /><button type="submit">イベントを探す <ArrowIcon /></button></div></form></div></section>
 
-    <footer className="fm-home-footer"><div className="fm-home-wrap"><div><BrandMark /><p>近くのイベントと、出会いやすく。</p></div><nav><Link href="/festmap">イベントを探す</Link><a href="#organizers">主催者の方</a><a href="#vendors">出店者の方</a></nav><small>© 2026 FestMatch</small></div></footer>
+    <footer className="fm-home-footer"><div className="fm-home-wrap"><div><BrandMark /><p>近くのイベントと、出会いやすく。</p></div><nav><Link href="/festmap">イベントを探す</Link><Link href="/signup?role=organizer">主催者の方</Link><Link href="/signup?role=vendor">出店者の方</Link></nav><small>© 2026 FestMatch</small></div></footer>
   </main>
 }

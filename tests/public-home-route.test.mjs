@@ -8,6 +8,7 @@ const vendorShell = await readFile(new URL('../src/components/VendorShell.tsx', 
 const organizerShell = await readFile(new URL('../src/components/OrganizerShell.tsx', import.meta.url), 'utf8')
 const marketingPage = await readFile(new URL('../src/app/(marketing)/page.tsx', import.meta.url), 'utf8')
 const marketingCss = await readFile(new URL('../src/app/(marketing)/marketing.css', import.meta.url), 'utf8')
+const scrollStory = await readFile(new URL('../src/app/(marketing)/FestMatchScrollStory.tsx', import.meta.url), 'utf8')
 
 test('logged-in users can deliberately open the public home page', () => {
   assert.match(publicHome, /from '\.\.\/page'/)
@@ -24,10 +25,23 @@ test('role portals expose a link to the public home page', () => {
 test('public hero uses the compact, user-focused design', () => {
   assert.match(marketingPage, /今週末、/)
   assert.match(marketingPage, /どこ行こう。/)
-  assert.match(marketingPage, /場所と日付からすぐに探せます/)
+  assert.match(marketingPage, /予定のない週末が、楽しみに変わる。/)
   assert.match(marketingPage, /fm-home-feature-main/)
   assert.doesNotMatch(marketingPage, /今日、近くで/)
   assert.match(marketingCss, /font-size: clamp\(3rem, 5vw, 4\.65rem\)/)
   assert.match(marketingCss, /fm-home-feature-mini/)
   assert.doesNotMatch(marketingCss, /background-size: 115px 106px/)
+})
+
+test('public home tells a six-step weekend story with a sticky photo stage', () => {
+  assert.match(marketingPage, /<FestMatchScrollStory \/>/)
+  assert.match(scrollStory, /IntersectionObserver/)
+  assert.match(scrollStory, /rootMargin: "-45% 0px -45% 0px"/)
+  assert.match(scrollStory, /01 — A WEEKEND WITH FESTMATCH/)
+  assert.equal((scrollStory.match(/time: "/g) ?? []).length, 6)
+  assert.equal((scrollStory.match(/feature: "/g) ?? []).length, 3)
+  assert.match(marketingCss, /\.fm-story-stage \{ position: sticky; top: 0; height: 100svh;/)
+  assert.match(marketingCss, /margin-top: -100svh/)
+  assert.match(marketingCss, /\.fm-story-photo\.is-active \{ opacity: 1;/)
+  assert.match(marketingCss, /overflow-x: clip/)
 })
