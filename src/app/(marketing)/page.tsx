@@ -3,6 +3,7 @@ import Link from "next/link"
 import Image from "next/image"
 import BrandMark from "@/components/BrandMark"
 import AuthHomeRedirect from "@/components/AuthHomeRedirect"
+import FestMatchScrollStory from "./FestMatchScrollStory"
 import { createPublicClient } from "@/lib/supabase/public"
 import { listFestMapEvents } from "@/lib/festmap"
 import type { PublicEvent } from "@/components/festmap/PublicEventCard"
@@ -80,8 +81,8 @@ export default async function MarketingPage() {
         <BrandMark />
         <nav aria-label="メインナビゲーション">
           <Link href="/festmap">イベントを探す</Link>
-          <a href="#organizers">主催者の方</a>
-          <a href="#vendors">出店者の方</a>
+          <Link href="/signup?role=organizer">主催者の方</Link>
+          <Link href="/signup?role=vendor">出店者の方</Link>
         </nav>
         <Link className="fm-home-publish" href="/signup?role=organizer"><span aria-hidden="true">⌁</span>イベントを掲載する</Link>
       </div>
@@ -90,37 +91,40 @@ export default async function MarketingPage() {
     <section className="fm-home-hero" id="top">
       <div className="fm-home-wrap fm-home-hero-grid">
         <div className="fm-home-hero-copy">
-          <p className="fm-home-overline">まちの週末が、もっと身近に。</p>
-          <h1>今日、近くで<br />なにやってる？</h1>
-          <p className="fm-home-lead">気になる街のイベントを、いちばん見つけやすく。</p>
+          <p className="fm-home-overline">街の予定を、ひとつの場所に。</p>
+          <h1><span>週末が、近くなる。</span></h1>
+          <p className="fm-home-lead">いつもの街にも、まだ知らない楽しみがある。<br />場所と日付から、ふらっと行ける予定を探せます。</p>
           <form className="fm-home-search" action="/festmap">
-            <label htmlFor="home-event-search"><PinIcon /><span className="sr-only">現在地または駅名</span></label>
-            <input id="home-event-search" name="q" placeholder="現在地・駅名から探す" />
-            <button type="submit"><SearchIcon />近くのイベントを探す <ArrowIcon /></button>
+            <label htmlFor="home-event-search"><PinIcon /><span className="sr-only">駅名またはエリア名</span></label>
+            <input id="home-event-search" name="q" placeholder="駅名・エリア名で探す" />
+            <button type="submit"><SearchIcon />イベントを探す <ArrowIcon /></button>
           </form>
-          <p className="fm-home-search-note">◎ 気になるエリア名からイベントを探せます</p>
+          <p className="fm-home-search-note">登録なしですぐに検索できます</p>
           <div className="fm-home-hero-links">
             <Link href="/signup?role=organizer">イベントを掲載する <ArrowIcon /></Link>
             <Link href="/signup?role=vendor">出店先を探す <ArrowIcon /></Link>
           </div>
         </div>
-        <div className="fm-home-hero-visual" aria-label="今週末のイベント掲載イメージ">
-          <p><span>⌁</span> 今週末のおすすめ</p>
-          <article className="fm-home-hero-card fm-home-card-market">
-            <Image src={homeImages[0]} alt="港沿いで開かれる朝市の様子" width={700} height={438} priority />
-            <div><span>今週末</span><h2>みなと朝市</h2><small>7/18(土)　みなとみらい</small></div>
+        <div className="fm-home-hero-visual" aria-label="近くで開催されるイベント">
+          <article className="fm-home-feature fm-home-feature-main">
+            <Image src={homeImages[0]} alt="港沿いで開かれる朝市の様子" width={700} height={520} priority />
+            <div><span>今週末</span><h2>みなと朝市</h2><p>7/18(土)・みなとみらい</p></div>
           </article>
-          <div className="fm-home-mini-map" aria-hidden="true"><i className="fm-home-map-pin pin-a" /><i className="fm-home-map-pin pin-b" /><i className="fm-home-map-pin pin-c" /><i className="fm-home-map-pin pin-d" /></div>
-          <article className="fm-home-hero-card fm-home-card-festival"><Image src={homeImages[1]} alt="夏のまちフェスの様子" width={700} height={438} /></article>
-          <article className="fm-home-hero-card fm-home-card-craft"><Image src={homeImages[2]} alt="親子クラフト市の様子" width={700} height={438} /><div><h2>親子クラフト市</h2><small>7/20(月祝)</small></div></article>
+          <article className="fm-home-feature fm-home-feature-mini">
+            <Image src={homeImages[1]} alt="夏のまちフェスの様子" width={420} height={300} />
+            <div><span>音楽</span><h2>夏のまちフェス</h2></div>
+          </article>
+          <div className="fm-home-feature-count"><strong>4</strong><span>近くで開催</span></div>
         </div>
       </div>
     </section>
 
+    <FestMatchScrollStory />
+
     <section className="fm-home-events" id="events">
       <div className="fm-home-wrap">
-        <div className="fm-home-section-heading"><p>NEAR YOU</p><h2>近くで、今週末に見つかること。</h2><span>{visibleEvents.length ? `${visibleEvents.length}件を表示中` : "掲載イメージ"}</span></div>
-        <p className="fm-home-section-lead">気分や予定に合わせて、近くのイベントを絞り込めます。</p>
+        <div className="fm-home-section-heading"><p>NEAR YOU</p><h2>今週末、近くで開かれるイベント。</h2><span>{visibleEvents.length ? `${visibleEvents.length}件を表示中` : "掲載イメージ"}</span></div>
+        <p className="fm-home-section-lead">場所や気分から、行きたい予定を選べます。</p>
         <div className="fm-home-filter-row" aria-label="イベントカテゴリー"><span aria-hidden="true">☷</span>{["すべて", "グルメ", "親子", "音楽", "カルチャー", "体験"].map((label, index) => <Link key={label} className={index === 0 ? "is-active" : ""} href="/festmap">{label}</Link>)}<Link className="fm-home-map-toggle" href="/festmap" aria-label="地図でイベントを探す">⌖</Link></div>
         <div className="fm-home-event-grid">
           {cards.map((event, index) => <article className="fm-home-event-card" key={`${event.title}-${index}`}>
@@ -138,19 +142,8 @@ export default async function MarketingPage() {
       </div>
     </section>
 
-    <section className="fm-home-why">
-      <div className="fm-home-wrap fm-home-why-grid">
-        <div><p>WHY FESTMATCH</p><h2>SNSを探し回らなくても、街の予定がわかる。</h2><span>主催者の投稿、出店者の告知、地域のイベント情報。散らばっていた情報を、場所と日付でひとつに整理します。</span></div>
-        <div className="fm-home-reason-list"><article><b>01</b><h3>近い順に見つかる</h3><p>現在地や駅名から、今日行けるイベントをすぐに探せます。</p></article><article><b>02</b><h3>必要な情報だけ見やすく</h3><p>開催日時、場所、料金、出店内容をひとつの画面に整理。</p></article><article><b>03</b><h3>気になる予定を保存</h3><p>家族や友人と共有して、週末の予定を決めやすくします。</p></article></div>
-      </div>
-    </section>
+    <section className="fm-home-final"><div className="fm-home-wrap"><p>次の週末を、近くから。</p><h2>気になる街を、のぞいてみよう。</h2><form action="/festmap"><label htmlFor="home-event-search-bottom">駅名・エリア名</label><div><input id="home-event-search-bottom" name="q" placeholder="駅名・エリア名を入力" /><button type="submit">イベントを探す <ArrowIcon /></button></div></form></div></section>
 
-    <section className="fm-home-paths">
-      <div className="fm-home-wrap"><p>FOR ORGANIZERS &amp; VENDORS</p><h2>人が集まる。その先の運営まで。</h2><span>利用者に見つけてもらう入口から、募集・応募・管理までFestMatchでつながります。</span><div className="fm-home-path-grid"><article id="organizers"><div className="fm-home-path-icon">⌁</div><p>イベント主催者の方へ</p><h3>掲載から出店者管理まで、ひとつの場所で。</h3><ul><li>イベントページの作成・公開</li><li>応募者の確認・承認</li><li>区画ごとの出店料設定</li><li>お知らせの一斉配信</li></ul><Link href="/signup?role=organizer">イベント掲載をはじめる <ArrowIcon /></Link></article><article id="vendors"><div className="fm-home-path-icon">▣</div><p>キッチンカー・出店者の方へ</p><h3>自分に合う出店先を、迷わず選べる。</h3><ul><li>条件に合うイベント検索</li><li>応募・スケジュール管理</li><li>営業許可書などの書類管理</li><li>売上記録と振り返り</li></ul><Link href="/signup?role=vendor">出店先を探してみる <ArrowIcon /></Link></article></div></div>
-    </section>
-
-    <section className="fm-home-final"><div className="fm-home-wrap"><p>次の週末を、近くから。</p><h2>まずは街のイベントを探してみよう。</h2><form action="/festmap"><label htmlFor="home-event-search-bottom">駅名・エリア名</label><div><input id="home-event-search-bottom" name="q" placeholder="駅名・エリア名を入力" /><button type="submit">イベントを探す <ArrowIcon /></button></div></form></div></section>
-
-    <footer className="fm-home-footer"><div className="fm-home-wrap"><div><BrandMark /><p>近くのイベントと、出会いやすく。</p></div><nav><Link href="/festmap">イベントを探す</Link><a href="#organizers">主催者の方</a><a href="#vendors">出店者の方</a></nav><small>© 2026 FestMatch</small></div></footer>
+    <footer className="fm-home-footer"><div className="fm-home-wrap"><div><BrandMark /><p>近くのイベントと、出会いやすく。</p></div><nav><Link href="/festmap">イベントを探す</Link><Link href="/signup?role=organizer">主催者の方</Link><Link href="/signup?role=vendor">出店者の方</Link></nav><small>© 2026 FestMatch</small></div></footer>
   </main>
 }

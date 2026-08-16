@@ -19,6 +19,7 @@ const links = [
 const platformLinks = [
   { href: '/organizer/verification', label: '審査・認証', symbol: '✓', exact: false },
   { href: '/organizer/policies', label: 'ポリシー・補欠', symbol: '↻', exact: false },
+  { href: '/home', label: '公式HPを見る', symbol: '↗', exact: true },
 ] as const
 
 function isActive(pathname: string, href: string, exact?: boolean) {

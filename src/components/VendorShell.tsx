@@ -14,6 +14,7 @@ const menuLinks = [
 
 const platformLinks = [
   { href: '/vendor/settings', label: 'プロフィール・契約', symbol: '☆', exact: false },
+  { href: '/home', label: '公式HPを見る', symbol: '↗', exact: true },
 ] as const
 
 function isActive(pathname: string, href: string, exact?: boolean) {
