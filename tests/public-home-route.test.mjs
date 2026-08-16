@@ -23,12 +23,12 @@ test('role portals expose a link to the public home page', () => {
 })
 
 test('public hero uses the compact, user-focused design', () => {
-  assert.match(marketingPage, /近くで見つける、/)
-  assert.match(marketingPage, /次の週末。/)
+  assert.match(marketingPage, /週末が、近くなる。/)
   assert.match(marketingPage, /いつもの街にも、まだ知らない楽しみがある。/)
   assert.match(marketingPage, /fm-home-feature-main/)
   assert.doesNotMatch(marketingPage, /今日、近くで/)
-  assert.match(marketingCss, /font-size: clamp\(2\.65rem, 4\.35vw, 4\.05rem\)/)
+  assert.match(marketingCss, /font-size: clamp\(2\.55rem, 4\.15vw, 3\.6rem\)/)
+  assert.match(marketingCss, /white-space: nowrap/)
   assert.match(marketingCss, /font-weight: 700; line-height: 1\.18/)
   assert.match(marketingCss, /fm-home-feature-mini/)
   assert.doesNotMatch(marketingCss, /background-size: 115px 106px/)
