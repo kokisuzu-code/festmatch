@@ -3,7 +3,16 @@
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
-const storySteps = [
+type StoryStep = {
+  time: string
+  title: string
+  body: string
+  image: string
+  alt: string
+  feature?: string
+}
+
+const storySteps: readonly StoryStep[] = [
   {
     time: "FRI 20:00",
     title: "予定のない週末に、ひとつ候補ができる。",
@@ -49,7 +58,7 @@ const storySteps = [
     alt: "地域のマーケットから帰る二人",
     feature: "保存して、すぐ共有",
   },
-] as const
+]
 
 export default function FestMatchScrollStory() {
   const [activeIndex, setActiveIndex] = useState(0)
