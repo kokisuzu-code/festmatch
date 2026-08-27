@@ -17,6 +17,9 @@ test('Phase 4 separates verified external events from application-capable events
 test('external event links are isolated from FestMatch applications and are safe', () => {
   assert.match(card, /external-event/)
   assert.match(card, /rel="nofollow noopener noreferrer"/)
+  assert.match(card, /public-event-card-content/)
+  assert.match(card, /public-event-card-action/)
+  assert.match(card, /public-status/)
   assert.match(eventDetail, /event\.is_external/)
   assert.match(eventDetail, /event\.is_external \? event\.official_url/)
 })
