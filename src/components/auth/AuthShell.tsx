@@ -17,30 +17,36 @@ export default function AuthShell({
   return (
     <main className={styles.page}>
       <section className={styles.story} aria-label="FestMatchの紹介">
-        <Link className={styles.brand} href="/" aria-label="FestMatch ホーム">
+        <Link className={styles.brand} href="/home" aria-label="FestMatch トップへ戻る">
           <span className={styles.brandIcon}>F</span>
           <span>FestMatch</span>
         </Link>
 
         <div className={styles.storyCopy}>
-          <p className={styles.kicker}>EVENT OPERATIONS, SIMPLIFIED.</p>
-          <h1>イベント運営を、<br />ひとつの場所で。</h1>
-          <p>募集・応募・出店管理まで。<br />現場の判断が、もっと速くなる。</p>
+          <p className={styles.kicker}>FIND. APPLY. OPERATE.</p>
+          <h1>イベントと出店を、<br />もっと近くに。</h1>
+          <p>探す、募集する、当日を迎える。<br />主催者と出店者を、ひとつの場所でつなぎます。</p>
         </div>
 
         <div className={styles.storyFooter}>
-          <span>01　募集をつくる</span>
-          <span>02　応募を選ぶ</span>
-          <span>03　当日を動かす</span>
+          <span>01　イベントを探す</span>
+          <span>02　応募・審査</span>
+          <span>03　当日を進める</span>
         </div>
         <div className={styles.glow} aria-hidden="true" />
       </section>
 
       <section className={styles.access}>
-        <Link className={styles.mobileBrand} href="/" aria-label="FestMatch ホーム">
-          <span className={styles.brandIcon}>F</span>
-          <span>FestMatch</span>
-        </Link>
+        <div className={styles.accessTop}>
+          <Link className={styles.mobileBrand} href="/home" aria-label="FestMatch トップへ戻る">
+            <span className={styles.brandIcon}>F</span>
+            <span>FestMatch</span>
+          </Link>
+          <Link className={styles.homeLink} href="/home">
+            <span aria-hidden="true">←</span>
+            FestMatchトップへ戻る
+          </Link>
+        </div>
 
         <div className={styles.formWrap}>
           <header className={styles.heading}>

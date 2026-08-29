@@ -9,7 +9,7 @@ export const metadata = { title: "応募を完了", description: "FestMatchの�
 
 export default async function ClaimPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const token = (await searchParams).token; const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser()
-  if (!token) return <AuthShell eyebrow="APPLICATION CLAIM" title="応募リンクが見つかりません" description="メールに記載されたリンクをもう一度開いてください。"><Link className={styles.submit} href="/"><span>ホームへ戻る</span><span aria-hidden="true">→</span></Link></AuthShell>
+  if (!token) return <AuthShell eyebrow="APPLICATION CLAIM" title="応募リンクが見つかりません" description="メールに記載されたリンクをもう一度開いてください。"><Link className={styles.submit} href="/home"><span>ホームへ戻る</span><span aria-hidden="true">→</span></Link></AuthShell>
   if (!user) return <AuthShell eyebrow="APPLICATION CLAIM" title="ログインが必要です" description="応募に使用したメールアドレスでログインしてください。"><Link className={styles.submit} href={`/login?claim=${encodeURIComponent(token)}`}><span>ログインへ進む</span><span aria-hidden="true">→</span></Link></AuthShell>
   return <AuthShell eyebrow="APPLICATION CLAIM" title="応募を完了する" description="アカウントと応募内容を確認して、正式応募へ進みます。"><ClaimApplicationForm token={token} /></AuthShell>
 }

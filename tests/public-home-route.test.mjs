@@ -9,6 +9,7 @@ const organizerShell = await readFile(new URL('../src/components/OrganizerShell.
 const marketingPage = await readFile(new URL('../src/app/(marketing)/page.tsx', import.meta.url), 'utf8')
 const marketingCss = await readFile(new URL('../src/app/(marketing)/marketing.css', import.meta.url), 'utf8')
 const scrollStory = await readFile(new URL('../src/app/(marketing)/FestMatchScrollStory.tsx', import.meta.url), 'utf8')
+const authShell = await readFile(new URL('../src/components/auth/AuthShell.tsx', import.meta.url), 'utf8')
 
 test('logged-in users can deliberately open the public home page', () => {
   assert.match(publicHome, /from '\.\.\/page'/)
@@ -20,6 +21,12 @@ test('logged-in users can deliberately open the public home page', () => {
 test('role portals expose a link to the public home page', () => {
   assert.match(vendorShell, /href: '\/home', label: '公式HPを見る'/)
   assert.match(organizerShell, /href: '\/home', label: '公式HPを見る'/)
+})
+
+test('public and auth screens expose an explicit two-way login path', () => {
+  assert.match(marketingPage, /className="fm-home-login" href="\/login">ログイン/)
+  assert.match(authShell, /className=\{styles\.homeLink\} href="\/home"/)
+  assert.match(authShell, /FestMatchトップへ戻る/)
 })
 
 test('public hero uses the compact, user-focused design', () => {

@@ -6,12 +6,14 @@ import styles from '@/app/(auth)/login/login.module.css'
 
 type GoogleAuthButtonProps = {
   claim?: string | null
+  next?: string | null
   role?: 'organizer' | 'vendor'
   label?: string
 }
 
 export default function GoogleAuthButton({
   claim,
+  next,
   role = 'organizer',
   label = 'Googleで続ける',
 }: GoogleAuthButtonProps) {
@@ -24,6 +26,7 @@ export default function GoogleAuthButton({
 
     const query = new URLSearchParams({ role })
     if (claim) query.set('claim', claim)
+    if (next) query.set('next', next)
 
     const { error } = await createClient().auth.signInWithOAuth({
       provider: 'google',

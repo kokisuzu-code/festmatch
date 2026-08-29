@@ -36,12 +36,18 @@ export async function proxy(request: NextRequest) {
   if (retiredApi.some((prefix) => pathname.startsWith(prefix)) || pathname === '/api/events/copy' || pathname === '/api/stripe/invoice' || pathname === '/api/stripe/checkout') return new NextResponse(null, { status: 410 })
 
   const legacyDashboardPaths = ['/events', '/browse', '/messages', '/review', '/schedule', '/my-applications', '/my-sales', '/kitchen-cars', '/plan', '/dev']
-  if (legacyDashboardPaths.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) return redirectWithAuthCookies(new URL(user ? '/dashboard' : '/login', request.url), supabaseResponse)
+  if (legacyDashboardPaths.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    if (user) return redirectWithAuthCookies(new URL('/dashboard', request.url), supabaseResponse)
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('next', '/dashboard')
+    return redirectWithAuthCookies(loginUrl, supabaseResponse)
+  }
   if (pathname === '/vendor/sales/record') return redirectWithAuthCookies(new URL('/vendor/sales', request.url), supabaseResponse)
 
   const protectedPath = pathname.startsWith('/dashboard') || pathname.startsWith('/organizer') || pathname.startsWith('/vendor') || pathname.startsWith('/admin')
   if (!user && protectedPath) {
     const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
     if (isExpiredSessionError(authError)) loginUrl.searchParams.set('reason', 'session_expired')
     return redirectWithAuthCookies(loginUrl, supabaseResponse)
   }

@@ -84,7 +84,10 @@ export default async function MarketingPage() {
           <Link href="/signup?role=organizer">主催者の方</Link>
           <Link href="/signup?role=vendor">出店者の方</Link>
         </nav>
-        <Link className="fm-home-publish" href="/signup?role=organizer"><span aria-hidden="true">⌁</span>イベントを掲載する</Link>
+        <div className="fm-home-account-actions">
+          <Link className="fm-home-login" href="/login">ログイン</Link>
+          <Link className="fm-home-publish" href="/signup?role=organizer"><span aria-hidden="true">⌁</span>イベントを掲載する</Link>
+        </div>
       </div>
     </header>
 

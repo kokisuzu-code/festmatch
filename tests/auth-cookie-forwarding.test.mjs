@@ -16,3 +16,8 @@ test('an invalid session redirects with a clear login message', () => {
   assert.match(proxy, /if \(isExpiredSessionError\(authError\)\) loginUrl\.searchParams\.set\('reason', 'session_expired'\)/)
   assert.match(login, /セッションの有効期限が切れました/)
 })
+
+test('protected routes return users to the requested page after login', () => {
+  assert.match(proxy, /loginUrl\.searchParams\.set\('next', `\$\{pathname\}\$\{request\.nextUrl\.search\}`\)/)
+  assert.match(login, /returnPath\(params\.get\("next"\)\)/)
+})

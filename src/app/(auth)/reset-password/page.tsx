@@ -15,9 +15,14 @@ function claimToken(value: string | null) {
   return value && /^(?:[A-Za-z0-9_-]{43}|[a-f0-9-]{36})$/i.test(value) ? value : null
 }
 
+function returnPath(value: string | null) {
+  return value && /^\/(?:dashboard|organizer|vendor|admin)(?:\/|\?|$)/.test(value) ? value : null
+}
+
 function ResetPasswordForm() {
   const params = useSearchParams()
   const claim = claimToken(params.get("claim"))
+  const next = returnPath(params.get("next"))
   const [password, setPassword] = useState("")
   const [confirmation, setConfirmation] = useState("")
   const [message, setMessage] = useState("")
@@ -41,7 +46,7 @@ function ResetPasswordForm() {
       setMessage("パスワードを設定できませんでした。メール内のリンクを開き直して、もう一度お試しください。")
       return
     }
-    window.location.assign(claim ? `/claim?token=${encodeURIComponent(claim)}` : "/dashboard")
+    window.location.assign(claim ? `/claim?token=${encodeURIComponent(claim)}` : next ?? "/dashboard")
   }
 
   return (
@@ -49,7 +54,7 @@ function ResetPasswordForm() {
       eyebrow="NEW PASSWORD"
       title="新しいパスワード"
       description="12文字以上の新しいパスワードを設定してください。"
-      footer={<Link href="/login">ログインに戻る</Link>}
+      footer={<Link href={`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}>ログインに戻る</Link>}
     >
       <form className={styles.form} onSubmit={submit}>
         <label><span>新しいパスワード</span><input required type="password" autoComplete="new-password" minLength={12} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="12文字以上" /></label>
