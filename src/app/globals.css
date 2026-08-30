@@ -217,14 +217,15 @@ button, input, select, textarea { font: inherit; }
 .organizer-side-nav a.active > span { color: #ddf44c; }
 .organizer-side-nav a small { background: #3c413d; border-radius: 99px; color: #d9ddd9; font-size: 8px; margin-left: auto; padding: 2px 6px; }
 .organizer-platform-nav { border-top: 1px solid #2a2e2b; margin-top: 18px; padding-top: 18px; }
-.organizer-account { align-items: center; border-top: 1px solid #2a2e2b; display: grid; gap: 9px; grid-template-columns: 33px 1fr auto; margin-top: auto; padding: 16px 6px 0; }
+.organizer-account { align-items: center; border-top: 1px solid #2a2e2b; display: grid; gap: 9px; grid-template-columns: 33px 1fr; margin-top: auto; padding: 16px 6px 0; }
 .organizer-account > span { align-items: center; background: #e9dfc7; border-radius: 50%; color: #594d38; display: flex; font-size: 9px; font-weight: 800; height: 33px; justify-content: center; width: 33px; }
 .organizer-account > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .organizer-account strong { font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .organizer-account small { color: #787f79; font-size: 8px; }
-.organizer-account form { display: block; }
-.organizer-account button { background: transparent; border: 0; color: #929991; cursor: pointer; font-size: 9px; padding: 3px 0; text-align: left; }
-.organizer-account button:hover { color: #fff; }
+.organizer-account .organizer-logout-form { display: block; grid-column: 1 / -1; }
+.organizer-account .organizer-logout-button { align-items: center; background: #202421; border: 1px solid #303631; border-radius: 8px; color: #c9cec9; cursor: pointer; display: flex; font-size: 11px; font-weight: 700; gap: 8px; justify-content: center; padding: 9px 12px; text-align: center; transition: background .18s, border-color .18s, color .18s; width: 100%; }
+.organizer-account .organizer-logout-button:hover { background: #2a302b; border-color: #485049; color: #fff; }
+.organizer-account .organizer-logout-button:focus-visible { outline: 2px solid #d8bd76; outline-offset: 2px; }
 .organizer-workspace { margin-left: 238px; min-height: 100vh; }
 .organizer-topbar { align-items: center; background: rgba(255,255,255,.95); border-bottom: 1px solid #e3e6e1; display: flex; height: 62px; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 30; backdrop-filter: blur(12px); }
 .organizer-topbar > div { align-items: center; display: flex; font-size: 11px; font-weight: 650; gap: 10px; }
