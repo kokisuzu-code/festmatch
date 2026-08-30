@@ -85,7 +85,12 @@ export default function VendorShell({
         <div className="organizer-account">
           <span aria-hidden="true">{initials}</span>
           <div><strong>{displayName}</strong><small>出店者アカウント</small></div>
-          <form action="/auth/signout" method="post"><button aria-label="ログアウト" type="submit">•••</button></form>
+          <form action="/auth/signout" className="organizer-logout-form" method="post">
+            <button className="organizer-logout-button" type="submit">
+              <span aria-hidden="true">↪</span>
+              ログアウト
+            </button>
+          </form>
         </div>
       </aside>
 
