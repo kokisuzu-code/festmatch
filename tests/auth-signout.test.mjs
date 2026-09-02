@@ -15,4 +15,5 @@ test('both dashboard logout controls post to the signout route', () => {
   assert.doesNotMatch(vendorShell, /<a href="\/auth\/signout">/)
   assert.match(signoutRoute, /export async function POST/)
   assert.match(signoutRoute, /supabase\.auth\.signOut\(\)/)
+  assert.match(signoutRoute, /NextResponse\.redirect\(`\$\{origin\}\/login`, 303\)/)
 })
