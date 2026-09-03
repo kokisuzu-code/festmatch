@@ -52,7 +52,7 @@ function ForgotPasswordForm() {
       <form className={styles.form} onSubmit={submit}>
         <label><span>メールアドレス</span><input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label>
         {message && <p className={styles.message} role="status">{message}</p>}
-        <button className={styles.submit} disabled={submitting}><span>{submitting ? "送信中…" : "設定リンクを送る"}</span>{!submitting && <span aria-hidden="true">→</span>}</button>
+        <button className={styles.submit} disabled={submitting} aria-busy={submitting}><span>{submitting ? "送信中…" : "設定リンクを送る"}</span>{!submitting && <span aria-hidden="true">→</span>}</button>
       </form>
     </AuthShell>
   )

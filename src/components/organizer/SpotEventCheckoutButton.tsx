@@ -28,8 +28,8 @@ export default function SpotEventCheckoutButton({ eventId }: { eventId: string }
   }
 
   return <div className="action-box">
-    <button className="button button-primary" disabled={loading} onClick={beginCheckout}>
-      {loading ? '決済ページを準備中' : 'スポット契約で公開する（¥250,000・一括）'}
+    <button className="button button-primary" disabled={loading} aria-busy={loading} onClick={beginCheckout}>
+      {loading ? '決済ページを準備中…' : 'スポット契約で公開する（¥250,000・一括）'}
     </button>
     <p>このイベントだけを公開できます。利用期間は決済日から最大3か月です。</p>
     {message && <p role="alert">{message}</p>}

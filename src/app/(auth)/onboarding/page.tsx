@@ -40,7 +40,7 @@ function OnboardingContent() {
           <p className={styles.hint}>登録後は利用区分を変更できません。</p>
         </fieldset>
         {state.error && <p className={styles.message} role="alert">{state.error}</p>}
-        <button className={styles.submit} disabled={pending}><span>{pending ? '保存中…' : '保存して続ける'}</span>{!pending && <span aria-hidden="true">→</span>}</button>
+        <button className={styles.submit} disabled={pending} aria-busy={pending}><span>{pending ? '保存中…' : '保存して続ける'}</span>{!pending && <span aria-hidden="true">→</span>}</button>
       </form>
     </AuthShell>
   )

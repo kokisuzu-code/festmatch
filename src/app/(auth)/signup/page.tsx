@@ -65,7 +65,7 @@ function SignupForm() {
         <label><span>パスワード（確認）</span><input required type="password" autoComplete="new-password" minLength={12} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="もう一度入力" /></label>
         <p className={styles.hint}>12文字以上で設定してください。</p>
         {message && <p className={styles.message} role="status">{message}</p>}
-        <button className={styles.submit} disabled={submitting}><span>{submitting ? '作成中…' : 'アカウントを作成'}</span>{!submitting && <span aria-hidden="true">→</span>}</button>
+        <button className={styles.submit} disabled={submitting} aria-busy={submitting}><span>{submitting ? '作成中…' : 'アカウントを作成'}</span>{!submitting && <span aria-hidden="true">→</span>}</button>
       </form>
     </AuthShell>
   )

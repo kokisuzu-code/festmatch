@@ -18,5 +18,5 @@ export default function PublishEventButton({ eventId }: { eventId: string }) {
     else setMessage(body.error ?? 'イベントを公開できませんでした。')
   }
 
-  return <div className="action-box"><button className="button button-primary" disabled={loading} onClick={publish}>{loading ? '公開中' : '募集を公開する'}</button>{message && <p role="alert">{message}</p>}</div>
+  return <div className="action-box"><button className="button button-primary" disabled={loading} aria-busy={loading} onClick={publish}>{loading ? '公開中…' : '募集を公開する'}</button>{message && <p role="alert">{message}</p>}</div>
 }
