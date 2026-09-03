@@ -75,7 +75,7 @@ export default function GenreCapacityManager({
 
       <div className="genre-capacity-actions">
         <button className="button button-secondary" onClick={() => setSlots((current) => [...current, { genre: '新しいジャンル', capacity: 1 }])} type="button">＋ ジャンルを追加</button>
-        <div>{notice && <span>{notice}</span>}<button className="button button-primary" disabled={pending} onClick={save} type="button">{pending ? '保存中…' : '変更を保存'}</button></div>
+        <div>{notice && <span>{notice}</span>}<button className="button button-primary" disabled={pending} aria-busy={pending} onClick={save} type="button">{pending ? '保存中…' : '変更を保存'}</button></div>
       </div>
     </section>
   )

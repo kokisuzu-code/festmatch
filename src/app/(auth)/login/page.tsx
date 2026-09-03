@@ -104,7 +104,7 @@ function LoginForm() {
             </div>
             <div className={styles.passwordLink}><Link href={forgotPasswordHref}>パスワードを忘れた場合</Link></div>
             {message && <p className={styles.message} role="alert">{message}</p>}
-            <button className={styles.submit} disabled={submitting}>
+            <button className={styles.submit} disabled={submitting} aria-busy={submitting}>
               <span>{submitting ? "ログイン中…" : "ログイン"}</span>
               {!submitting && <span aria-hidden="true">→</span>}
             </button>

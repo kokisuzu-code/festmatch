@@ -60,7 +60,7 @@ function ResetPasswordForm() {
         <label><span>新しいパスワード</span><input required type="password" autoComplete="new-password" minLength={12} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="12文字以上" /></label>
         <label><span>パスワード（確認）</span><input required type="password" autoComplete="new-password" minLength={12} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="もう一度入力" /></label>
         {message && <p className={styles.message} role="alert">{message}</p>}
-        <button className={styles.submit} disabled={submitting}><span>{submitting ? "保存中…" : "パスワードを設定"}</span>{!submitting && <span aria-hidden="true">→</span>}</button>
+        <button className={styles.submit} disabled={submitting} aria-busy={submitting}><span>{submitting ? "保存中…" : "パスワードを設定"}</span>{!submitting && <span aria-hidden="true">→</span>}</button>
       </form>
     </AuthShell>
   )

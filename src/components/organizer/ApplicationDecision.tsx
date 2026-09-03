@@ -58,15 +58,15 @@ export default function ApplicationDecision({
 
   if (status !== 'pending') {
     if ((status !== 'approved' && status !== 'paid') || !spaces.length) return <span className="status">{status}</span>
-    return <div className="decision-actions assignment-control"><span className="status">{status}</span><label>区画<select value={selectedSpaceId} disabled={pending} onChange={(event) => setSelectedSpaceId(event.target.value)}><option value="">未割当</option>{compatibleSpaces.map((space) => <option key={space.id} value={space.id}>{space.label}{space.genre ? `（${space.genre}）` : ''}</option>)}</select></label><button className="button button-secondary" disabled={pending} onClick={saveAssignment}>{pending ? '保存中…' : '区画を保存'}</button>{message && <small>{message}</small>}</div>
+    return <div className="decision-actions assignment-control"><span className="status">{status}</span><label>区画<select value={selectedSpaceId} disabled={pending} onChange={(event) => setSelectedSpaceId(event.target.value)}><option value="">未割当</option>{compatibleSpaces.map((space) => <option key={space.id} value={space.id}>{space.label}{space.genre ? `（${space.genre}）` : ''}</option>)}</select></label><button className="button button-secondary" disabled={pending} aria-busy={pending} onClick={saveAssignment}>{pending ? '保存中…' : '区画を保存'}</button>{message && <small>{message}</small>}</div>
   }
 
   return <div className="decision-actions">
     {genreSlotFull && <small className="slot-full-note">ジャンル枠が満了しているため承認できません。</small>}
     {requiresSpace && <label>割当区画<select value={selectedSpaceId} disabled={pending} onChange={(event) => setSelectedSpaceId(event.target.value)}><option value="">区画を選択</option>{compatibleSpaces.map((space) => <option key={space.id} value={space.id}>{space.label}{space.genre ? `（${space.genre}）` : ''}</option>)}</select></label>}
     {requiresSpace && !compatibleSpaces.length && <small className="slot-full-note">割り当て可能な空き区画がありません。</small>}
-    <button className="button button-secondary" disabled={pending} onClick={() => decide('rejected')}>{pending ? '処理中…' : '見送る'}</button>
-    <button className="button button-primary" disabled={pending || genreSlotFull || (requiresSpace && (!selectedSpaceId || !compatibleSpaces.length))} onClick={() => decide('approved')}>{pending ? '処理中…' : '承認'}</button>
+    <button className="button button-secondary" disabled={pending} aria-busy={pending} onClick={() => decide('rejected')}>{pending ? '処理中…' : '見送る'}</button>
+    <button className="button button-primary" disabled={pending || genreSlotFull || (requiresSpace && (!selectedSpaceId || !compatibleSpaces.length))} aria-busy={pending} onClick={() => decide('approved')}>{pending ? '処理中…' : '承認'}</button>
     {message && <small>{message}</small>}
   </div>
 }

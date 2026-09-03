@@ -56,7 +56,7 @@ export default function EventCapacitySettings({
         </div>
       </div>
 
-      <div className="capacity-save-row"><button type="button" className="button button-primary" disabled={pending} onClick={save}>{pending ? '保存中' : '枠・区画を保存'}</button>{notice && <p className="form-subtle">{notice}</p>}</div>
+      <div className="capacity-save-row"><button type="button" className="button button-primary" disabled={pending} aria-busy={pending} onClick={save}>{pending ? '保存中…' : '枠・区画を保存'}</button>{notice && <p className="form-subtle">{notice}</p>}</div>
     </section>
   )
 }

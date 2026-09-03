@@ -48,6 +48,7 @@ export default function GoogleAuthButton({
         type="button"
         onClick={continueWithGoogle}
         disabled={submitting}
+        aria-busy={submitting}
       >
         <GoogleIcon />
         <span>{submitting ? 'Googleへ接続中…' : label}</span>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Noto_Sans_JP } from "next/font/google";
+import NavigationFeedback from "@/components/NavigationFeedback";
 import "./globals.css";
 
 const notoSansJP = Noto_Sans_JP({
@@ -29,7 +30,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" className={`${notoSansJP.variable} ${geistSans.variable} h-full`} data-scroll-behavior="smooth">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <NavigationFeedback />
+        {children}
+      </body>
     </html>
   );
 }
