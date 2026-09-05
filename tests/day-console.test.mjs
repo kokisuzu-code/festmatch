@@ -25,6 +25,17 @@ test('the Sites day-control feature set remains available', () => {
   }
 })
 
+test('sidebar navigation switches between dedicated operation workspaces', () => {
+  for (const workspace of ['overview', 'map', 'vendors', 'broadcast', 'attention', 'checklist', 'timeline']) {
+    assert.ok(consoleSource.includes(`${workspace}: {`), `${workspace} should have its own workspace metadata`)
+    assert.ok(styles.includes(`view-${workspace}`), `${workspace} should have a dedicated workspace layout`)
+  }
+  assert.match(consoleSource, /className="card vendors-workspace"/)
+  assert.match(consoleSource, /className="broadcast-workspace"/)
+  assert.match(consoleSource, /setActiveNav\(id\)/)
+  assert.doesNotMatch(styles, /nav button:nth-child\(5\).*display:none/)
+})
+
 test('day-console styles are isolated from the existing production UI', () => {
   assert.match(styles, /\.day-console-page \.sidebar/)
   assert.doesNotMatch(styles, /(^|\n)\.sidebar\s*\{/)

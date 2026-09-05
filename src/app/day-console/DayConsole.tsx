@@ -83,7 +83,19 @@ const navItems = [
   ["attention", "!", "要対応"],
   ["checklist", "✓", "運営チェック"],
   ["timeline", "↳", "タイムライン"],
-];
+] as const;
+
+type WorkspaceId = (typeof navItems)[number][0];
+
+const workspaceMeta: Record<WorkspaceId, { eyebrow: string; title: string; description: string }> = {
+  overview: { eyebrow: "LIVE OPERATION", title: "当日ダッシュボード", description: "会場全体の進行と、いま対応すべきことをまとめて確認します。" },
+  map: { eyebrow: "VENUE CONTROL", title: "会場マップ", description: "区画ごとの到着・営業状況を、会場図から直接更新します。" },
+  vendors: { eyebrow: "VENDOR CONTROL", title: "出店者管理", description: "全出店者の現在地、ステータス、確認項目を一覧で管理します。" },
+  broadcast: { eyebrow: "BROADCAST CENTER", title: "全体配信", description: "搬入・開場・撤収の連絡を作成し、既読状況まで追跡します。" },
+  attention: { eyebrow: "ACTION CENTER", title: "要対応", description: "トラブルや未到着など、優先度の高い案件から処理します。" },
+  checklist: { eyebrow: "OPERATIONS", title: "運営チェック", description: "本部・搬入口・各区画の確認事項を進行順に完了させます。" },
+  timeline: { eyebrow: "RUN OF SHOW", title: "タイムライン", description: "当日の進行、完了した工程、次の予定を時系列で確認します。" },
+};
 
 const timeline = [
   { time: "07:00", minutes: 420, title: "運営集合・朝礼" },
@@ -107,7 +119,7 @@ export default function DayConsole({ events, operatorName }: DayConsoleProps) {
   const [eventId, setEventId] = useState(availableEvents[0].id);
   const activeEvent = availableEvents.find((event) => event.id === eventId) ?? availableEvents[0];
   const [stalls, setStalls] = useState(() => hydrateStalls(activeEvent));
-  const [activeNav, setActiveNav] = useState("overview");
+  const [activeNav, setActiveNav] = useState<WorkspaceId>("overview");
   const [filter, setFilter] = useState<StallStatus | "すべて">("すべて");
   const [selected, setSelected] = useState<Stall | null>(null);
   const [panel, setPanel] = useState<"detail" | "chat" | "broadcast" | "notifications" | "mapImport" | null>(null);
@@ -205,22 +217,13 @@ export default function DayConsole({ events, operatorName }: DayConsoleProps) {
     }, 1400);
   };
 
-  const jumpTo = (id: string) => {
+  const jumpTo = (id: WorkspaceId) => {
     setActiveNav(id);
-    if (id === "map" || id === "vendors") {
-      document.getElementById("venue-map")?.scrollIntoView({ behavior: "smooth" });
-    } else if (id === "attention") {
-      document.getElementById("attention-queue")?.scrollIntoView({ behavior: "smooth" });
-    } else if (id === "checklist") {
-      document.getElementById("checklist")?.scrollIntoView({ behavior: "smooth" });
-    } else if (id === "timeline") {
-      document.getElementById("timeline")?.scrollIntoView({ behavior: "smooth" });
-    } else if (id === "broadcast") {
-      setPanel("broadcast");
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    setPanel(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const currentWorkspace = workspaceMeta[activeNav];
 
   return (
     <div className="day-console-page"><div className="app-shell">
@@ -237,7 +240,7 @@ export default function DayConsole({ events, operatorName }: DayConsoleProps) {
           {navItems.map(([id, icon, label]) => (
             <button key={id} className={activeNav === id ? "active" : ""} onClick={() => jumpTo(id)}>
               <span>{icon}</span>{label}
-              {id === "attention" && <em>3</em>}
+              {id === "attention" && attentionCount > 0 && <em>{attentionCount}</em>}
             </button>
           ))}
         </nav>
@@ -275,13 +278,15 @@ export default function DayConsole({ events, operatorName }: DayConsoleProps) {
         <div className="content">
           <section className="welcome">
             <div>
-              <div className="eyebrow"><span className="live-dot" /> LIVE OPERATION</div>
-              <h1>{activeEvent.title}</h1>
-              <p>{eventDate}–{eventEndTime} · {activeEvent.address}{activeEvent.isDemo ? " · 本番データ未登録のためデモ表示" : ""}</p>
+              <div className="eyebrow"><span className="live-dot" /> {currentWorkspace.eyebrow}</div>
+              <h1>{currentWorkspace.title}</h1>
+              <p>{currentWorkspace.description}</p>
+              <div className="workspace-event-line"><b>{activeEvent.title}</b><span>{eventDate}–{eventEndTime} · {activeEvent.address}{activeEvent.isDemo ? " · デモ表示" : ""}</span></div>
             </div>
             <button className="ghost-button" onClick={() => activeEvent.slug ? router.push(`/festmap/events/${activeEvent.slug}`) : showToast("このイベントはまだ公開されていません")}>公開ページを見る ↗</button>
           </section>
 
+          <div className={`workspace-view view-${activeNav}`} key={activeNav}>
           <section className="metrics">
             <article>
               <div className="metric-top"><span className="metric-icon green">✓</span><small>到着済み</small></div>
@@ -307,6 +312,83 @@ export default function DayConsole({ events, operatorName }: DayConsoleProps) {
               <div className="progress blue-bar"><i style={{ width: `${(completedChecks.filter(Boolean).length / completedChecks.length) * 100}%` }} /></div>
               <p>{completedChecks.filter(Boolean).length * 9} / 36項目 完了</p>
             </article>
+          </section>
+
+          <section className="card vendors-workspace" aria-label="出店者一覧">
+            <div className="workspace-panel-head">
+              <div>
+                <span className="section-kicker">ALL VENDORS</span>
+                <h2>{totalStalls}店舗の稼働状況</h2>
+                <p>区画・到着状況・確認項目を一覧から更新できます。</p>
+              </div>
+              <button onClick={() => showToast("出店者一覧をCSVで書き出しました")}>CSV出力</button>
+            </div>
+            <div className="vendor-summary">
+              {statusOrder.map((status) => (
+                <button key={status} className={filter === status ? "active" : ""} onClick={() => setFilter(filter === status ? "すべて" : status)}>
+                  <i className={`status-dot status-dot-${status}`} />
+                  <span>{status}</span>
+                  <b>{counts[status]}</b>
+                </button>
+              ))}
+            </div>
+            <div className="vendor-table" role="table" aria-label="出店者の当日状況">
+              <div className="vendor-table-head" role="row">
+                <span>出店者・区画</span><span>現在の状況</span><span>確認項目</span><span>担当者</span><span>操作</span>
+              </div>
+              {filteredStalls.map((stall) => (
+                <div className="vendor-table-row" role="row" key={stall.id}>
+                  <div className="vendor-name"><i className={`status-dot status-dot-${stall.status}`} /><span><b>{stall.name}</b><small>{stall.id} · {stall.category}</small></span></div>
+                  <label className="vendor-status-select">
+                    <span className="sr-only">{stall.name}のステータス</span>
+                    <select value={stall.status} onChange={(event) => updateStatus(stall.id, event.target.value as StallStatus)}>
+                      {statusOrder.map((status) => <option key={status} value={status}>{status}</option>)}
+                    </select>
+                  </label>
+                  <div className="vendor-checks"><span><i style={{ width: `${(stall.checks / 4) * 100}%` }} /></span><b>{stall.checks} / 4</b></div>
+                  <div className="vendor-owner"><b>{stall.owner}</b><small>{stall.phone}</small></div>
+                  <div className="vendor-actions"><button onClick={() => { setSelected(stall); setPanel("chat"); }}>連絡</button><button className="primary" onClick={() => openStall(stall)}>詳細</button></div>
+                </div>
+              ))}
+              {filteredStalls.length === 0 && <div className="vendor-empty">該当する出店者はいません</div>}
+            </div>
+          </section>
+
+          <section className="broadcast-workspace" aria-label="全体配信センター">
+            <div className="broadcast-stats">
+              <article><small>配信対象</small><b>{totalStalls}<span>店舗</span></b><p>現在のイベント全出店者</p></article>
+              <article><small>直近の既読</small><b>{Math.max(0, totalStalls - 2)}<span> / {totalStalls}</span></b><p>08:42 配信分</p></article>
+              <article><small>未確認</small><b className="orange-number">{Math.min(2, totalStalls)}<span>店舗</span></b><p>個別連絡が必要です</p></article>
+            </div>
+            <div className="broadcast-layout">
+              <div className="card broadcast-compose-card">
+                <div className="workspace-panel-head">
+                  <div><span className="section-kicker">NEW MESSAGE</span><h2>新しい配信を作成</h2><p>全出店者へ同じ内容を即時配信します。</p></div>
+                  <span className="delivery-target">● {totalStalls}店舗</span>
+                </div>
+                <div className="broadcast-templates">
+                  <small>テンプレート</small>
+                  <div>{["まもなく開場します", "搬入を完了してください", "撤収開始のお知らせ"].map((text) => <button key={text} onClick={() => setBroadcastText(text)}>{text}</button>)}</div>
+                </div>
+                <label className="broadcast-editor">
+                  <span>配信内容</span>
+                  <textarea value={broadcastText} onChange={(event) => setBroadcastText(event.target.value)} placeholder="例：まもなく一般開場です。各店舗は最終確認をお願いします。" />
+                  <small>{broadcastText.length} / 500文字</small>
+                </label>
+                <div className="broadcast-send-row">
+                  <label><input type="checkbox" defaultChecked /> 了解の回答を求める</label>
+                  <button disabled={!broadcastText.trim()} onClick={() => { showToast(`${totalStalls}店舗へ一斉配信しました`); setBroadcastText(""); }}>今すぐ配信する</button>
+                </div>
+              </div>
+              <div className="card broadcast-history-card">
+                <div className="workspace-panel-head"><div><span className="section-kicker">HISTORY</span><h2>配信履歴</h2></div><button onClick={() => showToast("配信履歴を更新しました")}>更新</button></div>
+                <div className="broadcast-history-list">
+                  <article><div><time>08:42</time><span>搬入案内</span></div><p>搬入は海側ゲートからお願いします。9:30までに車両の退出を完了してください。</p><footer><b>既読 {Math.max(0, totalStalls - 2)} / {totalStalls}</b><span>了解 {Math.max(0, totalStalls - 3)} / {totalStalls}</span></footer></article>
+                  <article><div><time>07:15</time><span>運営連絡</span></div><p>本日の受付を開始しました。到着後は運営本部へお越しください。</p><footer><b>既読 {totalStalls} / {totalStalls}</b><span>全員確認済み</span></footer></article>
+                  <article><div><time>前日 18:00</time><span>リマインド</span></div><p>明日の搬入時間と入場ルートをご確認ください。</p><footer><b>既読 {totalStalls} / {totalStalls}</b><span>全員確認済み</span></footer></article>
+                </div>
+              </div>
+            </div>
           </section>
 
           <div className="dashboard-grid">
@@ -440,7 +522,7 @@ export default function DayConsole({ events, operatorName }: DayConsoleProps) {
             <div className="card checklist-card" id="checklist">
               <div className="section-head compact">
                 <div><span className="section-kicker">OPERATIONS</span><h2>運営チェックリスト</h2></div>
-                <button onClick={() => showToast("全チェックリストを開きました")}>全36項目</button>
+                <button onClick={() => jumpTo("checklist")}>全36項目</button>
               </div>
               <div className="check-progress"><span>本日の完了状況</span><b>{completedChecks.filter(Boolean).length} / {completedChecks.length}</b></div>
               {["受付・本部設営", "搬入口の誘導員配置", "保健所許可証の掲示確認", "電源・消火器の設置確認"].map((label, index) => (
@@ -458,6 +540,7 @@ export default function DayConsole({ events, operatorName }: DayConsoleProps) {
               <button onClick={() => setPanel("broadcast")}>メッセージを作成</button>
             </div>
           </section>
+          </div>
         </div>
       </main>
 
