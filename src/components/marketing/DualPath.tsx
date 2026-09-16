@@ -27,7 +27,7 @@ export default function DualPath() {
           </div>
           <div className="path path-vendor" id="vendor">
             <h3>キッチンカー・ベンダー</h3>
-            <p className="who">キッチンカーオーナー・移動販売・クラフト出店者</p>
+            <p className="who">ベンダー・移動販売・クラフト出店者</p>
             <ul>
               <li>全国のフェス・イベントの募集をマップで検索</li>
               <li>プロフィールを一度作れば、申請はワンタップ</li>

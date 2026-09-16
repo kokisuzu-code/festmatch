@@ -73,7 +73,7 @@ export default function NewKitchenCarPage() {
       const ext = photoFile.name.split('.').pop()
       const path = `${car.id}/profile.${ext}`
       const { data: uploaded, error: uploadError } = await supabase.storage
-        .from('kitchen-car-photos')
+        .from('vendor-photos')
         .upload(path, photoFile, { upsert: true, contentType: photoFile.type || undefined })
       if (uploadError) {
         setError('車両写真のアップロードに失敗しました。画像を選び直して再試行してください。')
@@ -81,7 +81,7 @@ export default function NewKitchenCarPage() {
         return
       }
       if (uploaded) {
-        const { data: { publicUrl } } = supabase.storage.from('kitchen-car-photos').getPublicUrl(uploaded.path)
+        const { data: { publicUrl } } = supabase.storage.from('vendor-photos').getPublicUrl(uploaded.path)
         await supabase.from('vendors').update({ photo_url: publicUrl }).eq('id', car.id)
       }
     }

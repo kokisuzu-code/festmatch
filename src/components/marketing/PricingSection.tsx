@@ -25,7 +25,7 @@ export default function PricingSection() {
             <div className="price">
               ¥120,000<small>/月</small>
             </div>
-            <p className="per-cost">年間を通じて複数イベントを開催する方に</p>
+            <p className="per-cost">年間を通じて複数イベントを開催する方に（年間契約）</p>
             <div className="best-for">
               <span>自治体</span>
               <span>商店街</span>
@@ -48,15 +48,15 @@ export default function PricingSection() {
             <div className="price">
               ¥250,000<small>/イベント</small>
             </div>
-            <p className="per-cost">1イベント限定・利用期間は最長3ヶ月</p>
+            <p className="per-cost">単発・短期開催に。イベントごとの一括払い、利用期間は最大3ヶ月です。</p>
             <div className="best-for">
               <span>単発フェス</span>
               <span>学園祭</span>
               <span>お試し利用</span>
             </div>
             <ul>
-              <li>1イベント分のフル機能利用</li>
-              <li>準備期間を含め最長3ヶ月間利用可能</li>
+              <li>対象イベントを1件掲載</li>
+              <li>イベントごとの一括払い・利用期間は最大3ヶ月</li>
               <li>年間契約と同じすべての機能</li>
               <li>年間契約への切替はいつでも可能</li>
             </ul>

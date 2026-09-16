@@ -1,22 +1,26 @@
-export const dynamic = 'force-dynamic'
-
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Noto_Sans_JP } from "next/font/google";
+import NavigationFeedback from "@/components/NavigationFeedback";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoSansJP = Noto_Sans_JP({
+  weight: ["400", "500", "700", "900"],
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-noto-sans-jp",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const geistSans = Geist({
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-geist-sans",
 });
 
 export const metadata: Metadata = {
-  title: "FestMatch",
-  description: "フェスとキッチンカーをつなぐ、主催者自走型プラットフォーム",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://festmatch-pink.vercel.app"),
+  title: { default: "FestMatch | 主催者自走型の出店管理SaaS", template: "%s | FestMatch" },
+  description: "FestMatchは、イベント主催者とベンダーを直接つなぐ主催者自走型の出店管理SaaSです。",
+  openGraph: { type: "website", locale: "ja_JP", siteName: "FestMatch", title: "FestMatch | 主催者自走型の出店管理SaaS", description: "募集から応募、決済までを主催者自身で完結できます。" },
 };
 
 export default function RootLayout({
@@ -25,11 +29,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="ja" className={`${notoSansJP.variable} ${geistSans.variable} h-full`} data-scroll-behavior="smooth">
+      <body className="min-h-full flex flex-col">
+        <NavigationFeedback />
+        {children}
+      </body>
     </html>
   );
 }

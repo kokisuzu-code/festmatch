@@ -122,7 +122,7 @@ export default async function MessagesPage() {
                   const lastMsg = lastMessageMap[app.id]
                   const event = app.events
                   const car = app.vendors
-                  const partnerName = (car?.profiles as any)?.name ?? car?.name ?? 'キッチンカーオーナー'
+                  const partnerName = (car?.profiles as any)?.name ?? car?.name ?? 'ベンダー'
                   const subtitle = `${event?.title ?? ''}`
                   let preview = 'メッセージはまだありません'
                   if (lastMsg) {

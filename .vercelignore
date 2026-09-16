@@ -1,0 +1,2 @@
+# Local recovery caches from prior Next.js builds; never deploy these.
+.next_old*/

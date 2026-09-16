@@ -1,0 +1,7 @@
+.vendor-photo {
+  width: 100%;
+  aspect-ratio: 1;
+  background-size: cover;
+  background-position: center;
+  border-radius: .7rem;
+}

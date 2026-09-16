@@ -1,59 +1,152 @@
-import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { todayISO } from "@/lib/festEvents";
-import HeroWithMap from "@/components/marketing/HeroWithMap";
-import PrefStrip from "@/components/marketing/PrefStrip";
-import OpenEventsGrid from "@/components/marketing/OpenEventsGrid";
-import DualPath from "@/components/marketing/DualPath";
-import FeatureGrid from "@/components/marketing/FeatureGrid";
-import StepsSection from "@/components/marketing/StepsSection";
-import PricingSection from "@/components/marketing/PricingSection";
-import FinalCta from "@/components/marketing/FinalCta";
+import type { Metadata } from "next"
+import Link from "next/link"
+import Image from "next/image"
+import BrandMark from "@/components/BrandMark"
+import AuthHomeRedirect from "@/components/AuthHomeRedirect"
+import FestMatchScrollStory from "./FestMatchScrollStory"
+import { createPublicClient } from "@/lib/supabase/public"
+import { listFestMapEvents } from "@/lib/festmap"
+import type { PublicEvent } from "@/components/festmap/PublicEventCard"
 
-export const dynamic = "force-dynamic";
+// 公開トップページ: セッションを読まないため静的化しISRで配信する。
+// ログイン済みユーザーの/dashboardへの遷移はAuthHomeRedirect(クライアント側)で行う。
+export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: "FestMatch | フェスとキッチンカーをつなぐ、主催者自走型プラットフォーム",
-  description:
-    "FestMatchは、フェス・イベントの主催者とキッチンカーを直接つなぐプラットフォーム。出店募集から申請、区画割り、出店料の決済まですべて完結。担当者不要、登録すれば即日利用開始。",
-  openGraph: {
-    title: "FestMatch | 主催者自走型キッチンカーマッチング",
-    description: "出店募集から決済まで、担当者不要で完結するフェス出店管理SaaS。",
-    url: "https://festmatch.jp",
-    siteName: "FestMatch",
-    locale: "ja_JP",
-    type: "website",
-  },
-};
+  title: "FestMatch | 近くのイベントを、もっと見つけやすく",
+  description: "FestMatchは、近くのイベントを探す人、イベントを運営する主催者、出店者をつなぐプラットフォームです。",
+  openGraph: { title: "FestMatch | 近くのイベントを、もっと見つけやすく", description: "イベントを探す入口から、募集・応募・管理までをひとつに。", url: "https://festmatch-pink.vercel.app", siteName: "FestMatch", locale: "ja_JP", type: "website" },
+}
+
+const demoEvents = [
+  { title: "みなと朝市", date: "7月18日(土)・9:00〜14:00", place: "みなとみらい 臨港パーク", category: "グルメ", note: "キッチンカー", href: "/festmap" },
+  { title: "夏のまちフェス", date: "7月19日(日)・15:00〜20:30", place: "関内・馬車道エリア", category: "音楽", note: "屋台・ライブ", href: "/festmap" },
+  { title: "親子クラフト市", date: "7月20日(月祝)・10:00〜16:00", place: "横浜市役所アトリウム", category: "親子", note: "ワークショップ", href: "/festmap" },
+] as const
+
+const homeImages = [
+  "/reference/waterfront-market.webp",
+  "/reference/summer-festival.webp",
+  "/reference/craft-workshop.webp",
+] as const
+
+function formatHomeDate(value: string) {
+  return new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", weekday: "short" }).format(new Date(value))
+}
+
+function eventDetail(event: PublicEvent, index: number) {
+  return {
+    title: event.title,
+    date: formatHomeDate(event.starts_at),
+    place: event.address ?? event.prefecture,
+    category: event.is_external ? "地域イベント" : "出店募集中",
+    note: event.is_external ? "公式情報を確認" : "出店募集あり",
+    href: event.is_external && event.official_url ? event.official_url : `/festmap/events/${event.slug}`,
+    external: Boolean(event.is_external && event.official_url),
+    image: homeImages[index % homeImages.length],
+  }
+}
+
+function CalendarIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3" /><path d="M7.5 3v4M16.5 3v4M3.5 10h17" /></svg>
+}
+
+function PinIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.3 10.2c0 5.3-7.3 10.3-7.3 10.3s-7.3-5-7.3-10.3a7.3 7.3 0 1 1 14.6 0Z" /><circle cx="12" cy="10.2" r="2.3" /></svg>
+}
+
+function SearchIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3" /><path d="m16 16 4.1 4.1" /></svg>
+}
+
+function ArrowIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+}
 
 export default async function MarketingPage() {
-  const supabase = await createClient();
+  const publicEvents = await (async () => {
+    try {
+      return await listFestMapEvents(createPublicClient())
+    } catch {
+      return [] as PublicEvent[]
+    }
+  })()
+  const visibleEvents = publicEvents.slice(0, 6).map(eventDetail)
+  const cards = visibleEvents.length ? visibleEvents : demoEvents.map((event, index) => ({ ...event, image: homeImages[index], external: false }))
 
-  // ログイン済みはロール別ダッシュボードへ、未ログインはマーケティングトップを表示
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user) {
-    redirect("/dashboard");
-  }
+  return <main className="fm-home">
+    <AuthHomeRedirect />
+    <header className="fm-home-header">
+      <div className="fm-home-wrap fm-home-nav">
+        <BrandMark />
+        <nav aria-label="メインナビゲーション">
+          <Link href="/festmap">イベントを探す</Link>
+          <Link href="/signup?role=organizer">主催者の方</Link>
+          <Link href="/signup?role=vendor">出店者の方</Link>
+        </nav>
+        <div className="fm-home-account-actions">
+          <Link className="fm-home-login" href="/login">ログイン</Link>
+          <Link className="fm-home-publish" href="/signup?role=organizer"><span aria-hidden="true">⌁</span>イベントを掲載する</Link>
+        </div>
+      </div>
+    </header>
 
-  const { count } = await supabase
-    .from("fest_events")
-    .select("id", { count: "exact", head: true })
-    .eq("published", true)
-    .gte("end_date", todayISO());
+    <section className="fm-home-hero" id="top">
+      <div className="fm-home-wrap fm-home-hero-grid">
+        <div className="fm-home-hero-copy">
+          <p className="fm-home-overline">街の予定を、ひとつの場所に。</p>
+          <h1><span>週末が、近くなる。</span></h1>
+          <p className="fm-home-lead">いつもの街にも、まだ知らない楽しみがある。<br />場所と日付から、ふらっと行ける予定を探せます。</p>
+          <form className="fm-home-search" action="/festmap">
+            <label htmlFor="home-event-search"><PinIcon /><span className="sr-only">駅名またはエリア名</span></label>
+            <input id="home-event-search" name="q" placeholder="駅名・エリア名で探す" />
+            <button type="submit"><SearchIcon />イベントを探す <ArrowIcon /></button>
+          </form>
+          <p className="fm-home-search-note">登録なしですぐに検索できます</p>
+          <div className="fm-home-hero-links">
+            <Link href="/signup?role=organizer">イベントを掲載する <ArrowIcon /></Link>
+            <Link href="/signup?role=vendor">出店先を探す <ArrowIcon /></Link>
+          </div>
+        </div>
+        <div className="fm-home-hero-visual" aria-label="近くで開催されるイベント">
+          <article className="fm-home-feature fm-home-feature-main">
+            <Image src={homeImages[0]} alt="港沿いで開かれる朝市の様子" width={700} height={520} priority />
+            <div><span>今週末</span><h2>みなと朝市</h2><p>7/18(土)・みなとみらい</p></div>
+          </article>
+          <article className="fm-home-feature fm-home-feature-mini">
+            <Image src={homeImages[1]} alt="夏のまちフェスの様子" width={420} height={300} />
+            <div><span>音楽</span><h2>夏のまちフェス</h2></div>
+          </article>
+          <div className="fm-home-feature-count"><strong>4</strong><span>近くで開催</span></div>
+        </div>
+      </div>
+    </section>
 
-  return (
-    <>
-      <HeroWithMap upcomingCount={count ?? 0} />
-      <PrefStrip />
-      <OpenEventsGrid />
-      <DualPath />
-      <FeatureGrid />
-      <StepsSection />
-      <PricingSection />
-      <FinalCta />
-    </>
-  );
+    <FestMatchScrollStory />
+
+    <section className="fm-home-events" id="events">
+      <div className="fm-home-wrap">
+        <div className="fm-home-section-heading"><p>NEAR YOU</p><h2>今週末、近くで開かれるイベント。</h2><span>{visibleEvents.length ? `${visibleEvents.length}件を表示中` : "掲載イメージ"}</span></div>
+        <p className="fm-home-section-lead">場所や気分から、行きたい予定を選べます。</p>
+        <div className="fm-home-filter-row" aria-label="イベントカテゴリー"><span aria-hidden="true">☷</span>{["すべて", "グルメ", "親子", "音楽", "カルチャー", "体験"].map((label, index) => <Link key={label} className={index === 0 ? "is-active" : ""} href="/festmap">{label}</Link>)}<Link className="fm-home-map-toggle" href="/festmap" aria-label="地図でイベントを探す">⌖</Link></div>
+        <div className="fm-home-event-grid">
+          {cards.map((event, index) => <article className="fm-home-event-card" key={`${event.title}-${index}`}>
+            <Image src={event.image} alt="" width={700} height={438} />
+            <Link href={event.href} target={event.external ? "_blank" : undefined} rel={event.external ? "noopener noreferrer" : undefined} className="fm-home-event-card-body">
+              <div className="fm-home-event-card-top"><span>{event.category}</span><small>{event.external ? "公式情報" : "イベント情報"}</small></div>
+              <h3>{event.title}</h3>
+              <p><CalendarIcon />{event.date}</p>
+              <p><PinIcon />{event.place}</p>
+              <div className="fm-home-event-tags"><span>{event.note}</span><span>イベント</span></div>
+            </Link>
+          </article>)}
+        </div>
+        <div className="fm-home-events-more"><Link href="/festmap">すべてのイベントを探す <ArrowIcon /></Link></div>
+      </div>
+    </section>
+
+    <section className="fm-home-final"><div className="fm-home-wrap"><p>次の週末を、近くから。</p><h2>気になる街を、のぞいてみよう。</h2><form action="/festmap"><label htmlFor="home-event-search-bottom">駅名・エリア名</label><div><input id="home-event-search-bottom" name="q" placeholder="駅名・エリア名を入力" /><button type="submit">イベントを探す <ArrowIcon /></button></div></form></div></section>
+
+    <footer className="fm-home-footer"><div className="fm-home-wrap"><div><BrandMark /><p>近くのイベントと、出会いやすく。</p></div><nav><Link href="/festmap">イベントを探す</Link><Link href="/signup?role=organizer">主催者の方</Link><Link href="/signup?role=vendor">出店者の方</Link></nav><small>© 2026 FestMatch</small></div></footer>
+  </main>
 }
