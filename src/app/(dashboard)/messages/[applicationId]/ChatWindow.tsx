@@ -51,12 +51,14 @@ export default function ChatWindow({
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
+  const [showAttachmentOptions, setShowAttachmentOptions] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ url: string; type: 'image' | 'video'; file: File } | null>(null)
   const pendingIds = useRef<Set<string>>(new Set())
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
 
@@ -89,8 +91,7 @@ export default function ChatWindow({
   }, [applicationId, supabase])
 
   // ファイル選択
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const selectFile = (file?: File) => {
     if (!file) return
 
     const isImage = file.type.startsWith('image/')
@@ -111,7 +112,11 @@ export default function ChatWindow({
 
     const url = URL.createObjectURL(file)
     setPreview({ url, type: isImage ? 'image' : 'video', file })
-    // input リセット
+    setShowAttachmentOptions(false)
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    selectFile(e.target.files?.[0])
     e.target.value = ''
   }
 
@@ -123,7 +128,7 @@ export default function ChatWindow({
 
     const { file, type } = preview
     const ext = file.name.split('.').pop()
-    const path = `${applicationId}/${Date.now()}.${ext}`
+    const path = `${applicationId}/${crypto.randomUUID()}.${ext}`
 
     const { data: uploaded, error: uploadErr } = await supabase.storage
       .from('chat-media')
@@ -387,8 +392,33 @@ export default function ChatWindow({
           <p className={`text-xs ${t.endedText}`}>このチャットは終了しました</p>
         </div>
       ) : (
-        <div className={`${t.inputBg} px-3 py-3 flex items-end gap-2 shrink-0`}>
-          <button onClick={() => setShowTemplates(v => !v)}
+        <div className={`${t.inputBg} relative px-3 py-3 flex items-end gap-2 shrink-0`}>
+          {showAttachmentOptions && (
+            <div className={`absolute bottom-[72px] left-12 z-20 w-56 rounded-2xl border p-2 shadow-xl ${isOrganizer ? 'border-gray-200 bg-white' : 'border-slate-700 bg-slate-800'}`}>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors ${isOrganizer ? 'text-gray-700 hover:bg-gray-100' : 'text-slate-100 hover:bg-slate-700'}`}
+              >
+                <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16l4.6-4.6a2 2 0 012.8 0L16 16m-2-2 1.6-1.6a2 2 0 012.8 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                写真・動画を選ぶ
+              </button>
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors ${isOrganizer ? 'text-gray-700 hover:bg-gray-100' : 'text-slate-100 hover:bg-slate-700'}`}
+              >
+                <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9a2 2 0 012-2h1.2l1-2h5.6l1 2H19a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                カメラで撮る
+              </button>
+            </div>
+          )}
+          <button onClick={() => { setShowTemplates(v => !v); setShowAttachmentOptions(false) }}
             className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${
               showTemplates ? t.templateToggleActive : t.templateToggleInactive
             }`}>
@@ -396,7 +426,11 @@ export default function ChatWindow({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
             </svg>
           </button>
-          <button onClick={() => fileInputRef.current?.click()}
+          <button
+            type="button"
+            onClick={() => { setShowAttachmentOptions(value => !value); setShowTemplates(false) }}
+            aria-label="画像・動画を添付"
+            title="画像・動画を添付"
             className={`w-10 h-10 rounded-full ${t.attachBtn} flex items-center justify-center shrink-0 transition-colors`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -404,6 +438,7 @@ export default function ChatWindow({
             </svg>
           </button>
           <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileSelect} className="hidden" />
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="hidden" aria-label="カメラで撮影" />
           <textarea
             ref={inputRef}
             value={body}

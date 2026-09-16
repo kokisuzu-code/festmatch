@@ -27,7 +27,6 @@ export default async function DocumentsPage() {
     <DocumentsClient
       car={car}
       documents={documents ?? []}
-      userId={user.id}
     />
   )
 }
