@@ -33,10 +33,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   rejected:    { label: '差し戻し', color: 'text-red-400', bg: 'bg-red-900/30', desc: '書類を修正して再提出してください' },
 }
 
-export default function DocumentsClient({ car, documents, userId }: {
+export default function DocumentsClient({ car, documents }: {
   car: Car
   documents: Document[]
-  userId: string
 }) {
   const router = useRouter()
   const supabase = createClient()
@@ -44,12 +43,19 @@ export default function DocumentsClient({ car, documents, userId }: {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const cameraRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const status = STATUS_CONFIG[car.verified_status] ?? STATUS_CONFIG.unsubmitted
 
   const getDocByType = (type: string) => documents.find(d => d.doc_type === type)
 
   const handleUpload = async (docType: string, file: File) => {
+    const isImage = file.type.startsWith('image/') && file.type !== 'image/svg+xml'
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    if (!isImage && !isPdf) {
+      setError('画像またはPDFファイルを選択してください')
+      return
+    }
     if (file.size > 10 * 1024 * 1024) {
       setError('ファイルは10MB以下にしてください')
       return
@@ -58,11 +64,11 @@ export default function DocumentsClient({ car, documents, userId }: {
     setError(null)
 
     const ext = file.name.split('.').pop()
-    const path = `${car.id}/${docType}_${Date.now()}.${ext}`
+    const path = `${car.id}/${docType}_${crypto.randomUUID()}.${ext}`
 
     const { data: uploaded, error: uploadErr } = await supabase.storage
       .from('kitchen-car-docs')
-      .upload(path, file, { upsert: true })
+      .upload(path, file, { upsert: true, contentType: file.type || undefined })
 
     if (uploadErr) {
       setError('アップロードに失敗しました: ' + uploadErr.message)
@@ -154,8 +160,18 @@ export default function DocumentsClient({ car, documents, userId }: {
               const isRequired = dt.key !== 'other'
 
               return (
-                <div key={dt.key} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-                  <div className="flex items-start justify-between gap-3">
+                <div
+                  key={dt.key}
+                  onDragOver={event => event.preventDefault()}
+                  onDrop={event => {
+                    event.preventDefault()
+                    if (isUploading || car.verified_status === 'approved') return
+                    const file = event.dataTransfer.files?.[0]
+                    if (file) handleUpload(dt.key, file)
+                  }}
+                  className="rounded-xl border border-slate-700 bg-slate-800 p-4 transition-colors hover:border-slate-600"
+                >
+                  <div className="flex items-start gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-slate-100">{dt.label}</p>
@@ -174,25 +190,58 @@ export default function DocumentsClient({ car, documents, userId }: {
                         <p className="text-xs text-slate-500 mt-1 truncate">📎 {existing.file_name}</p>
                       )}
                     </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
                     <button
+                      type="button"
                       onClick={() => fileRefs.current[dt.key]?.click()}
                       disabled={isUploading || car.verified_status === 'approved'}
-                      className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 hover:border-green-500 hover:text-green-400 disabled:opacity-40 transition-colors"
+                      className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-600 px-3 py-2.5 text-xs font-semibold text-slate-200 transition-colors hover:border-green-500 hover:text-green-300 disabled:opacity-40"
                     >
-                      {isUploading ? 'アップロード中...' : existing ? '差し替え' : 'アップロード'}
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v11m0-11-4 4m4-4 4 4" />
+                      </svg>
+                      {isUploading ? '送信中...' : existing ? '端末から差し替え' : '端末から選ぶ'}
                     </button>
-                    <input
-                      ref={el => { fileRefs.current[dt.key] = el }}
-                      type="file"
-                      accept="image/*,.pdf"
-                      className="hidden"
-                      onChange={e => {
-                        const f = e.target.files?.[0]
-                        if (f) handleUpload(dt.key, f)
-                        e.target.value = ''
-                      }}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => cameraRefs.current[dt.key]?.click()}
+                      disabled={isUploading || car.verified_status === 'approved'}
+                      className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-600 px-3 py-2.5 text-xs font-semibold text-slate-200 transition-colors hover:border-green-500 hover:text-green-300 disabled:opacity-40"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h1.2l1-2h5.6l1 2H19a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      カメラで撮る
+                    </button>
                   </div>
+                  <p className="mt-2 text-[11px] text-slate-500">画像・PDF（10MB以下）／PCはこの枠へドロップ可</p>
+                  <input
+                    ref={el => { fileRefs.current[dt.key] = el }}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf"
+                    className="sr-only"
+                    aria-label={`${dt.label}を端末から選択`}
+                    onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (f) handleUpload(dt.key, f)
+                      e.target.value = ''
+                    }}
+                  />
+                  <input
+                    ref={el => { cameraRefs.current[dt.key] = el }}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="sr-only"
+                    aria-label={`${dt.label}をカメラで撮影`}
+                    onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (f) handleUpload(dt.key, f)
+                      e.target.value = ''
+                    }}
+                  />
                 </div>
               )
             })}

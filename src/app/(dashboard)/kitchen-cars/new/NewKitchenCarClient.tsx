@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { SingleImageUpload } from '@/components/uploads/ImageUploadField'
 
 // 🏆 TOP5: 唐揚げ・クレープ・たこ焼き・カレー・タコス（国内フェス実績順）
 const GENRES = [
@@ -24,7 +25,6 @@ const GENRES = [
 export default function NewKitchenCarPage() {
   const router = useRouter()
   const supabase = createClient()
-  const photoRef = useRef<HTMLInputElement>(null)
 
   const [name, setName] = useState('')
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
@@ -33,7 +33,6 @@ export default function NewKitchenCarPage() {
   const [instagramUrl, setInstagramUrl] = useState('')
   const [tiktokUrl, setTiktokUrl] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,14 +40,6 @@ export default function NewKitchenCarPage() {
     setSelectedGenres(prev =>
       prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]
     )
-  }
-
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.size > 5 * 1024 * 1024) { setError('写真は5MB以下にしてください'); return }
-    setPhotoFile(file)
-    setPhotoPreview(URL.createObjectURL(file))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,9 +72,14 @@ export default function NewKitchenCarPage() {
     if (photoFile) {
       const ext = photoFile.name.split('.').pop()
       const path = `${car.id}/profile.${ext}`
-      const { data: uploaded } = await supabase.storage
+      const { data: uploaded, error: uploadError } = await supabase.storage
         .from('vendor-photos')
-        .upload(path, photoFile, { upsert: true })
+        .upload(path, photoFile, { upsert: true, contentType: photoFile.type || undefined })
+      if (uploadError) {
+        setError('車両写真のアップロードに失敗しました。画像を選び直して再試行してください。')
+        setLoading(false)
+        return
+      }
       if (uploaded) {
         const { data: { publicUrl } } = supabase.storage.from('vendor-photos').getPublicUrl(uploaded.path)
         await supabase.from('vendors').update({ photo_url: publicUrl }).eq('id', car.id)
@@ -105,35 +101,20 @@ export default function NewKitchenCarPage() {
         <h1 className="text-lg font-semibold text-slate-100">キッチンカーを登録</h1>
       </header>
 
-      <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6 max-w-lg mx-auto">
+      <form id="new-kitchen-car-form" onSubmit={handleSubmit} className="px-4 py-6 space-y-6 max-w-lg mx-auto">
 
         {/* プロフィール写真 */}
-        <div>
-          <label className="block text-sm font-medium text-slate-200 mb-3">プロフィール写真</label>
-          <div className="flex items-center gap-4">
-            <div
-              onClick={() => photoRef.current?.click()}
-              className="w-24 h-24 rounded-2xl bg-slate-800 border-2 border-dashed border-slate-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-green-500 transition-colors shrink-0"
-            >
-              {photoPreview ? (
-                <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
-              ) : (
-                <svg className="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              )}
-            </div>
-            <div>
-              <button type="button" onClick={() => photoRef.current?.click()}
-                className="text-sm text-green-400 hover:text-green-300 font-medium">
-                写真を選択
-              </button>
-              <p className="text-xs text-slate-500 mt-1">JPG・PNG・WEBP（5MB以下）</p>
-              <p className="text-xs text-slate-500">主催者が承認画面で確認します</p>
-            </div>
-          </div>
-          <input ref={photoRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
-        </div>
+        <SingleImageUpload
+          label="プロフィール写真"
+          file={photoFile}
+          onChange={setPhotoFile}
+          onRemove={() => setPhotoFile(null)}
+          onError={setError}
+          helperText="主催者が承認画面で確認します（5MB以下）"
+          maxSizeMB={5}
+          theme="dark"
+          disabled={loading}
+        />
 
         {/* 車両名 */}
         <div>
@@ -221,7 +202,8 @@ export default function NewKitchenCarPage() {
 
       <div className="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 px-4 py-4">
         <button
-          onClick={handleSubmit as any}
+          type="submit"
+          form="new-kitchen-car-form"
           disabled={loading || !name}
           className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-4 rounded-2xl text-base transition-colors"
         >

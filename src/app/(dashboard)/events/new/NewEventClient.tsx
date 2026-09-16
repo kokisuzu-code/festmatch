@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import OrganizerSidebarNav from '@/components/OrganizerSidebarNav'
+import { MultiImageUpload, SingleImageUpload } from '@/components/uploads/ImageUploadField'
 
 const GENRES = [
   '唐揚げ・揚げ物',
@@ -82,30 +83,8 @@ export default function NewEventPage() {
     setTags(tags.filter(t => t !== tag))
 
   // 画像
-  const posterRef = useRef<HTMLInputElement>(null)
-  const photosRef = useRef<HTMLInputElement>(null)
   const [posterFile, setPosterFile] = useState<File | null>(null)
-  const [posterPreview, setPosterPreview] = useState<string | null>(null)
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
-
-  const handlePosterSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.size > 10 * 1024 * 1024) { setError('ポスターは10MB以下にしてください'); return }
-    setPosterFile(file); setPosterPreview(URL.createObjectURL(file))
-  }
-  const handlePhotosSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    const valid = files.filter(f => f.size <= 10 * 1024 * 1024)
-    const combined = [...photoFiles, ...valid].slice(0, 8)
-    setPhotoFiles(combined); setPhotoPreviews(combined.map(f => URL.createObjectURL(f)))
-    e.target.value = ''
-  }
-  const removePhoto = (i: number) => {
-    setPhotoFiles(prev => prev.filter((_, j) => j !== i))
-    setPhotoPreviews(prev => prev.filter((_, j) => j !== i))
-  }
 
   // 主催者情報
   const [organizerCompany, setOrganizerCompany] = useState('')
@@ -505,62 +484,25 @@ export default function NewEventPage() {
             <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
               <h2 className="font-semibold text-gray-900">画像</h2>
 
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">募集ポスター</p>
-                <div onClick={() => posterRef.current?.click()}
-                  className="w-full h-40 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-green-500 transition-colors">
-                  {posterPreview ? (
-                    <img src={posterPreview} alt="poster" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-center">
-                      <svg className="w-8 h-8 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-sm text-gray-400">クリックして画像を選択</p>
-                      <p className="text-xs text-gray-300 mt-1">JPG・PNG・WEBP（10MB以下）</p>
-                    </div>
-                  )}
-                </div>
-                {posterPreview && (
-                  <button type="button" onClick={() => { setPosterFile(null); setPosterPreview(null) }}
-                    className="mt-2 text-xs text-gray-400 hover:text-red-500">削除</button>
-                )}
-                <input ref={posterRef} type="file" accept="image/*" onChange={handlePosterSelect} className="hidden" />
-              </div>
+              <SingleImageUpload
+                label="募集ポスター"
+                file={posterFile}
+                onChange={setPosterFile}
+                onRemove={() => setPosterFile(null)}
+                onError={setError}
+                helperText="端末から選択または撮影・JPG／PNG／WEBP／HEIC（10MB以下）"
+                disabled={loading}
+              />
 
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-gray-700">過去の開催写真 <span className="text-gray-400 font-normal">（最大8枚）</span></p>
-                  {photoFiles.length < 8 && (
-                    <button type="button" onClick={() => photosRef.current?.click()} className="text-sm text-green-600 font-medium">追加</button>
-                  )}
-                </div>
-                {photoPreviews.length > 0 ? (
-                  <div className="grid grid-cols-4 gap-2">
-                    {photoPreviews.map((src, i) => (
-                      <div key={i} className="relative aspect-square">
-                        <img src={src} alt="" className="w-full h-full object-cover rounded-lg" />
-                        <button type="button" onClick={() => removePhoto(i)}
-                          className="absolute top-1 right-1 w-5 h-5 bg-white/90 rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 text-xs shadow">
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                    {photoFiles.length < 8 && (
-                      <div onClick={() => photosRef.current?.click()}
-                        className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-green-500 transition-colors">
-                        <span className="text-gray-400 text-xl">+</span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div onClick={() => photosRef.current?.click()}
-                    className="w-full h-24 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-green-500 transition-colors">
-                    <p className="text-sm text-gray-400">クリックして写真を選択（複数可）</p>
-                  </div>
-                )}
-                <input ref={photosRef} type="file" accept="image/*" multiple onChange={handlePhotosSelect} className="hidden" />
-              </div>
+              <MultiImageUpload
+                label="過去の開催写真"
+                files={photoFiles}
+                onChange={setPhotoFiles}
+                onError={setError}
+                helperText="まとめて複数選択できます。PCではドラッグ＆ドロップにも対応"
+                maxFiles={8}
+                disabled={loading}
+              />
             </section>
 
             {/* 主催者情報 */}

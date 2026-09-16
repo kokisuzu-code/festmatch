@@ -2,12 +2,13 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import OrganizerSidebarNav from '@/components/OrganizerSidebarNav'
 import SpaceSettings from '@/components/organizer/SpaceSettings'
+import { MultiImageUpload, SingleImageUpload } from '@/components/uploads/ImageUploadField'
 
 const GENRES = [
   '唐揚げ・揚げ物',
@@ -86,18 +87,11 @@ export default function EditEventPage() {
   const removeTag = (tag: string, tags: string[], setTags: (t: string[]) => void) =>
     setTags(tags.filter(t => t !== tag))
 
-  // ポスター画像
-  const posterRef = useRef<HTMLInputElement>(null)
+  // 画像
   const [posterFile, setPosterFile] = useState<File | null>(null)
-  const [posterPreview, setPosterPreview] = useState<string | null>(null)
   const [existingPosterUrl, setExistingPosterUrl] = useState<string | null>(null)
-
-  const handlePosterSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.size > 10 * 1024 * 1024) { setError('ポスターは10MB以下にしてください'); return }
-    setPosterFile(file); setPosterPreview(URL.createObjectURL(file))
-  }
+  const [photoFiles, setPhotoFiles] = useState<File[]>([])
+  const [existingPhotoUrls, setExistingPhotoUrls] = useState<string[]>([])
 
   // イベントデータ取得
   useEffect(() => {
@@ -148,10 +142,8 @@ export default function EditEventPage() {
       setAlcoholOk(event.alcohol_ok ?? false)
       setCustomFacilityTags(event.custom_facility_tags ?? [])
       setCustomEnvTags(event.custom_env_tags ?? [])
-      if (event.poster_url) {
-        setExistingPosterUrl(event.poster_url)
-        setPosterPreview(event.poster_url)
-      }
+      setExistingPosterUrl(event.poster_url ?? null)
+      setExistingPhotoUrls(event.event_photo_urls ?? [])
 
       // ジャンル枠取得
       const { data: slots } = await supabase
@@ -168,9 +160,6 @@ export default function EditEventPage() {
 
     fetchEvent()
   }, [eventId])
-
-  const [eventTitle, setEventTitle] = useState('')
-  useEffect(() => { setEventTitle(title) }, [title])
 
   const handleSubmit = async (status: 'draft' | 'published') => {
     setLoading(true); setError(null)
@@ -227,14 +216,50 @@ export default function EditEventPage() {
       if (slotError) { setError('ジャンル枠の保存に失敗しました'); setLoading(false); return }
     }
 
-    // ポスター画像アップロード（新しいファイルが選択された場合のみ）
+    const imageUpdates: { poster_url: string | null; event_photo_urls: string[] } = {
+      poster_url: existingPosterUrl,
+      event_photo_urls: existingPhotoUrls,
+    }
+
+    // 新しく選択された画像だけをアップロードする
     if (posterFile) {
       const ext = posterFile.name.split('.').pop()
-      const { data: up } = await supabase.storage.from('event-images').upload(`${eventId}/poster.${ext}`, posterFile, { upsert: true })
-      if (up) {
-        const { data: { publicUrl } } = supabase.storage.from('event-images').getPublicUrl(up.path)
-        await supabase.from('events').update({ poster_url: publicUrl }).eq('id', eventId)
+      const { data: up, error: uploadError } = await supabase.storage
+        .from('event-images')
+        .upload(`${eventId}/poster.${ext}`, posterFile, { upsert: true, contentType: posterFile.type || undefined })
+      if (uploadError || !up) {
+        setError('募集ポスターのアップロードに失敗しました。画像を選び直して再試行してください。')
+        setLoading(false)
+        return
       }
+      const { data: { publicUrl } } = supabase.storage.from('event-images').getPublicUrl(up.path)
+      imageUpdates.poster_url = publicUrl
+    }
+
+    if (photoFiles.length > 0) {
+      const uploadedUrls: string[] = []
+      for (const [index, file] of photoFiles.entries()) {
+        const ext = file.name.split('.').pop()
+        const path = `${eventId}/photo_${crypto.randomUUID()}_${index}.${ext}`
+        const { data: up, error: uploadError } = await supabase.storage
+          .from('event-images')
+          .upload(path, file, { upsert: false, contentType: file.type || undefined })
+        if (uploadError || !up) {
+          setError('開催写真のアップロードに失敗しました。画像を選び直して再試行してください。')
+          setLoading(false)
+          return
+        }
+        const { data: { publicUrl } } = supabase.storage.from('event-images').getPublicUrl(up.path)
+        uploadedUrls.push(publicUrl)
+      }
+      imageUpdates.event_photo_urls = [...existingPhotoUrls, ...uploadedUrls]
+    }
+
+    const { error: imageUpdateError } = await supabase.from('events').update(imageUpdates).eq('id', eventId)
+    if (imageUpdateError) {
+      setError('画像情報の保存に失敗しました。もう一度お試しください。')
+      setLoading(false)
+      return
     }
 
     router.push(`/events/${eventId}`)
@@ -401,28 +426,30 @@ export default function EditEventPage() {
                 ))}
               </section>
 
-              {/* 募集ポスター */}
+              {/* 画像 */}
               <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                <h2 className="font-semibold text-gray-900">募集ポスター</h2>
-                <div onClick={() => posterRef.current?.click()}
-                  className="w-full h-40 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-green-500 transition-colors">
-                  {posterPreview ? (
-                    <img src={posterPreview} alt="poster" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-center">
-                      <svg className="w-8 h-8 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-sm text-gray-400">クリックして画像を選択</p>
-                      <p className="text-xs text-gray-300 mt-1">JPG・PNG・WEBP（10MB以下）</p>
-                    </div>
-                  )}
-                </div>
-                {posterPreview && (
-                  <button type="button" onClick={() => { setPosterFile(null); setPosterPreview(null); setExistingPosterUrl(null) }}
-                    className="mt-2 text-xs text-gray-400 hover:text-red-500">削除</button>
-                )}
-                <input ref={posterRef} type="file" accept="image/*" onChange={handlePosterSelect} className="hidden" />
+                <h2 className="font-semibold text-gray-900">画像</h2>
+                <SingleImageUpload
+                  label="募集ポスター"
+                  file={posterFile}
+                  existingUrl={existingPosterUrl}
+                  onChange={file => { setPosterFile(file); setError(null) }}
+                  onRemove={() => { setPosterFile(null); setExistingPosterUrl(null) }}
+                  onError={setError}
+                  helperText="端末から選択または撮影・JPG／PNG／WEBP／HEIC（10MB以下）"
+                  disabled={loading}
+                />
+                <MultiImageUpload
+                  label="開催写真"
+                  files={photoFiles}
+                  existingUrls={existingPhotoUrls}
+                  onChange={setPhotoFiles}
+                  onRemoveExisting={index => setExistingPhotoUrls(urls => urls.filter((_, photoIndex) => photoIndex !== index))}
+                  onError={setError}
+                  helperText="既存写真の削除・新しい写真の追加をこの画面で行えます"
+                  maxFiles={8}
+                  disabled={loading}
+                />
               </section>
 
               {/* 設備 */}
