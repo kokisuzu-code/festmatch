@@ -1,3 +1,4 @@
+import { eventSearchFilter } from './event-search'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { PublicEvent } from '@/components/festmap/PublicEventCard'
 
@@ -23,15 +24,17 @@ export async function listFestMapEvents(supabase: SupabaseClient, filters: FestM
     internal = internal.eq('prefecture', filters.prefecture)
     external = external.eq('prefecture', filters.prefecture)
   }
-  if (filters.query) {
-    internal = internal.ilike('title', `%${filters.query}%`)
-    external = external.ilike('title', `%${filters.query}%`)
+  const search = eventSearchFilter(filters.query)
+  if (search) {
+    internal = internal.or(search)
+    external = external.or(search)
   }
 
-  const [{ data: internalEvents }, { data: externalEvents }] = await Promise.all([
+  const [{ data: internalEvents, error: internalError }, { data: externalEvents, error: externalError }] = await Promise.all([
     internal.order('starts_at').limit(100),
     external.order('starts_at').limit(100),
   ])
+  if (internalError || externalError) throw new Error('公開イベントを読み込めませんでした。')
   return [
     ...(internalEvents ?? []).map((event) => ({ ...event, is_external: false, official_url: null })),
     ...(externalEvents ?? []).map((event) => ({ ...event, application_deadline_at: null, booth_fee_yen: null, is_external: true })),

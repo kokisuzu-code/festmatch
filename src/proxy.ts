@@ -44,7 +44,7 @@ export async function proxy(request: NextRequest) {
   }
   if (pathname === '/vendor/sales/record') return redirectWithAuthCookies(new URL('/vendor/sales', request.url), supabaseResponse)
 
-  const protectedPath = pathname.startsWith('/dashboard') || pathname.startsWith('/organizer') || pathname.startsWith('/vendor') || pathname.startsWith('/admin')
+  const protectedPath = pathname === '/day-console' || pathname.startsWith('/dashboard') || pathname.startsWith('/organizer') || pathname.startsWith('/vendor') || pathname.startsWith('/admin')
   if (!user && protectedPath) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
@@ -54,12 +54,12 @@ export async function proxy(request: NextRequest) {
   if (user && (pathname === '/login' || pathname === '/signup')) return redirectWithAuthCookies(new URL('/dashboard', request.url), supabaseResponse)
   if (!user && pathname === '/onboarding') return redirectWithAuthCookies(new URL('/login', request.url), supabaseResponse)
 
-  if (user && (pathname.startsWith('/organizer') || pathname.startsWith('/vendor') || pathname === '/dashboard')) {
+  if (user && (pathname === '/day-console' || pathname.startsWith('/organizer') || pathname.startsWith('/vendor') || pathname === '/dashboard')) {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
     if (!profile) return redirectWithAuthCookies(new URL('/onboarding', request.url), supabaseResponse)
     if (pathname === '/dashboard') return redirectWithAuthCookies(new URL(profile.role === 'organizer' || profile.role === 'admin' ? '/organizer' : '/vendor', request.url), supabaseResponse)
     if (profile.role === 'organizer' && pathname.startsWith('/vendor')) return redirectWithAuthCookies(new URL('/organizer', request.url), supabaseResponse)
-    if (profile.role === 'vendor' && pathname.startsWith('/organizer')) return redirectWithAuthCookies(new URL('/vendor', request.url), supabaseResponse)
+    if (profile.role === 'vendor' && (pathname === '/day-console' || pathname.startsWith('/organizer'))) return redirectWithAuthCookies(new URL('/vendor', request.url), supabaseResponse)
   }
 
   if (user && pathname.startsWith('/admin')) {
@@ -79,5 +79,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/organizer/:path*', '/vendor/:path*', '/admin/:path*', '/embed/events/:path*', '/events/:path*', '/browse/:path*', '/messages/:path*', '/review/:path*', '/schedule/:path*', '/my-applications/:path*', '/my-sales/:path*', '/kitchen-cars/:path*', '/plan/:path*', '/dev', '/api/cron/:path*', '/api/notifications/:path*', '/api/notify/:path*', '/api/events/copy', '/api/stripe/invoice', '/api/stripe/checkout', '/login', '/signup', '/onboarding'],
+  matcher: ['/day-console', '/dashboard/:path*', '/organizer/:path*', '/vendor/:path*', '/admin/:path*', '/embed/events/:path*', '/events/:path*', '/browse/:path*', '/messages/:path*', '/review/:path*', '/schedule/:path*', '/my-applications/:path*', '/my-sales/:path*', '/kitchen-cars/:path*', '/plan/:path*', '/dev', '/api/cron/:path*', '/api/notifications/:path*', '/api/notify/:path*', '/api/events/copy', '/api/stripe/invoice', '/api/stripe/checkout', '/login', '/signup', '/onboarding'],
 }

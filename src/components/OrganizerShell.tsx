@@ -60,8 +60,6 @@ export default function OrganizerShell({ children, displayName = '主催者ア�
             >
               <span aria-hidden="true">{link.symbol}</span>
               {link.label}
-              {link.label === '応募一覧・承認' && <small>3</small>}
-              {link.label === 'メッセージ' && <small>2</small>}
             </Link>
           ))}
         </nav>
@@ -103,8 +101,8 @@ export default function OrganizerShell({ children, displayName = '主催者ア�
             <span>{activeLink?.label ?? '主催者ポータル'}</span>
           </div>
           <div className="organizer-topbar-actions">
-            <span className="organizer-db-state">DB接続済み</span>
-            <button aria-label="通知" className="organizer-notification" type="button">◇<i /></button>
+
+            <Link aria-label="メッセージを確認" className="organizer-notification" href="/organizer/messages">◇</Link>
             <span className="organizer-verified">✓ 認証済み</span>
             <span className="organizer-top-avatar" aria-hidden="true">{displayName.slice(0, 2).toUpperCase()}</span>
           </div>

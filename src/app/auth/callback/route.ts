@@ -14,7 +14,7 @@ function recoveryDestination(value: string | null) {
 }
 
 function returnDestination(value: string | null) {
-  return value && /^\/(?:dashboard|organizer|vendor|admin)(?:\/|\?|$)/.test(value) ? value : null
+  return value && /^\/(?:dashboard|organizer|vendor|admin|day-console)(?:\/|\?|$)/.test(value) ? value : null
 }
 
 export async function GET(request: Request) {
@@ -51,6 +51,7 @@ export async function GET(request: Request) {
   if (!profile) {
     const query = new URLSearchParams({ role })
     if (claim) query.set('claim', claim)
+    if (next) query.set('next', next)
     return NextResponse.redirect(`${origin}/onboarding?${query.toString()}`)
   }
 

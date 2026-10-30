@@ -20,5 +20,5 @@ export function createEventSlug(title: string) {
 }
 
 export function formatEventDate(value: string) {
-  return new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value))
+  return new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Tokyo" }).format(new Date(value))
 }
