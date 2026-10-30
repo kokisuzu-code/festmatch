@@ -23,7 +23,7 @@ export default async function FestMapPage({ searchParams }: { searchParams: Prom
     <main className="festmap-main">
       <section className="festmap-intro">
         <div><p className="eyebrow">FESTMAP</p><h1>全国のイベントを探す</h1><p>主催者が公開した募集情報と、公式ソースに基づく外部イベントを掲載しています。</p></div>
-        <form className="festmap-search"><input name="q" defaultValue={q ?? ''} placeholder="イベント名で検索" /><select name="prefecture" defaultValue={prefecture ?? ''}><option value="">すべての都道府県</option>{PREFECTURES.map((item) => <option key={item.slug} value={item.name}>{item.name}</option>)}</select><button className="button button-primary">検索</button></form>
+        <form className="festmap-search"><input name="q" defaultValue={q ?? ''} aria-label="イベント名・エリア名" placeholder="イベント名・エリア名で検索" /><select aria-label="都道府県" name="prefecture" defaultValue={prefecture ?? ''}><option value="">すべての都道府県</option>{PREFECTURES.map((item) => <option key={item.slug} value={item.name}>{item.name}</option>)}</select><button className="button button-primary">検索</button></form>
       </section>
       <div className="prefecture-links">{PREFECTURES.map((item) => <Link key={item.slug} href={`/festmap/${item.slug}`}>{item.name}</Link>)}</div>
       <section className="festmap-grid">

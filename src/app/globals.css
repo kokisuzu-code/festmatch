@@ -866,3 +866,13 @@ body[data-navigation-pending="true"] a[href], body[data-navigation-pending="true
   .vendor-console .vendor-photo-order { grid-column: 2; }
   .vendor-console .vendor-photo-remove { grid-column: 3; grid-row: 1 / span 2; align-self: stretch; }
 }
+
+.vendor-day-panel { display: grid; gap: 16px; }
+.vendor-day-field { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line, #dce4e0); }
+.vendor-day-field small { display: block; margin-top: 5px; font-size: 12px; }
+.vendor-day-field select,.vendor-day-field input { min-height: 44px; padding: 10px; border: 1px solid #97a89f; border-radius: 8px; max-width: 100%; color: #19352b; background: #fff; }
+.vendor-day-field input { flex: 1; }
+.vendor-day-notice { border-bottom: 1px solid #adbfb5; padding: 16px 0; }
+.vendor-day-notice p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.vendor-day-notice time { font-size: 12px; }
+@media(max-width:600px) { .vendor-day-field { flex-wrap: wrap; } .vendor-day-field input { min-width: 200px; } }

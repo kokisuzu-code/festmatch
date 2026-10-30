@@ -8,6 +8,7 @@ const menuLinks = [
   { href: '/vendor', label: 'ホーム', symbol: '⌂', exact: true },
   { href: '/vendor/events', label: 'イベントを探す', symbol: '□', exact: false },
   { href: '/vendor/applications', label: '応募状況', symbol: '◎', exact: false },
+  { href: '/vendor/day', label: '当日の準備・連絡', symbol: '◷', exact: false },
   { href: '/vendor/messages', label: 'メッセージ', symbol: '◇', exact: false },
   { href: '/vendor/sales', label: '売上記録', symbol: '↗', exact: false },
 ] as const
@@ -103,8 +104,8 @@ export default function VendorShell({
             <span>{activeLink?.label ?? '出店者ポータル'}</span>
           </div>
           <div className="organizer-topbar-actions">
-            <span className="organizer-db-state">DB接続済み</span>
-            <button aria-label="通知" className="organizer-notification" type="button">◇<i /></button>
+
+            <Link aria-label="お知らせを確認" className="organizer-notification" href="/vendor/day">◇</Link>
             <span className="organizer-verified">✓ 登録済み</span>
             <span className="organizer-top-avatar" aria-hidden="true">{initials}</span>
           </div>

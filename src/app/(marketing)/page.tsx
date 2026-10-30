@@ -18,12 +18,6 @@ export const metadata: Metadata = {
   openGraph: { title: "FestMatch | 近くのイベントを、もっと見つけやすく", description: "イベントを探す入口から、募集・応募・管理までをひとつに。", url: "https://festmatch-pink.vercel.app", siteName: "FestMatch", locale: "ja_JP", type: "website" },
 }
 
-const demoEvents = [
-  { title: "みなと朝市", date: "7月18日(土)・9:00〜14:00", place: "みなとみらい 臨港パーク", category: "グルメ", note: "キッチンカー", href: "/festmap" },
-  { title: "夏のまちフェス", date: "7月19日(日)・15:00〜20:30", place: "関内・馬車道エリア", category: "音楽", note: "屋台・ライブ", href: "/festmap" },
-  { title: "親子クラフト市", date: "7月20日(月祝)・10:00〜16:00", place: "横浜市役所アトリウム", category: "親子", note: "ワークショップ", href: "/festmap" },
-] as const
-
 const homeImages = [
   "/reference/waterfront-market.webp",
   "/reference/summer-festival.webp",
@@ -31,7 +25,7 @@ const homeImages = [
 ] as const
 
 function formatHomeDate(value: string) {
-  return new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", weekday: "short" }).format(new Date(value))
+  return new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", weekday: "short", timeZone: "Asia/Tokyo" }).format(new Date(value))
 }
 
 function eventDetail(event: PublicEvent, index: number) {
@@ -64,15 +58,15 @@ function ArrowIcon() {
 }
 
 export default async function MarketingPage() {
-  const publicEvents = await (async () => {
+  const { publicEvents, loadFailed } = await (async () => {
     try {
-      return await listFestMapEvents(createPublicClient())
+      return { publicEvents: await listFestMapEvents(createPublicClient()), loadFailed: false }
     } catch {
-      return [] as PublicEvent[]
+      return { publicEvents: [] as PublicEvent[], loadFailed: true }
     }
   })()
   const visibleEvents = publicEvents.slice(0, 6).map(eventDetail)
-  const cards = visibleEvents.length ? visibleEvents : demoEvents.map((event, index) => ({ ...event, image: homeImages[index], external: false }))
+  const cards = visibleEvents
 
   return <main className="fm-home">
     <AuthHomeRedirect />
@@ -98,8 +92,8 @@ export default async function MarketingPage() {
           <h1><span>週末が、近くなる。</span></h1>
           <p className="fm-home-lead">いつもの街にも、まだ知らない楽しみがある。<br />場所と日付から、ふらっと行ける予定を探せます。</p>
           <form className="fm-home-search" action="/festmap">
-            <label htmlFor="home-event-search"><PinIcon /><span className="sr-only">駅名またはエリア名</span></label>
-            <input id="home-event-search" name="q" placeholder="駅名・エリア名で探す" />
+            <label htmlFor="home-event-search"><PinIcon /><span className="sr-only">イベント名またはエリア名</span></label>
+            <input id="home-event-search" name="q" placeholder="イベント名・エリア名で探す" />
             <button type="submit"><SearchIcon />イベントを探す <ArrowIcon /></button>
           </form>
           <p className="fm-home-search-note">登録なしですぐに検索できます</p>
@@ -108,16 +102,16 @@ export default async function MarketingPage() {
             <Link href="/signup?role=vendor">出店先を探す <ArrowIcon /></Link>
           </div>
         </div>
-        <div className="fm-home-hero-visual" aria-label="近くで開催されるイベント">
+        <div className="fm-home-hero-visual" aria-label="イベントのイメージ">
           <article className="fm-home-feature fm-home-feature-main">
             <Image src={homeImages[0]} alt="港沿いで開かれる朝市の様子" width={700} height={520} priority />
-            <div><span>今週末</span><h2>みなと朝市</h2><p>7/18(土)・みなとみらい</p></div>
+            <div><span>街の楽しみを探す</span><h2>週末のイベントへ</h2><p>写真はイメージです</p></div>
           </article>
           <article className="fm-home-feature fm-home-feature-mini">
             <Image src={homeImages[1]} alt="夏のまちフェスの様子" width={420} height={300} />
-            <div><span>音楽</span><h2>夏のまちフェス</h2></div>
+            <div><span>音楽・グルメ・体験</span><h2>新しい予定と出会う</h2></div>
           </article>
-          <div className="fm-home-feature-count"><strong>4</strong><span>近くで開催</span></div>
+          <div className="fm-home-feature-count"><strong>{loadFailed ? "—" : publicEvents.length}</strong><span>公開イベント</span></div>
         </div>
       </div>
     </section>
@@ -126,14 +120,15 @@ export default async function MarketingPage() {
 
     <section className="fm-home-events" id="events">
       <div className="fm-home-wrap">
-        <div className="fm-home-section-heading"><p>NEAR YOU</p><h2>今週末、近くで開かれるイベント。</h2><span>{visibleEvents.length ? `${visibleEvents.length}件を表示中` : "掲載イメージ"}</span></div>
+        <div className="fm-home-section-heading"><p>NEAR YOU</p><h2>これから開催されるイベント。</h2><span>{visibleEvents.length ? `${visibleEvents.length}件を表示中` : ""}</span></div>
         <p className="fm-home-section-lead">場所や気分から、行きたい予定を選べます。</p>
-        <div className="fm-home-filter-row" aria-label="イベントカテゴリー"><span aria-hidden="true">☷</span>{["すべて", "グルメ", "親子", "音楽", "カルチャー", "体験"].map((label, index) => <Link key={label} className={index === 0 ? "is-active" : ""} href="/festmap">{label}</Link>)}<Link className="fm-home-map-toggle" href="/festmap" aria-label="地図でイベントを探す">⌖</Link></div>
+        <div className="fm-home-filter-row" aria-label="イベントカテゴリー"><span aria-hidden="true">☷</span>{["すべて", "グルメ", "親子", "音楽", "カルチャー", "体験"].map((label, index) => <Link key={label} className={index === 0 ? "is-active" : ""} href={index === 0 ? "/festmap" : `/festmap?q=${encodeURIComponent(label)}`}>{label}</Link>)}<Link className="fm-home-map-toggle" href="/festmap" aria-label="地図でイベントを探す">⌖</Link></div>
+        {!cards.length && <div className="empty-state"><h3>{loadFailed ? "イベント情報を読み込めませんでした" : "公開中のイベントはまだありません"}</h3><p>{loadFailed ? "時間をおいて、イベント検索からもう一度お試しください。" : "イベントが公開されると、ここに掲載されます。"}</p><Link href="/festmap">イベント検索を開く</Link></div>}
         <div className="fm-home-event-grid">
           {cards.map((event, index) => <article className="fm-home-event-card" key={`${event.title}-${index}`}>
             <Image src={event.image} alt="" width={700} height={438} />
-            <Link href={event.href} target={event.external ? "_blank" : undefined} rel={event.external ? "noopener noreferrer" : undefined} className="fm-home-event-card-body">
-              <div className="fm-home-event-card-top"><span>{event.category}</span><small>{event.external ? "公式情報" : "イベント情報"}</small></div>
+            <Link href={event.href} target={event.external ? "_blank" : undefined} rel={event.external ? "nofollow noopener noreferrer" : undefined} className="fm-home-event-card-body">
+              <div className="fm-home-event-card-top"><span>{event.category}</span><small>{event.external ? "公式情報" : "イベント情報"} ・ 写真はイメージ</small></div>
               <h3>{event.title}</h3>
               <p><CalendarIcon />{event.date}</p>
               <p><PinIcon />{event.place}</p>
@@ -145,7 +140,7 @@ export default async function MarketingPage() {
       </div>
     </section>
 
-    <section className="fm-home-final"><div className="fm-home-wrap"><p>次の週末を、近くから。</p><h2>気になる街を、のぞいてみよう。</h2><form action="/festmap"><label htmlFor="home-event-search-bottom">駅名・エリア名</label><div><input id="home-event-search-bottom" name="q" placeholder="駅名・エリア名を入力" /><button type="submit">イベントを探す <ArrowIcon /></button></div></form></div></section>
+    <section className="fm-home-final"><div className="fm-home-wrap"><p>次の週末を、近くから。</p><h2>気になる街を、のぞいてみよう。</h2><form action="/festmap"><label htmlFor="home-event-search-bottom">イベント名・エリア名</label><div><input id="home-event-search-bottom" name="q" placeholder="イベント名・エリア名を入力" /><button type="submit">イベントを探す <ArrowIcon /></button></div></form></div></section>
 
     <footer className="fm-home-footer"><div className="fm-home-wrap"><div><BrandMark /><p>近くのイベントと、出会いやすく。</p></div><nav><Link href="/festmap">イベントを探す</Link><Link href="/signup?role=organizer">主催者の方</Link><Link href="/signup?role=vendor">出店者の方</Link></nav><small>© 2026 FestMatch</small></div></footer>
   </main>

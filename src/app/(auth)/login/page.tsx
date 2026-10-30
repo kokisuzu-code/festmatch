@@ -17,7 +17,7 @@ function claimToken(value: string | null) {
 }
 
 function returnPath(value: string | null) {
-  return value && /^\/(?:dashboard|organizer|vendor|admin)(?:\/|\?|$)/.test(value) ? value : null
+  return value && /^\/(?:dashboard|organizer|vendor|admin|day-console)(?:\/|\?|$)/.test(value) ? value : null
 }
 
 function LoginForm() {
@@ -36,13 +36,18 @@ function LoginForm() {
     event.preventDefault()
     setSubmitting(true)
     setMessage("")
-    const { error } = await createClient().auth.signInWithPassword({ email, password })
-    setSubmitting(false)
-    if (error) {
-      setMessage("メールアドレスまたはパスワードが正しくありません。")
-      return
-    }
-    window.location.assign(claim ? `/claim?token=${encodeURIComponent(claim)}` : next ?? "/dashboard")
+    try {
+      const { error } = await createClient().auth.signInWithPassword({ email, password })
+      if (error) {
+        setMessage(error.status === 400 || error.code === 'invalid_credentials'
+          ? "メールアドレスまたはパスワードが正しくありません。"
+          : "現在ログインに接続できません。時間をおいてもう一度お試しください。")
+        return
+      }
+      window.location.assign(claim ? `/claim?token=${encodeURIComponent(claim)}` : next ?? "/dashboard")
+    } catch {
+      setMessage("通信できませんでした。接続を確認してもう一度お試しください。")
+    } finally { setSubmitting(false) }
   }
 
   const signupQuery = new URLSearchParams()

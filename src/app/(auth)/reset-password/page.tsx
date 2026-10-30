@@ -16,7 +16,7 @@ function claimToken(value: string | null) {
 }
 
 function returnPath(value: string | null) {
-  return value && /^\/(?:dashboard|organizer|vendor|admin)(?:\/|\?|$)/.test(value) ? value : null
+  return value && /^\/(?:dashboard|organizer|vendor|admin|day-console)(?:\/|\?|$)/.test(value) ? value : null
 }
 
 function ResetPasswordForm() {
