@@ -42,6 +42,7 @@ export async function GET(_request: Request, { params }: Context) {
   ])
   if (results.some(result => result.error)) return json({ error: '当日運営データを読み込めませんでした。再読み込みしてください。' }, 503)
   const [applications, spaces, states, checks, timeline, incidents, announcements, receipts, settings, pins] = results
+  const acceptedApplications = new Set((applications.data ?? []).map(app => app.id))
   const vendorIds = [...new Set((applications.data ?? []).map(app => app.vendor_id))]
   const { data: vendors, error: vendorError } = vendorIds.length ? await supabase.from('vendors_public').select('id,name,genre').in('id', vendorIds) : { data: [], error: null }
   if (vendorError) return json({ error: 'ベンダー情報を読み込めませんでした。' }, 503)
@@ -52,7 +53,10 @@ export async function GET(_request: Request, { params }: Context) {
     mapUrl = signed.data.signedUrl
   }
   const data = {
-    role, event, spaces: spaces.data, states: states.data, checks: checks.data, timeline: timeline.data, incidents: incidents.data,
+    role, event, spaces: spaces.data,
+    states: states.data?.filter(row => acceptedApplications.has(row.application_id)),
+    checks: checks.data?.filter(row => acceptedApplications.has(row.application_id)),
+    timeline: timeline.data, incidents: incidents.data,
     announcements: announcements.data, receipts: receipts.data, settings: settings.data, pins: pins.data, mapUrl,
     applications: (applications.data ?? []).map(app => {
       const vendor = 'vendor' in session && session.vendor?.id === app.vendor_id ? session.vendor : vendors?.find(v => v.id === app.vendor_id)

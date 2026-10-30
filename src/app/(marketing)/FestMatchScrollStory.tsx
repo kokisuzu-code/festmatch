@@ -16,7 +16,7 @@ const storySteps: readonly StoryStep[] = [
   {
     time: "FRI 20:00",
     title: "金曜の夜、ふと予定を探す。",
-    body: "明日はまだ何も決めていない。駅名を入れると、近くのマルシェや音楽イベントが並びます。",
+    body: "明日はまだ何も決めていない。エリア名から、気になる街の公開イベントを探します。",
     image: "/story/discover-candid.webp",
     alt: "カフェのテーブルでスマートフォンを見る手元",
   },
@@ -26,7 +26,7 @@ const storySteps: readonly StoryStep[] = [
     body: "日付、場所、開催時間。知りたいことだけを見比べて、行き先を決めます。",
     image: "/story/station-candid.webp",
     alt: "東京の駅構内でスマートフォンを見る人",
-    feature: "エリアと日付で探す",
+    feature: "開催日と会場を見比べる",
   },
   {
     time: "SAT 10:15",
@@ -52,11 +52,11 @@ const storySteps: readonly StoryStep[] = [
   },
   {
     time: "SAT 17:30",
-    title: "帰り道、次の予定を保存する。",
-    body: "気になったイベントを残して、誰かに送る。次の週末も、近くから。",
+    title: "帰り道、次の予定を探す。",
+    body: "気になった街のイベントを、もう一度のぞいてみる。次の週末も、近くから。",
     image: "/story/walk-home.webp",
     alt: "地域のマーケットから帰る二人",
-    feature: "保存して、すぐ共有",
+    feature: "登録なしでイベントを探す",
   },
 ]
 
