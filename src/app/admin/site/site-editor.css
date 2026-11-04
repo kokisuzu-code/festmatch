@@ -1,0 +1,60 @@
+.site-editor-page { min-height:100vh; background:#f4f6f1; color:#1d3530; font-family:var(--font-geist-sans),sans-serif; }
+.site-editor-page * { box-sizing:border-box; }
+.site-editor-header { height:72px; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:0 max(24px,calc((100vw - 1360px)/2)); border-bottom:1px solid #d6e1d7; background:#fff; font-size:13px; }
+.site-editor-header a { color:#316654; text-decoration:none; font-weight:650; }
+.site-editor-header strong { font-size:20px; }
+.site-editor-header strong span { font-size:13px; font-weight:500; color:#6f8076; margin-left:12px; }
+.site-editor-shell { max-width:1360px; padding:50px 24px 125px; margin:auto; }
+.site-editor-intro { display:flex; justify-content:space-between; gap:24px; align-items:end; margin-bottom:36px; }
+.site-editor-kicker { color:#33816a; font-size:11px; letter-spacing:.19em; font-weight:700; }
+.site-editor-intro h1 { font-size:clamp(27px,3vw,42px); margin:11px 0; line-height:1.3; }
+.site-editor-intro p { margin:0; color:#667b70; font-size:14px; line-height:1.7; }
+.site-editor-status { display:grid; gap:7px; white-space:nowrap; text-align:right; font-size:13px; color:#3a795b; }
+.site-editor-status small { color:#78877d; font-size:11px; }
+.site-editor-grid { display:grid; grid-template-columns:minmax(0,1.08fr) minmax(350px,.92fr); gap:24px; align-items:start; }
+.site-editor-panel,.site-editor-preview { background:#fff; border:1px solid #dde7de; box-shadow:0 12px 30px rgba(28,62,43,.04); }
+.site-editor-tabs { display:flex; padding:7px; border-bottom:1px solid #e1e9e2; }
+.site-editor-tabs button { flex:1; border:0; background:transparent; padding:16px 8px; color:#708275; font:inherit; font-size:13px; font-weight:650; cursor:pointer; }
+.site-editor-tabs button.active { background:#e4efe6; color:#195841; }
+.site-editor-fields { padding:30px; }
+.site-editor-fields h2 { margin:0 0 8px; font-size:21px; }
+.site-editor-fields > p { margin:0 0 25px; color:#75867b; font-size:13px; }
+.site-editor-field { display:block; margin:0 0 20px; }
+.site-editor-field > span { display:block; margin-bottom:8px; font-size:13px; font-weight:700; }
+.site-editor-field input:not([type=file]),.site-editor-field textarea { display:block; width:100%; border:1px solid #d4e0d7; border-radius:3px; background:#fbfcfa; padding:13px 14px; color:#1d3530; font:inherit; font-size:14px; line-height:1.6; }
+.site-editor-field input:focus,.site-editor-field textarea:focus { outline:2px solid #80ac8d; outline-offset:1px; }
+.site-editor-field textarea { resize:vertical; }
+.site-editor-field small { display:block; margin-top:9px; font-size:11px; color:#819189; }
+.site-editor-image { position:relative; aspect-ratio:1.8; overflow:hidden; background:#e1e9e2; }
+.site-editor-image img { width:100%; height:100%; object-fit:cover; }
+.site-editor-image button { position:absolute; bottom:14px; left:14px; background:#fff; color:#1e5944; padding:11px 16px; border:0; font-weight:700; cursor:pointer; }
+.site-editor-news { border:1px solid #dbe6dc; padding:18px; margin:0 0 18px; }
+.site-editor-news > div:first-child { display:flex; justify-content:space-between; margin-bottom:15px; }
+.site-editor-news > div:first-child button { border:0; background:none; color:#a44d44; cursor:pointer; }
+.site-editor-add { width:100%; border:1px dashed #83a88b; background:#f3f8f2; padding:16px; color:#215e46; font-weight:700; cursor:pointer; }
+.site-editor-preview { position:sticky; top:20px; padding:23px; }
+.site-editor-preview-title { display:flex; justify-content:space-between; gap:10px; margin-bottom:18px; }
+.site-editor-preview-title span,.site-editor-mini-copy small,.site-editor-mini-about small { font-size:10px; letter-spacing:.14em; color:#4e7a5b; font-weight:750; }
+.site-editor-preview-title strong { font-size:13px; }
+.site-editor-mini { border:1px solid #e3e9e2; background:#fafbf8; }
+.site-editor-mini-photo { position:relative; height:200px; }
+.site-editor-mini-photo img { object-fit:cover; }
+.site-editor-mini-copy { padding:23px; }
+.site-editor-mini-copy p { margin:18px 0 4px; font-size:12px; }
+.site-editor-mini-copy h2 { margin:0; font-size:clamp(24px,2.8vw,38px); line-height:1.2; white-space:pre-line; }
+.site-editor-mini-copy > span { display:block; margin:14px 0 21px; font-size:12px; color:#65766a; line-height:1.7; }
+.site-editor-mini-copy b { display:inline-block; padding:12px 18px; background:#215947; color:#fff; font-size:12px; }
+.site-editor-mini-about { display:grid; gap:12px; padding:24px 6px 0; }
+.site-editor-mini-about strong { font-size:19px; }
+.site-editor-mini-about p { margin:0; font-size:12px; line-height:1.75; color:#63796c; }
+.site-editor-preview-note { font-size:11px; line-height:1.7; color:#829087; margin:22px 6px; }
+.site-editor-full-preview { display:block; border:1px solid #41745a; padding:13px; text-align:center; color:#285740; text-decoration:none; font-size:12px; font-weight:700; }
+.site-editor-actions { position:fixed; z-index:10; bottom:0; left:0; right:0; padding:15px max(24px,calc((100vw - 1360px)/2)); background:#fff; border-top:1px solid #d4e1d7; box-shadow:0 -8px 30px rgba(20,49,36,.08); display:flex; align-items:center; justify-content:space-between; gap:15px; }
+.site-editor-actions p { margin:0; font-size:12px; color:#647b69; }
+.site-editor-actions > div { display:flex; gap:10px; flex-shrink:0; }
+.site-editor-actions button { padding:14px 22px; font:inherit; font-size:13px; font-weight:700; border:1px solid #205943; cursor:pointer; }
+.site-editor-actions button:disabled { opacity:.55; cursor:wait; }
+.site-editor-save { background:#fff; color:#205943; }
+.site-editor-publish { background:#205943; color:#fff; }
+@media(max-width:850px){ .site-editor-grid { grid-template-columns:1fr; } .site-editor-preview { position:static; } .site-editor-intro { display:block; } .site-editor-status { margin-top:15px; text-align:left; } }
+@media(max-width:600px){ .site-editor-header { padding:0 16px; } .site-editor-header strong span { display:none; } .site-editor-shell { padding:32px 14px 150px; } .site-editor-fields { padding:20px; } .site-editor-actions { display:block; padding:11px 14px; } .site-editor-actions p { margin-bottom:8px; } .site-editor-actions > div { display:flex; } .site-editor-actions button { flex:1; padding:12px 8px; } }
