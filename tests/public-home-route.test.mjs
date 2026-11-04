@@ -4,7 +4,7 @@ import test from 'node:test'
 
 const read = path => readFile(new URL(path, import.meta.url), 'utf8')
 const [authHomeRedirect, publicHome, vendorShell, organizerShell, marketingPage, marketingHome, marketingCss, authShell, editorPage, editorActions, schema] = await Promise.all([
-  '../src/components/AuthHomeRedirect.tsx', '../src/app/(marketing)/home/page.tsx', '../src/components/VendorShell.tsx', '../src/components/OrganizerShell.tsx', '../src/app/(marketing)/page.tsx', '../src/app/(marketing)/MarketingHome.tsx', '../src/app/(marketing)/marketing.css', '../src/components/auth/AuthShell.tsx', '../src/app/admin/site/page.tsx', '../src/app/admin/site/actions.ts', '../supabase/migrations/20261104000100_editable_marketing.sql',
+  '../src/components/AuthHomeRedirect.tsx', '../src/app/(marketing)/home/page.tsx', '../src/components/VendorShell.tsx', '../src/components/OrganizerShell.tsx', '../src/app/(marketing)/page.tsx', '../src/app/(marketing)/MarketingHome.tsx', '../src/app/(marketing)/marketing.css', '../src/components/auth/AuthShell.tsx', '../src/app/admin/site/page.tsx', '../src/app/admin/site/actions.ts', '../supabase/migrations/20261104151056_editable_marketing.sql',
 ].map(read))
 
 test('logged-in users can deliberately open the public home page', () => {
