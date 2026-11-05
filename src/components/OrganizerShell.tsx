@@ -26,11 +26,10 @@ function isActive(pathname: string, href: string, exact?: boolean) {
   return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`)
 }
 
-export default function OrganizerShell({ children, displayName = '主催者アカウント', canEditSite = false }: { children: React.ReactNode; displayName?: string; canEditSite?: boolean }) {
+export default function OrganizerShell({ children, displayName = '主催者アカウント' }: { children: React.ReactNode; displayName?: string }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const availablePlatformLinks = canEditSite ? [...platformLinks, { href: '/admin/site', label: '公式HPを編集', symbol: '✎', exact: false }] : platformLinks
-  const allLinks = [...links, ...availablePlatformLinks]
+  const allLinks = [...links, ...platformLinks]
   const activeLink = allLinks.find((link) => isActive(pathname, link.href, link.exact))
 
   return (
@@ -67,7 +66,7 @@ export default function OrganizerShell({ children, displayName = '主催者ア�
 
         <nav className="organizer-side-nav organizer-platform-nav" aria-label="プラットフォームメニュー">
           <p>PLATFORM</p>
-          {availablePlatformLinks.map((link) => (
+          {platformLinks.map((link) => (
             <Link
               aria-current={isActive(pathname, link.href, link.exact) ? 'page' : undefined}
               className={isActive(pathname, link.href, link.exact) ? 'active' : ''}

@@ -63,8 +63,13 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && pathname.startsWith('/admin')) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-    if (profile?.role !== 'admin') return redirectWithAuthCookies(new URL('/dashboard', request.url), supabaseResponse)
+    if (pathname === '/admin' || pathname.startsWith('/admin/site')) {
+      const { data: isInternal, error } = await supabase.rpc('is_platform_admin')
+      if (error || !isInternal) return redirectWithAuthCookies(new URL('/dashboard', request.url), supabaseResponse)
+    } else {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      if (profile?.role !== 'admin') return redirectWithAuthCookies(new URL('/dashboard', request.url), supabaseResponse)
+    }
   }
 
   if (pathname.startsWith('/embed/events/')) {

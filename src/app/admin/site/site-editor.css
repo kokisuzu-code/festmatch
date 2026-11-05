@@ -58,3 +58,8 @@
 .site-editor-publish { background:#205943; color:#fff; }
 @media(max-width:850px){ .site-editor-grid { grid-template-columns:1fr; } .site-editor-preview { position:static; } .site-editor-intro { display:block; } .site-editor-status { margin-top:15px; text-align:left; } }
 @media(max-width:600px){ .site-editor-header { padding:0 16px; } .site-editor-header strong span { display:none; } .site-editor-shell { padding:32px 14px 150px; } .site-editor-fields { padding:20px; } .site-editor-actions { display:block; padding:11px 14px; } .site-editor-actions p { margin-bottom:8px; } .site-editor-actions > div { display:flex; } .site-editor-actions button { flex:1; padding:12px 8px; } }
+.site-editor-header form button { border:0; background:transparent; color:#316654; font:inherit; font-weight:650; cursor:pointer; }
+.site-admin-card { max-width:640px; padding:34px; }
+.site-admin-card h2 { margin:12px 0; font-size:24px; }
+.site-admin-card p { color:#667b70; font-size:14px; line-height:1.8; }
+.site-admin-card a { display:inline-block; margin-top:20px; padding:15px 20px; background:#205943; color:#fff; text-decoration:none; font-size:13px; font-weight:700; }
