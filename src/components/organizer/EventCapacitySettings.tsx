@@ -42,12 +42,12 @@ export default function EventCapacitySettings({
   return (
     <section className="panel">
       <div className="section-heading"><div><p className="eyebrow">SLOTS & SPACES</p><h2>ジャンル枠・出店区画</h2></div></div>
-      <p className="panel-copy">ジャンルごとの承認上限と、承認時に割り当てる物理区画を設定します。割当済みの区画は削除できません。</p>
+      <p className="panel-copy">0台は募集なしとして保存されます。ジャンルごとの承認上限と、承認時に割り当てる物理区画を設定します。割当済みの区画は削除できません。</p>
 
       <div className="capacity-settings-grid">
         <div className="capacity-settings-section">
           <div className="capacity-settings-title"><h3>ジャンル別枠</h3><button type="button" className="button button-secondary" onClick={() => setSlots((current) => [...current, { genre: '', capacity: 1 }])}>枠を追加</button></div>
-          {slots.length ? <div className="capacity-row-list">{slots.map((slot, index) => <div className="capacity-row" key={slot.id ?? `slot-${index}`}><label>ジャンル<input value={slot.genre} maxLength={100} onChange={(event) => setSlots((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, genre: event.target.value } : item))} placeholder="例：カレー" /></label><label>定員<input type="number" min="1" step="1" value={slot.capacity} onChange={(event) => setSlots((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, capacity: Number(event.target.value) } : item))} /></label><button type="button" className="text-button" onClick={() => setSlots((current) => current.filter((_, itemIndex) => itemIndex !== index))}>削除</button></div>)}</div> : <p className="form-subtle">設定しないジャンルには、ジャンル別の上限は適用されません。</p>}
+          {slots.length ? <div className="capacity-row-list">{slots.map((slot, index) => <div className="capacity-row" key={slot.id ?? `slot-${index}`}><label>ジャンル<input value={slot.genre} maxLength={100} onChange={(event) => setSlots((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, genre: event.target.value } : item))} placeholder="例：カレー" /></label><label>定員<input type="number" min="0" step="1" value={slot.capacity} onChange={(event) => setSlots((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, capacity: Number(event.target.value) } : item))} /></label><button type="button" className="text-button" onClick={() => setSlots((current) => current.filter((_, itemIndex) => itemIndex !== index))}>削除</button></div>)}</div> : <p className="form-subtle">設定しないジャンルには、ジャンル別の上限は適用されません。</p>}
         </div>
 
         <div className="capacity-settings-section">

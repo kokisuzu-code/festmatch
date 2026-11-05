@@ -208,7 +208,7 @@ function validateSlotInputs(slots: GenreSlotInput[]) {
   const ids = new Set<string>()
   for (const slot of slots) {
     slot.genre = slot.genre.trim()
-    if (!slot.genre || slot.genre.length > 100 || !Number.isInteger(slot.capacity) || slot.capacity < 1) {
+    if (!slot.genre || slot.genre.length > 100 || !Number.isInteger(slot.capacity) || slot.capacity < 0) {
       throw new Error('ジャンル別枠の内容を確認してください。')
     }
     if (genres.has(slot.genre)) throw new Error('同じジャンルの枠は1つだけ登録できます。')

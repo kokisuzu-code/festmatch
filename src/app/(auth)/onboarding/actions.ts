@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+import { isVendorGenre } from '@/lib/genres'
+
 type OnboardingState = { error?: string }
 
 function isRole(value: string): value is 'organizer' | 'vendor' {
@@ -17,6 +19,8 @@ function validClaim(value: string) {
 export async function createInitialAccount(_: OnboardingState, formData: FormData): Promise<OnboardingState> {
   const displayName = String(formData.get('display_name') ?? '').trim()
   const roleValue = String(formData.get('role') ?? '')
+  const genre = String(formData.get('genre') ?? '').trim()
+  if (roleValue === 'vendor' && !isVendorGenre(genre)) return { error: 'ジャンルを選択してください。' }
   const claim = String(formData.get('claim') ?? '')
 
   if (!isRole(roleValue)) return { error: '利用する立場を選択してください。' }
@@ -57,7 +61,7 @@ export async function createInitialAccount(_: OnboardingState, formData: FormDat
         .upsert({
           profile_id: user.id,
           name: displayName,
-          genre: 'その他',
+          genre,
           slug: `${user.id.slice(0, 8)}-vendor`,
         }, { onConflict: 'profile_id' })
       if (error) return { error: 'ベンダープロフィールを作成できませんでした。もう一度お試しください。' }
