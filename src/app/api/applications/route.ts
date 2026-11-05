@@ -16,10 +16,11 @@ export async function POST(request: Request) {
   if (message && message.length > 2_000) return NextResponse.json({ error: "応募メッセージは2,000文字以内で入力してください。" }, { status: 400 })
   const [{ data: vendor }, { data: event }] = await Promise.all([
     supabase.from("vendors").select("id, name, genre").eq("profile_id", user.id).maybeSingle(),
-    supabase.from("events").select("id, organizer_id, title, starts_at, ends_at, application_deadline_at, status").eq("id", body.event_id).maybeSingle(),
+    supabase.from("events").select("id, organizer_id, title, starts_at, ends_at, application_deadline_at, status, booth_bidding_enabled").eq("id", body.event_id).maybeSingle(),
   ])
   if (!vendor) return NextResponse.json({ error: "ベンダープロフィールを設定してください。" }, { status: 403 })
   if (event?.status !== 'published' || isApplicationClosed(event)) return NextResponse.json({ error: "このイベントは現在応募を受け付けていません。" }, { status: 409 })
+  if (event.booth_bidding_enabled) return NextResponse.json({ error: '区画応募画面で提示額・希望順位を登録してください。', url: `/vendor/events/${event.id}` }, { status: 409 })
   const slotsByEvent = await getGenreSlotAvailability([event.id])
   const matchingSlot = findGenreSlotAvailability(slotsByEvent.get(event.id), vendor.genre)
   if (matchingSlot?.isFull) return NextResponse.json({ error: `${matchingSlot.genre}枠は満了です。` }, { status: 409 })

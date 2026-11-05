@@ -26,8 +26,10 @@ export async function POST(request: Request) {
   if (vendorName.length > 100 || message?.length && message.length > 2_000) return NextResponse.json({ error: '入力内容の文字数を確認してください。' }, { status: 400 })
 
   const admin = createAdminClient()
-  const { data: event } = await admin.from('events').select('id, title, starts_at, ends_at, application_deadline_at, status').eq('id', body.event_id).maybeSingle()
+  const { data: event } = await admin.from('events').select('id, title, starts_at, ends_at, application_deadline_at, status, booth_bidding_enabled').eq('id', body.event_id).maybeSingle()
   if (event?.status !== 'published' || isApplicationClosed(event)) return NextResponse.json({ error: 'このイベントは現在応募を受け付けていません。' }, { status: 409 })
+
+  if (event.booth_bidding_enabled) return NextResponse.json({ error: '区画応募画面で提示額・希望順位を登録してください。', url: `/vendor/events/${event.id}` }, { status: 409 })
 
   const rateLimitSince = new Date(Date.now() - 15 * 60_000).toISOString()
   const { count } = await admin

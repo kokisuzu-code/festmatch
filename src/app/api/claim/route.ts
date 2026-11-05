@@ -32,8 +32,10 @@ export async function POST(request: Request) {
   if (!pending) return NextResponse.json({ error: 'この応募リンクは使用できないか、期限切れです。' }, { status: 410 })
   if (pending.email.toLowerCase() !== user.email.toLowerCase()) return NextResponse.json({ error: '応募に使用したメールアドレスでログインしてください。' }, { status: 403 })
 
-  const { data: event } = await admin.from('events').select('starts_at, ends_at, application_deadline_at, status').eq('id', pending.event_id).maybeSingle()
+  const { data: event } = await admin.from('events').select('starts_at, ends_at, application_deadline_at, status, booth_bidding_enabled').eq('id', pending.event_id).maybeSingle()
   if (event?.status !== 'published' || isApplicationClosed(event)) return NextResponse.json({ error: 'このイベントの応募受付は終了しました。' }, { status: 409 })
+
+  if (event.booth_bidding_enabled) return NextResponse.json({ error: '区画応募画面で提示額・希望順位を登録してください。', url: `/vendor/events/${pending.event_id}` }, { status: 409 })
 
   const { data: profile } = await admin.from('profiles').select('role').eq('id', user.id).maybeSingle()
   if (!profile) return NextResponse.json({ error: 'ベンダープロフィールを作成してから、もう一度応募を完了してください。' }, { status: 409 })

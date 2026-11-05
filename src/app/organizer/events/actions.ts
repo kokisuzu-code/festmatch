@@ -103,7 +103,7 @@ export async function createEvent(formData: FormData) {
   const genreSlots = genreSlotPayload(formData)
   if (!payload.prefecture) throw new Error("都道府県を選択してください。")
   if (payload.status === 'published') throw new Error('新規イベントは下書きで保存してください。公開はイベント詳細から開始できます。')
-  const { data, error } = await supabase.from("events").insert({ ...payload, organizer_id: organizer.id, slug: createEventSlug(payload.title) }).select("id").single()
+  const { data, error } = await supabase.from("events").insert({ ...payload, booth_bidding_enabled: formData.get('booth_bidding_enabled') === 'on', organizer_id: organizer.id, slug: createEventSlug(payload.title) }).select("id").single()
   if (error || !data) throw new Error("イベントを保存できませんでした。")
   try {
     const coverPath = await uploadEventCover(supabase, data.id, formData)
