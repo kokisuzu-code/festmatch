@@ -22,5 +22,5 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   if (!organizer || event.organizer_id !== organizer.id) notFound()
   const bidding = await getBoothBidding(id)
   const { count: appCount } = await supabase.from('applications').select('id', { count: 'exact', head: true }).eq('event_id', id)
-  return <div className="dashboard-stack"><EventForm event={event} action={updateEvent.bind(null, id)} /><BoothManagement key={event.booth_config_version} event={event} spaces={bidding.spaces} slots={slots ?? []} bids={bidding.bids} mapUrl={boothMapUrl(event.booth_map_path)} names={{}} mode="setup" hasApplications={Boolean(appCount)} />{!event.booth_bidding_enabled && <EventCapacitySettings eventId={id} initialSlots={slots ?? []} initialSpaces={spaces ?? []} />}</div>
+  return <div className="dashboard-stack"><EventForm event={event} action={updateEvent.bind(null, id)} /><BoothManagement key={event.booth_config_version} event={event} spaces={bidding.spaces} slots={slots ?? []} bids={bidding.bids} mapUrl={boothMapUrl(event.booth_map_path)} names={{}} mode="setup" hasApplications={Boolean(appCount)} />{!event.booth_bidding_enabled && <EventCapacitySettings key={JSON.stringify([slots, spaces])} eventId={id} initialSlots={slots ?? []} initialSpaces={spaces ?? []} />}</div>
 }

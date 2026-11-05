@@ -43,7 +43,7 @@ export default async function OrganizerGenresPage({ searchParams }: { searchPara
         <div><span>対象イベント</span><strong>{selectedEvent.title}</strong></div>
         <form><select aria-label="対象イベント" defaultValue={selectedEvent.id} name="event">{(events ?? []).map((event) => <option key={event.id} value={event.id}>{event.title}</option>)}</select><button type="submit">イベントを変更⌄</button></form>
       </div>
-      <GenreCapacityManager eventId={selectedEvent.id} initialSlots={initialSlots} spaces={spaces ?? []} approvedByGenre={approvedByGenre} applicationsByGenre={applicationsByGenre} />
+      <GenreCapacityManager key={`${selectedEvent.id}:${JSON.stringify(slots)}`} eventId={selectedEvent.id} initialSlots={initialSlots} spaces={spaces ?? []} approvedByGenre={approvedByGenre} applicationsByGenre={applicationsByGenre} />
     </div>
   )
 }

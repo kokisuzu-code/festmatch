@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import GenreSelect from '@/components/GenreSelect'
 import { saveEventCapacitySettings } from '@/app/organizer/events/actions'
 
@@ -19,6 +20,7 @@ export default function EventCapacitySettings({
   initialSlots: GenreSlot[]
   initialSpaces: EventSpace[]
 }) {
+  const router = useRouter()
   const [slots, setSlots] = useState<EditableSlot[]>(initialSlots)
   const [spaces, setSpaces] = useState<EditableSpace[]>(initialSpaces)
   const [notice, setNotice] = useState('')
@@ -34,6 +36,7 @@ export default function EventCapacitySettings({
           spaces.map((space) => ({ id: space.id, label: space.label, genre: space.genre })),
         )
         setNotice('ジャンル枠と区画を保存しました。')
+        router.refresh()
       } catch {
         setNotice('保存できませんでした。入力内容と割当状況を確認してください。')
       }

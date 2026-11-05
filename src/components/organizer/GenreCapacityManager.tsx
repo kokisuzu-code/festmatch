@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { completeGenreSlots } from '@/lib/genres'
 import { saveEventCapacitySettings } from '@/app/organizer/events/actions'
 
@@ -20,6 +21,7 @@ export default function GenreCapacityManager({
   approvedByGenre: Record<string, number>
   applicationsByGenre: Record<string, number>
 }) {
+  const router = useRouter()
   const [slots, setSlots] = useState<Slot[]>(() => completeGenreSlots(initialSlots))
   const [notice, setNotice] = useState('')
   const [pending, startTransition] = useTransition()
@@ -37,6 +39,7 @@ export default function GenreCapacityManager({
       try {
         await saveEventCapacitySettings(eventId, slots, spaces)
         setNotice('ジャンル枠を保存しました。')
+        router.refresh()
       } catch {
         setNotice('保存できませんでした。内容を確認してください。')
       }
