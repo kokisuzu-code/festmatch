@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
   const { data: vendor } = await supabase.from('vendors').select('id, name, subscription_tier').eq('profile_id', user.id).maybeSingle()
   if (!vendor) return NextResponse.json({ error: 'ベンダープロフィールがありません。' }, { status: 403 })
-  const { data: application } = await supabase.from('applications').select('id, status, event_id').eq('id', body.application_id).eq('vendor_id', vendor.id).maybeSingle()
+  const { data: application } = await supabase.from('applications').select('id, status, event_id, booth_bid_id, booth_fee_yen_snapshot').eq('id', body.application_id).eq('vendor_id', vendor.id).maybeSingle()
   if (!application || application.status !== 'approved') return NextResponse.json({ error: '支払い可能な応募が見つかりません。' }, { status: 409 })
 
   const admin = createAdminClient()
@@ -30,7 +30,8 @@ export async function POST(request: Request) {
     .maybeSingle()
   if (!event?.id || !event.title || event.status !== 'published' || new Date(event.ends_at) <= new Date()) return NextResponse.json({ error: 'このイベントは現在決済できません。' }, { status: 409 })
 
-  const feeAmount = event.booth_fee_yen ?? 0
+  if (application.booth_bid_id && application.booth_fee_yen_snapshot == null) return NextResponse.json({ error: '確定した出店料を確認できません。' }, { status: 409 })
+  const feeAmount = application.booth_bid_id ? application.booth_fee_yen_snapshot : event.booth_fee_yen ?? 0
   if (feeAmount === 0) {
     const { error } = await admin
       .from('applications')

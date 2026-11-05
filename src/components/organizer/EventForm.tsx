@@ -171,12 +171,13 @@ export default function EventForm({ action, event }: { action: (formData: FormDa
 
           <div className={styles.formSection} hidden={step !== 2}>
             <div className={styles.formHeading}><span>02</span><div><h2>出店設定</h2><p>募集枠と出店料金を設定します。</p></div></div>
+            {!event && <label className={styles.publishToggle}><input type="checkbox" name="booth_bidding_enabled" defaultChecked /><span><strong>区画指定・入札形式で募集する</strong><small>作成後に区画図・最低額・希望区画を設定します。公開には応募締切と区画図が必須です。</small></span></label>}
             <input name="genre_slots" type="hidden" value={JSON.stringify(genreSlots)} />
             <div className={styles.grid}>
               <label>出店枠（合計） <em>必須</em><input min="1" name="capacity" onChange={(e) => setCapacity(e.target.value)} required step="1" type="number" value={capacity} /></label>
               <label>出店料（円／台） <em>必須</em><input min="0" name="booth_fee_yen" onChange={(e) => setFee(e.target.value)} required step="1" type="number" value={fee} /></label>
             </div>
-            <div className={styles.genreEditor}>
+            {!event && <><div className={styles.genreEditor}>
               {genreSlots.map((slot, index) => (
                 <div key={slot.genre}>
                   <span>{slot.genre}</span>
@@ -192,6 +193,8 @@ export default function EventForm({ action, event }: { action: (formData: FormDa
             <p className={`${styles.slotNote} ${genreTotal !== Number(capacity) ? styles.slotWarning : ''}`}>
               {genreTotal === Number(capacity) ? `✓ 全${capacity}台の枠を設定済み` : `設定 ${genreTotal}台 ／ 合計 ${capacity || 0}台`}
             </p>
+            </>}
+            {event && <p className={styles.infoNote}>区画図・ジャンル別枠は、このページ下の募集設定から編集してください。</p>}
             <div className={styles.optionGrid}>
               {['電源提供あり', '給水設備あり', '補欠登録を受け付ける', 'キャンセルポリシー適用'].map((label, index) => (
                 <div className={styles.toggleRow} key={label}>
