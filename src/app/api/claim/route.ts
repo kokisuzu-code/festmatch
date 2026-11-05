@@ -1,3 +1,4 @@
+import { isVendorGenre } from '@/lib/genres'
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
@@ -41,9 +42,10 @@ export async function POST(request: Request) {
   if (!profile) return NextResponse.json({ error: 'ベンダープロフィールを作成してから、もう一度応募を完了してください。' }, { status: 409 })
   if (profile.role !== 'vendor') return NextResponse.json({ error: '主催者アカウントでは応募を完了できません。ベンダーアカウントをご利用ください。' }, { status: 403 })
 
-  const { data: vendor } = await admin.from('vendors').select('id').eq('profile_id', user.id).maybeSingle()
+  const { data: vendor } = await admin.from('vendors').select('id, genre').eq('profile_id', user.id).maybeSingle()
   if (!vendor) return NextResponse.json({ error: 'ベンダープロフィールを作成してから、もう一度応募を完了してください。' }, { status: 409 })
 
+  if (!isVendorGenre(vendor.genre)) return NextResponse.json({ error: 'プロフィールでメインのジャンルを選択してください。', url: '/vendor/settings' }, { status: 409 })
   const { error: applicationError } = await admin.from('applications').insert({ event_id: pending.event_id, vendor_id: vendor.id, message: pending.message })
   if (applicationError && applicationError.code !== '23505') return NextResponse.json({ error: '正式応募を作成できませんでした。' }, { status: 500 })
 

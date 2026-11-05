@@ -7,7 +7,7 @@ import MapLocationPicker from '@/components/map/MapLocationPicker'
 import SubmitButton from '@/components/SubmitButton'
 import { PREFECTURES } from '@/lib/prefectures'
 import styles from './EventForm.module.css'
-import { VENDOR_GENRES } from '@/lib/genres'
+import { defaultGenreSlots } from '@/lib/genres'
 
 type EventFormData = {
   title?: string
@@ -31,7 +31,7 @@ const stepLabels = [
   ['確認・保存', '最終確認'],
 ] as const
 
-const initialGenreSlots = VENDOR_GENRES.map((genre, index) => ({ genre, capacity: index < 4 ? 2 : 1 }))
+const initialGenreSlots = defaultGenreSlots()
 
 function localDateTime(value?: string | null) {
   if (!value) return ''

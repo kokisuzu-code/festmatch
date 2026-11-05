@@ -1,10 +1,11 @@
 import { z } from 'zod'
+import { VENDOR_GENRES } from './genres.ts'
 
 export type BoothSpace = { id: string; label: string; genre: string; minimum_fee_yen: number; map_x: number; map_y: number; assigned_application_id?: string | null }
 export type BoothBid = { id: string; vendor_id: string; genre: string; amount_yen: number; amount_submitted_at: string; preferences: string[]; message: string | null; status: string; version: number; application_id: string | null }
 export type GenreCap = { genre: string; capacity: number }
 export const boothBidSchema = z.object({ amount: z.number().int().min(1000).max(1000000).multipleOf(1000), preferences: z.array(z.string().uuid()).min(1).max(3).refine(ids => new Set(ids).size === ids.length), message: z.string().trim().max(2000).default(''), version: z.number().int().nonnegative(), accepted: z.literal(true) }).strict()
-export const boothConfigSchema = z.object({ version: z.number().int().nonnegative(), enabled: z.boolean(), mapPath: z.string().max(512).nullable(), spaces: z.array(z.object({ label: z.string().trim().min(1).max(80), genre: z.string().trim().min(1).max(100), minimum_fee_yen: z.number().int().min(1000).max(1000000).multipleOf(1000), map_x: z.number().min(0).max(100), map_y: z.number().min(0).max(100) }).strict()).max(100), slots: z.array(z.object({ genre: z.string().trim().min(1).max(100), capacity: z.number().int().min(0).max(1000) }).strict()).max(100) }).strict()
+export const boothConfigSchema = z.object({ version: z.number().int().nonnegative(), enabled: z.boolean(), mapPath: z.string().max(512).nullable(), spaces: z.array(z.object({ label: z.string().trim().min(1).max(80), genre: z.enum(VENDOR_GENRES), minimum_fee_yen: z.number().int().min(1000).max(1000000).multipleOf(1000), map_x: z.number().min(0).max(100), map_y: z.number().min(0).max(100) }).strict()).max(100), slots: z.array(z.object({ genre: z.enum(VENDOR_GENRES), capacity: z.number().int().min(0).max(1000) }).strict()).max(100) }).strict().refine(config => new Set(config.slots.map(slot => slot.genre)).size === config.slots.length, { message: '同じジャンルの枠は1つだけ登録できます。' })
 
 function submittedMicros(value: string) {
   const fraction = value.match(/\.(\d+)(?:Z|[+-]\d{2}(?::?\d{2})?)$/)?.[1] ?? ''

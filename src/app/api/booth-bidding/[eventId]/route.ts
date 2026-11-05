@@ -1,3 +1,4 @@
+import { isVendorGenre } from '@/lib/genres'
 import { NextResponse } from 'next/server'
 import { getCurrentProfile } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -35,6 +36,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ eve
   try {
     const ctx = await context(params)
     if (!ctx || ctx.profile?.role !== 'vendor') return failure(new Error('出店者としてログインしてください。'), 403)
+    const { data: vendor } = await ctx.supabase.from('vendors').select('genre').eq('profile_id', ctx.user.id).maybeSingle()
+    if (!isVendorGenre(vendor?.genre)) return failure(new Error('プロフィールでメインのジャンルを選択してください。'), 409)
     const parsed = boothBidSchema.safeParse(await request.json())
     if (!parsed.success) return failure(new Error('提示額・希望区画・確認欄を確認してください。'))
     const input = parsed.data

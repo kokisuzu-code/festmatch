@@ -6,7 +6,7 @@ import AuthShell from '@/components/auth/AuthShell'
 import { createInitialAccount } from './actions'
 import styles from '../login/login.module.css'
 
-import { VENDOR_GENRES } from '@/lib/genres'
+import GenreSelect from '@/components/GenreSelect'
 
 const initialState: { error?: string } = {}
 
@@ -41,7 +41,7 @@ function OnboardingContent() {
           </div>
           <p className={styles.hint}>登録後は利用区分を変更できません。</p>
         </fieldset>
-        {role === 'vendor' && <label><span>ジャンル（必須）</span><select name="genre" required defaultValue="" disabled={pending}><option value="">選択してください</option>{VENDOR_GENRES.map((genre) => <option key={genre} value={genre}>{genre}</option>)}</select></label>}
+        {role === 'vendor' && <label><span>メインジャンル（必須）</span><GenreSelect name="genre" required defaultValue="" disabled={pending} /></label>}
         {state.error && <p className={styles.message} role="alert">{state.error}</p>}
         <button className={styles.submit} disabled={pending} aria-busy={pending}><span>{pending ? '保存中…' : '保存して続ける'}</span>{!pending && <span aria-hidden="true">→</span>}</button>
       </form>

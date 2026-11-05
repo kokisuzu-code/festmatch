@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { completeGenreSlots } from '@/lib/genres'
 import { saveEventCapacitySettings } from '@/app/organizer/events/actions'
 
 type Slot = { id?: string; genre: string; capacity: number }
@@ -19,7 +21,8 @@ export default function GenreCapacityManager({
   approvedByGenre: Record<string, number>
   applicationsByGenre: Record<string, number>
 }) {
-  const [slots, setSlots] = useState<Slot[]>(initialSlots)
+  const router = useRouter()
+  const [slots, setSlots] = useState<Slot[]>(() => completeGenreSlots(initialSlots))
   const [notice, setNotice] = useState('')
   const [pending, startTransition] = useTransition()
   const total = slots.reduce((sum, slot) => sum + slot.capacity, 0)
@@ -27,7 +30,7 @@ export default function GenreCapacityManager({
   const remaining = Math.max(0, total - approved)
 
   function updateCapacity(index: number, delta: number) {
-    setSlots((current) => current.map((slot, itemIndex) => itemIndex === index ? { ...slot, capacity: Math.max(1, slot.capacity + delta) } : slot))
+    setSlots((current) => current.map((slot, itemIndex) => itemIndex === index ? { ...slot, capacity: Math.max(0, slot.capacity + delta) } : slot))
   }
 
   function save() {
@@ -36,6 +39,7 @@ export default function GenreCapacityManager({
       try {
         await saveEventCapacitySettings(eventId, slots, spaces)
         setNotice('ジャンル枠を保存しました。')
+        router.refresh()
       } catch {
         setNotice('保存できませんでした。内容を確認してください。')
       }
@@ -60,10 +64,10 @@ export default function GenreCapacityManager({
             <div className="genre-capacity-row" key={slot.id ?? `${slot.genre}-${index}`}>
               <span className="genre-capacity-icon" aria-hidden="true">▦</span>
               <div className="genre-capacity-copy">
-                <input aria-label={`${slot.genre}のジャンル名`} maxLength={100} onChange={(event) => setSlots((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, genre: event.target.value } : item))} value={slot.genre} />
+                <strong>{slot.genre}</strong>
                 <small>承認 {approvedCount}台・応募 {applicationCount}台</small>
               </div>
-              <i><b style={{ width: `${Math.min(100, Math.round((approvedCount / slot.capacity) * 100))}%` }} /></i>
+              <i><b style={{ width: `${Math.min(100, Math.round((approvedCount / Math.max(1, slot.capacity)) * 100))}%` }} /></i>
               <span className="genre-capacity-ratio">{approvedCount} / {slot.capacity}</span>
               <button aria-label={`${slot.genre}を1台減らす`} onClick={() => updateCapacity(index, -1)} type="button">−</button>
               <strong>{slot.capacity}</strong>
@@ -74,7 +78,7 @@ export default function GenreCapacityManager({
       </div>
 
       <div className="genre-capacity-actions">
-        <button className="button button-secondary" onClick={() => setSlots((current) => [...current, { genre: '新しいジャンル', capacity: 1 }])} type="button">＋ ジャンルを追加</button>
+        <p>共通ジャンルから募集台数を設定してください。0台は募集なしです。</p>
         <div>{notice && <span>{notice}</span>}<button className="button button-primary" disabled={pending} aria-busy={pending} onClick={save} type="button">{pending ? '保存中…' : '変更を保存'}</button></div>
       </div>
     </section>

@@ -7,6 +7,7 @@ import { createEventSlug } from "@/lib/events"
 import { notifyVendorOfApplicationDecision } from "@/lib/notifications"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasEventPublicationEntitlement } from '@/lib/organizer-entitlements'
+import { isVendorGenre } from '@/lib/genres'
 
 type GenreSlotInput = { id?: string; genre: string; capacity: number }
 type EventSpaceInput = { id?: string; label: string; genre: string | null }
@@ -208,7 +209,7 @@ function validateSlotInputs(slots: GenreSlotInput[]) {
   const ids = new Set<string>()
   for (const slot of slots) {
     slot.genre = slot.genre.trim()
-    if (!slot.genre || slot.genre.length > 100 || !Number.isInteger(slot.capacity) || slot.capacity < 0) {
+    if (!isVendorGenre(slot.genre) || !Number.isInteger(slot.capacity) || slot.capacity < 0) {
       throw new Error('ジャンル別枠の内容を確認してください。')
     }
     if (genres.has(slot.genre)) throw new Error('同じジャンルの枠は1つだけ登録できます。')
@@ -224,6 +225,7 @@ function validateSpaceInputs(spaces: EventSpaceInput[]) {
   for (const space of spaces) {
     space.label = space.label.trim()
     space.genre = space.genre?.trim() || null
+    if (space.genre && !isVendorGenre(space.genre)) throw new Error('区画のジャンルは共通一覧から選択してください。')
     if (!space.label || space.label.length > 80) throw new Error('区画ラベルを確認してください。')
     if (labels.has(space.label)) throw new Error('同じ区画ラベルは登録できません。')
     if (space.id && (ids.has(space.id) || !/^[a-f0-9-]{36}$/i.test(space.id))) throw new Error('区画の指定が不正です。')

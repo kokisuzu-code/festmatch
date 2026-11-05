@@ -1,3 +1,4 @@
+import { isVendorGenre } from '@/lib/genres'
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { isApplicationClosed } from "@/lib/events"
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
     supabase.from("events").select("id, organizer_id, title, starts_at, ends_at, application_deadline_at, status, booth_bidding_enabled").eq("id", body.event_id).maybeSingle(),
   ])
   if (!vendor) return NextResponse.json({ error: "ベンダープロフィールを設定してください。" }, { status: 403 })
+  if (!isVendorGenre(vendor.genre)) return NextResponse.json({ error: 'プロフィールでメインのジャンルを選択してください。', url: '/vendor/settings' }, { status: 409 })
   if (event?.status !== 'published' || isApplicationClosed(event)) return NextResponse.json({ error: "このイベントは現在応募を受け付けていません。" }, { status: 409 })
   if (event.booth_bidding_enabled) return NextResponse.json({ error: '区画応募画面で提示額・希望順位を登録してください。', url: `/vendor/events/${event.id}` }, { status: 409 })
   const slotsByEvent = await getGenreSlotAvailability([event.id])

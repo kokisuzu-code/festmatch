@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { completeGenreSlots } from '@/lib/genres'
 import GenreCapacityManager from '@/components/organizer/GenreCapacityManager'
 import { requireRole } from '@/lib/auth'
 
@@ -23,11 +24,7 @@ export default async function OrganizerGenresPage({ searchParams }: { searchPara
     supabase.from('event_spaces').select('id, label, genre').eq('event_id', selectedEvent.id).order('label'),
     supabase.from('applications').select('status, vendor_genre_snapshot').eq('event_id', selectedEvent.id),
   ])
-  const initialSlots = slots?.length ? slots : [
-    { genre: '唐揚げ・揚げ物', capacity: 2 }, { genre: 'クレープ・スイーツ', capacity: 2 },
-    { genre: 'カレー・スパイス料理', capacity: 2 }, { genre: 'タコス・メキシカン', capacity: 2 },
-    { genre: 'コーヒー・ドリンク', capacity: 1 }, { genre: 'その他', capacity: 1 },
-  ]
+  const initialSlots = completeGenreSlots(slots ?? [])
   const approvedByGenre: Record<string, number> = {}
   const applicationsByGenre: Record<string, number> = {}
   for (const application of applications ?? []) {
@@ -40,13 +37,13 @@ export default async function OrganizerGenresPage({ searchParams }: { searchPara
     <div className="dashboard-stack">
       <section className="dashboard-hero genre-page-hero">
         <div><p className="eyebrow">GENRE CAPACITY</p><h1>ジャンル枠管理</h1><p>料理カテゴリごとの上限を決め、出店内容の偏りを防ぎます。</p></div>
-        <Link className="button button-primary" href="/organizer/events/new">＋ ジャンルを追加</Link>
+        <Link className="button button-primary" href={`/organizer/events/${selectedEvent.id}/edit#booth-bidding`}>区画・募集設定</Link>
       </section>
       <div className="genre-event-select">
         <div><span>対象イベント</span><strong>{selectedEvent.title}</strong></div>
         <form><select aria-label="対象イベント" defaultValue={selectedEvent.id} name="event">{(events ?? []).map((event) => <option key={event.id} value={event.id}>{event.title}</option>)}</select><button type="submit">イベントを変更⌄</button></form>
       </div>
-      <GenreCapacityManager eventId={selectedEvent.id} initialSlots={initialSlots} spaces={spaces ?? []} approvedByGenre={approvedByGenre} applicationsByGenre={applicationsByGenre} />
+      <GenreCapacityManager key={`${selectedEvent.id}:${JSON.stringify(slots)}`} eventId={selectedEvent.id} initialSlots={initialSlots} spaces={spaces ?? []} approvedByGenre={approvedByGenre} applicationsByGenre={applicationsByGenre} />
     </div>
   )
 }
