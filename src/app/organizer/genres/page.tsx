@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { completeGenreSlots } from '@/lib/genres'
 import GenreCapacityManager from '@/components/organizer/GenreCapacityManager'
 import { requireRole } from '@/lib/auth'
 
@@ -24,7 +23,7 @@ export default async function OrganizerGenresPage({ searchParams }: { searchPara
     supabase.from('event_spaces').select('id, label, genre').eq('event_id', selectedEvent.id).order('label'),
     supabase.from('applications').select('status, vendor_genre_snapshot').eq('event_id', selectedEvent.id),
   ])
-  const initialSlots = completeGenreSlots(slots ?? [])
+  const initialSlots = slots ?? []
   const approvedByGenre: Record<string, number> = {}
   const applicationsByGenre: Record<string, number> = {}
   for (const application of applications ?? []) {

@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { completeGenreSlots } from '@/lib/genres'
+import { VENDOR_GENRES } from '@/lib/genres'
+import GenreSelect from '@/components/GenreSelect'
 import { saveEventCapacitySettings } from '@/app/organizer/events/actions'
 
 type Slot = { id?: string; genre: string; capacity: number }
@@ -22,7 +23,7 @@ export default function GenreCapacityManager({
   applicationsByGenre: Record<string, number>
 }) {
   const router = useRouter()
-  const [slots, setSlots] = useState<Slot[]>(() => completeGenreSlots(initialSlots))
+  const [slots, setSlots] = useState<Slot[]>(initialSlots)
   const [notice, setNotice] = useState('')
   const [pending, startTransition] = useTransition()
   const total = slots.reduce((sum, slot) => sum + slot.capacity, 0)
@@ -64,7 +65,7 @@ export default function GenreCapacityManager({
             <div className="genre-capacity-row" key={slot.id ?? `${slot.genre}-${index}`}>
               <span className="genre-capacity-icon" aria-hidden="true">▦</span>
               <div className="genre-capacity-copy">
-                <strong>{slot.genre}</strong>
+                <GenreSelect required aria-label={`${slot.genre}のジャンル`} value={slot.genre} onChange={event => setSlots(current => current.map((item, i) => i === index ? { ...item, genre: event.target.value } : item))} />
                 <small>承認 {approvedCount}台・応募 {applicationCount}台</small>
               </div>
               <i><b style={{ width: `${Math.min(100, Math.round((approvedCount / Math.max(1, slot.capacity)) * 100))}%` }} /></i>
@@ -78,7 +79,7 @@ export default function GenreCapacityManager({
       </div>
 
       <div className="genre-capacity-actions">
-        <p>共通ジャンルから募集台数を設定してください。0台は募集なしです。</p>
+        <div><button className="button button-secondary" disabled={pending || slots.length >= VENDOR_GENRES.length} onClick={() => { const genre = VENDOR_GENRES.find(genre => !slots.some(slot => slot.genre === genre)); if (genre) setSlots(current => [...current, { genre, capacity: 0 }]) }} type="button">＋ 募集ジャンルを追加</button><p>未設定のジャンルは上限なし。0台で保存すると募集なしになります。</p></div>
         <div>{notice && <span>{notice}</span>}<button className="button button-primary" disabled={pending} aria-busy={pending} onClick={save} type="button">{pending ? '保存中…' : '変更を保存'}</button></div>
       </div>
     </section>
