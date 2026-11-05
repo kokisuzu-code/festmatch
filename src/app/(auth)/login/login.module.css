@@ -212,6 +212,7 @@
   font-size: 11px;
   font-weight: 600;
 }
+.form select,
 .form input {
   background: transparent;
   border: 0;

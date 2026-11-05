@@ -7,6 +7,7 @@ import MapLocationPicker from '@/components/map/MapLocationPicker'
 import SubmitButton from '@/components/SubmitButton'
 import { PREFECTURES } from '@/lib/prefectures'
 import styles from './EventForm.module.css'
+import { VENDOR_GENRES } from '@/lib/genres'
 
 type EventFormData = {
   title?: string
@@ -30,14 +31,7 @@ const stepLabels = [
   ['確認・保存', '最終確認'],
 ] as const
 
-const initialGenreSlots = [
-  { genre: '唐揚げ・揚げ物', capacity: 2 },
-  { genre: 'クレープ・スイーツ', capacity: 2 },
-  { genre: 'カレー・スパイス料理', capacity: 2 },
-  { genre: 'タコス・メキシカン', capacity: 2 },
-  { genre: 'コーヒー・ドリンク', capacity: 1 },
-  { genre: 'その他', capacity: 1 },
-]
+const initialGenreSlots = VENDOR_GENRES.map((genre, index) => ({ genre, capacity: index < 4 ? 2 : 1 }))
 
 function localDateTime(value?: string | null) {
   if (!value) return ''
@@ -187,8 +181,8 @@ export default function EventForm({ action, event }: { action: (formData: FormDa
                 <div key={slot.genre}>
                   <span>{slot.genre}</span>
                   <div>
-                    <button aria-label={`${slot.genre}を1台減らす`} onClick={() => setGenreSlots((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, capacity: Math.max(1, item.capacity - 1) } : item))} type="button">−</button>
-                    <strong>{slot.capacity}</strong>
+                    <button aria-label={`${slot.genre}を1台減らす`} onClick={() => setGenreSlots((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, capacity: Math.max(0, item.capacity - 1) } : item))} type="button">−</button>
+                    <strong>{slot.capacity === 0 ? '0（募集なし）' : slot.capacity}</strong>
                     <button aria-label={`${slot.genre}を1台増やす`} onClick={() => setGenreSlots((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, capacity: item.capacity + 1 } : item))} type="button">＋</button>
                     <small>台</small>
                   </div>
