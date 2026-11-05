@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type For
 import { updateVendorProfile } from '@/app/vendor/settings/actions'
 import { createClient } from '@/lib/supabase/client'
 
-import { VENDOR_GENRES } from '@/lib/genres'
+import GenreSelect from '@/components/GenreSelect'
 
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024
 
@@ -237,7 +237,8 @@ export default function VendorProfileForm({
       </div>
 
       <label className="field">屋号<input name="name" required defaultValue={name} disabled={isSubmitting} /></label>
-      <label className="field">ジャンル（必須）<select name="genre" required defaultValue={genre} disabled={isSubmitting}><option value="">選択してください</option>{genre && !VENDOR_GENRES.some((item) => item === genre) && <option value={genre}>{genre}（登録済み）</option>}{VENDOR_GENRES.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+      <label className="field">ジャンル（必須）<GenreSelect name="genre" required defaultValue={genre} disabled={isSubmitting} /></label>
+      <p className="form-subtle">メインで提供する料理を1つ選択してください。募集枠・区画の照合に使います。</p>
       <label className="field">紹介文<textarea name="description" rows={5} defaultValue={description} disabled={isSubmitting} /></label>
       <label className="field">公開プロフィールURL（Proプラン）<input name="slug" defaultValue={slug} placeholder="your-shop" disabled={isSubmitting} /><small>https://festmatch-pink.vercel.app/festmap/vendors/ の末尾を設定します。</small></label>
 

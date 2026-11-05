@@ -7,20 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { SingleImageUpload } from '@/components/uploads/ImageUploadField'
 
 // 🏆 TOP5: 唐揚げ・クレープ・たこ焼き・カレー・タコス（国内フェス実績順）
-const GENRES = [
-  '唐揚げ・揚げ物',
-  'クレープ・スイーツ',
-  'たこ焼き・お好み焼き',
-  'カレー・スパイス料理',
-  'タコス・タコライス',
-  'やきそば・焼きうどん',
-  'ラーメン・麺類',
-  'バーガー・サンドイッチ',
-  'BBQ・焼き肉・串焼き',
-  'ピザ・パスタ',
-  'アジアン・エスニック料理',
-  'その他',
-]
+import { VENDOR_GENRES as GENRES } from '@/lib/genres'
 
 export default function NewKitchenCarPage() {
   const router = useRouter()

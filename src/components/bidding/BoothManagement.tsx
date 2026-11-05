@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { allocateBoothBids, bidFingerprint, type BoothBid, type BoothSpace, type GenreCap } from '@/lib/booth-bidding'
-import { VENDOR_GENRES } from '@/lib/genres'
+import { VENDOR_GENRES, completeGenreSlots } from '@/lib/genres'
 import { yen } from '@/lib/app'
 import BoothMap from './BoothMap'
 import styles from './bidding.module.css'
@@ -18,7 +18,7 @@ export default function BoothManagement({ event, spaces: initialSpaces, slots: i
   const [mapPath, setMapPath] = useState(event.booth_map_path)
   const [mapUrl, setMapUrl] = useState(initialMapUrl)
   const [spaces, setSpaces] = useState(initialSpaces)
-  const [slots, setSlots] = useState<GenreCap[]>(initialSlots.length ? initialSlots : VENDOR_GENRES.map(genre => ({ genre, capacity: 0 })))
+  const [slots, setSlots] = useState<GenreCap[]>(completeGenreSlots(initialSlots))
   const [focused, setFocused] = useState('')
   const [placing, setPlacing] = useState(false)
   const [movingId, setMovingId] = useState<string | null>(null)

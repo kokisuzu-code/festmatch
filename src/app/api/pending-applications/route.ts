@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { isApplicationClosed } from '@/lib/events'
 import { sendEmail } from '@/lib/resend'
 import { APP_URL } from '@/lib/app'
+import { isVendorGenre } from '@/lib/genres'
 
 export const runtime = 'nodejs'
 
@@ -24,6 +25,8 @@ export async function POST(request: Request) {
   const message = body.message?.trim() || null
   if (!body.event_id || !/^[a-f0-9-]{36}$/i.test(body.event_id) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !vendorName) return NextResponse.json({ error: 'メールアドレスとベンダー名を入力してください。' }, { status: 400 })
   if (vendorName.length > 100 || message?.length && message.length > 2_000) return NextResponse.json({ error: '入力内容の文字数を確認してください。' }, { status: 400 })
+
+  if (!isVendorGenre(body.genre)) return NextResponse.json({ error: '共通一覧からメインのジャンルを選択してください。' }, { status: 400 })
 
   const admin = createAdminClient()
   const { data: event } = await admin.from('events').select('id, title, starts_at, ends_at, application_deadline_at, status, booth_bidding_enabled').eq('id', body.event_id).maybeSingle()
@@ -46,7 +49,7 @@ export async function POST(request: Request) {
     event_id: event.id,
     email,
     vendor_name: vendorName,
-    genre: body.genre?.trim().slice(0, 100) || null,
+    genre: body.genre,
     message,
     claim_token_hash: tokenHash(claimToken),
     expires_at: expiresAt,

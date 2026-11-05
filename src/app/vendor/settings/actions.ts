@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
+import { isVendorGenre } from '@/lib/genres'
 
 export type VendorProfileActionResult = {
   ok: boolean
@@ -27,6 +28,7 @@ export async function updateVendorProfile(formData: FormData): Promise<VendorPro
   const genre = String(formData.get('genre') ?? '').trim()
 
   if (!name || !genre) return { ok: false, message: '屋号とジャンルを入力してください。' }
+  if (!isVendorGenre(genre)) return { ok: false, message: '共通一覧からメインのジャンルを選択してください。' }
 
   const { data: current, error: currentError } = await supabase
     .from('vendors')
