@@ -11,7 +11,7 @@ create function auth.role() returns text language sql stable as $$select current
 create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
 create table public.organizers(id uuid primary key default gen_random_uuid(),profile_id uuid);
 create table public.vendors(id uuid primary key default gen_random_uuid(),profile_id uuid,genre text);
-create table public.events(id uuid primary key default gen_random_uuid(),organizer_id uuid references organizers,status text default 'draft',application_deadline_at timestamptz,starts_at timestamptz,ends_at timestamptz,capacity integer);
+create table public.events(id uuid primary key default gen_random_uuid(),organizer_id uuid references organizers,status text default 'draft',application_deadline_at timestamptz,starts_at timestamptz,ends_at timestamptz,capacity integer, booth_fee_yen integer default 33000, description text);
 create table public.applications(id uuid primary key default gen_random_uuid(),event_id uuid references events,vendor_id uuid references vendors,message text,status text default 'pending',vendor_genre_snapshot text,booth_fee_yen_snapshot integer,approved_at timestamptz,rejected_at timestamptz,paid_at timestamptz,unique(event_id,vendor_id));
 create table public.event_genre_slots(id uuid primary key default gen_random_uuid(),event_id uuid references events,genre text,capacity integer check(capacity>=0),unique(event_id,genre));
 create table public.event_spaces(id uuid primary key default gen_random_uuid(),event_id uuid references events,label text,genre text,assigned_application_id uuid unique references applications);
@@ -23,6 +23,7 @@ grant all on all tables in schema public,storage to service_role;
 `)
 const migration=readFileSync(new URL('../supabase/migrations/20261105115027_booth_bidding_integration.sql',import.meta.url),'utf8')
 await db.exec(migration)
+await db.exec(readFileSync(new URL('../supabase/migrations/20261109125343_event_experience_overhaul.sql',import.meta.url),'utf8'))
 await db.exec('create trigger trg_application_rules before insert or update on applications for each row execute function public.enforce_application_rules()')
 const profile='00000000-0000-4000-8000-000000000001',o='00000000-0000-4000-8000-000000000002',e='00000000-0000-4000-8000-000000000003'
 const vendors=[1,2,3,4].map(n=>({id:`10000000-0000-4000-8000-00000000000${n}`,profile:`20000000-0000-4000-8000-00000000000${n}`}))
@@ -79,6 +80,29 @@ assert.equal(accepted.find(a=>a.vendor_id===vendors[0].id).vendor_genre_snapshot
 assert.ok(accepted.every(a=>a.status==='approved'&&a.booth_fee_yen_snapshot>=35000))
 await rejects(()=>db.query('select finalize_booth_bids($1,$2,$3)',[e,profile,fp]),/すでに確定/)
 console.log('PASS: full migration, configuration, timestamp preservation/reset, stale versions, minimum/genre/duplicates, freeze guards, deadline, owner checks, atomic finalize, snapshot fees and no repeated finalization')
+// A shared-booth event accepts different vendor genres with no genre configuration.
+const shared='00000000-0000-4000-8000-000000000004'
+await db.query("insert into events(id,organizer_id,starts_at,ends_at,application_deadline_at,capacity) values($1,$2,now()+interval '5 days',now()+interval '6 days',now()+interval '1 day',1)",[shared,o])
+await db.query('insert into storage.objects(bucket_id,name) values($1,$2)',['event-images',shared+'/booth-map-test.png'])
+const sharedSpaces=[{label:'OPEN-1',genre:null,minimum_fee_yen:20000,map_x:50,map_y:50,map_width:12,map_height:8}]
+await db.query('select save_booth_config($1,$2,0,true,$3,$4::jsonb,$5::jsonb)',[shared,profile,shared+'/booth-map-test.png',JSON.stringify(sharedSpaces),'[]'])
+await db.query("update events set status='published' where id=$1",[shared])
+const openSpace=(await db.query('select id,map_width from event_spaces where event_id=$1',[shared])).rows[0]
+assert.equal(Number(openSpace.map_width),12)
+// First vendor is now sweets, second is food: money must win across genres.
+await db.query('select * from submit_booth_bid($1,$2,35000,$3::uuid[],null,0)',[shared,vendors[0].profile,[openSpace.id]])
+await db.query('select * from submit_booth_bid($1,$2,42000,$3::uuid[],null,0)',[shared,vendors[1].profile,[openSpace.id]])
+await db.query("update events set description='公開後に案内を更新' where id=$1",[shared])
+assert.equal((await db.query('select description from events where id=$1',[shared])).rows[0].description,'公開後に案内を更新')
+await rejects(()=>db.query('update events set booth_fee_yen=9000 where id=$1',[shared]),/応募受付後/)
+await rejects(()=>db.query('update event_spaces set map_width=20 where event_id=$1',[shared]),/応募受付後/)
+await db.exec('alter table events disable trigger guard_booth_event')
+await db.query("update events set application_deadline_at=now()-interval '1 second' where id=$1",[shared])
+await db.exec('alter table events enable trigger guard_booth_event')
+const sharedFp=(await db.query("select string_agg(id::text||':'||version::text,',' order by id) as fp from booth_bids where event_id=$1",[shared])).rows[0].fp
+assert.equal((await db.query('select finalize_booth_bids($1,$2,$3) as n',[shared,profile,sharedFp])).rows[0].n,1)
+assert.equal((await db.query('select vendor_id from applications where event_id=$1',[shared])).rows[0].vendor_id,vendors[1].id)
+console.log('PASS: optional genre setup, shared booths, global price ranking, resizable markers, and editable public descriptions with protected application terms')
 await db.close()
 
 })

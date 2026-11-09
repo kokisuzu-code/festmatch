@@ -9,6 +9,8 @@ import { notifyVendorOfApplicationDecision } from "@/lib/notifications"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasEventPublicationEntitlement } from '@/lib/organizer-entitlements'
 import { isVendorGenre } from '@/lib/genres'
+import { parseTokyoDate } from '@/lib/event-presentation'
+import { boothConfigSchema } from '@/lib/booth-bidding'
 
 type GenreSlotInput = { id?: string; genre: string; capacity: number }
 type EventSpaceInput = { id?: string; label: string; genre: string | null }
@@ -30,9 +32,7 @@ function optionalNumber(formData: FormData, field: string, options: { min?: numb
 function optionalDate(formData: FormData, field: string) {
   const value = stringValue(formData, field)
   if (!value) return null
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) throw new Error(`${field} の日時を確認してください。`)
-  return date.toISOString()
+  return parseTokyoDate(value)
 }
 
 function eventPayload(formData: FormData) {
@@ -42,14 +42,32 @@ function eventPayload(formData: FormData) {
   if (!title || title.length > 120 || !startsAt || !endsAt || new Date(endsAt) <= new Date(startsAt)) throw new Error("イベント名と正しい開催日時を入力してください。")
   const applicationDeadlineAt = optionalDate(formData, "application_deadline_at")
   if (applicationDeadlineAt && new Date(applicationDeadlineAt) > new Date(startsAt)) throw new Error("応募締切は開催開始日時以前に設定してください。")
+  if (stringValue(formData,'description').length > 5000 || stringValue(formData,'address').length > 500 || stringValue(formData,'cancellation_policy').length > 3000) throw new Error('説明・住所・キャンセル条件の文字数を確認してください。')
   return {
     title, description: stringValue(formData, "description") || null,
     prefecture: stringValue(formData, "prefecture"), address: stringValue(formData, "address") || null,
-    latitude: optionalNumber(formData, "lat", { min: -90, max: 90 }), longitude: optionalNumber(formData, "lng", { min: -180, max: 180 }), starts_at: startsAt, ends_at: endsAt,
-    application_deadline_at: applicationDeadlineAt, capacity: optionalNumber(formData, "capacity", { min: 1, integer: true }),
-    booth_fee_yen: optionalNumber(formData, "booth_fee_yen", { min: 0, integer: true }) ?? 0,
+    starts_at: startsAt, ends_at: endsAt,
+    application_deadline_at: applicationDeadlineAt, capacity: optionalNumber(formData, "capacity", { min: 1, max: 1000, integer: true }),
+    booth_fee_yen: optionalNumber(formData, "booth_fee_yen", { min: 0, max: 1000000, integer: true }) ?? 0,
+    has_power: formData.get('has_power') === 'on', has_water: formData.get('has_water') === 'on',
+    cancellation_policy: stringValue(formData, 'cancellation_policy') || null,
     status: formData.get('status') === 'published' ? 'published' : 'draft',
   }
+}
+
+function eventDetails(formData: FormData, previous: Record<string, unknown> = {}) {
+  const details = { ...previous }
+  for (const key of ['venue_name', 'host_message', 'requirements', 'loading_info']) {
+    const value = stringValue(formData, key)
+    if (value.length > (key === 'venue_name' ? 200 : 3000)) throw new Error('案内文は3,000文字以内で入力してください。')
+    details[key] = value
+  }
+  return details
+}
+
+function revalidateEvent(eventId: string, slug?: string | null) {
+  for (const path of ['/organizer/events', `/organizer/events/${eventId}`, `/organizer/events/${eventId}/edit`, '/vendor/events', `/vendor/events/${eventId}`, '/festmap', '/home']) revalidatePath(path)
+  if (slug) { revalidatePath(`/festmap/events/${slug}`); revalidatePath(`/embed/events/${slug}`) }
 }
 
 function genreSlotPayload(formData: FormData) {
@@ -69,8 +87,9 @@ async function uploadEventCover(
   supabase: Awaited<ReturnType<typeof requireRole>>['supabase'],
   eventId: string,
   formData: FormData,
+  field = 'cover_photo',
 ) {
-  const file = formData.get('cover_photo')
+  const file = formData.get(field)
   if (!(file instanceof File) || file.size === 0) return null
   const extensionByType: Record<string, string> = {
     'image/jpeg': 'jpg',
@@ -80,7 +99,7 @@ async function uploadEventCover(
   const extension = extensionByType[file.type]
   if (!extension) throw new Error('イベント写真はJPG・PNG・WebP形式で選択してください。')
   if (file.size > 6 * 1024 * 1024) throw new Error('イベント写真は6MB以下にしてください。')
-  const path = `${eventId}/cover-${crypto.randomUUID()}.${extension}`
+  const path = `${eventId}/${field === 'booth_map' ? 'booth-map' : 'cover'}-${crypto.randomUUID()}.${extension}`
   const { error } = await supabase.storage.from('event-images').upload(path, file, {
     cacheControl: '3600',
     contentType: file.type,
@@ -103,27 +122,35 @@ export async function createEvent(formData: FormData) {
   if (!organizer) throw new Error("主催者プロフィールが見つかりません。")
   const payload = eventPayload(formData)
   const genreSlots = genreSlotPayload(formData)
+  const enabled = formData.get('booth_bidding_enabled') === 'on'
+  let rawSpaces: unknown
+  try { rawSpaces = JSON.parse(stringValue(formData,'booth_spaces') || '[]') } catch { throw new Error('区画の内容を確認してください。') }
+  const config = boothConfigSchema.safeParse({ version:0, enabled, mapPath:null, spaces:rawSpaces, slots:genreSlots })
+  if (!config.success) throw new Error('区画番号・最低額・ジャンルの設定を確認してください。')
+  if (genreSlots.reduce((sum,slot) => sum + slot.capacity,0) > (payload.capacity ?? 1000)) throw new Error('ジャンル枠の合計が募集台数を超えています。')
   if (!payload.prefecture) throw new Error("都道府県を選択してください。")
   if (payload.status === 'published') throw new Error('新規イベントは下書きで保存してください。公開はイベント詳細から開始できます。')
-  const { data, error } = await supabase.from("events").insert({ ...payload, booth_bidding_enabled: formData.get('booth_bidding_enabled') === 'on', organizer_id: organizer.id, slug: createEventSlug(payload.title) }).select("id").single()
+  const { data, error } = await supabase.from("events").insert({ ...payload, operations_info:eventDetails(formData), booth_bidding_enabled: false, organizer_id: organizer.id, slug: createEventSlug(payload.title) }).select("id").single()
   if (error || !data) throw new Error("イベントを保存できませんでした。")
+  const uploaded: string[] = []
   try {
     const coverPath = await uploadEventCover(supabase, data.id, formData)
+    if (coverPath) uploaded.push(coverPath)
+    const mapPath = await uploadEventCover(supabase, data.id, formData, 'booth_map')
+    if (mapPath) uploaded.push(mapPath)
+    if (enabled && (!mapPath || !config.data.spaces.length)) throw new Error('区画図と1つ以上の区画を設定してください。')
     if (coverPath) {
-      const { error: coverError } = await supabase.from('events').update({ cover_photo_path: coverPath }).eq('id', data.id)
-      if (coverError) {
-        await supabase.storage.from('event-images').remove([coverPath])
-        throw coverError
-      }
+      const { error } = await supabase.from('events').update({ cover_photo_path:coverPath }).eq('id',data.id)
+      if (error) throw error
     }
-    if (genreSlots.length) {
-      const { error: slotError } = await supabase.from('event_genre_slots').insert(genreSlots.map((slot) => ({ event_id: data.id, genre: slot.genre, capacity: slot.capacity })))
-      if (slotError) throw slotError
-    }
-  } catch {
-    await supabase.from('events').delete().eq('id', data.id)
-    throw new Error('イベント情報を保存できなかったため、イベント作成を中止しました。もう一度お試しください。')
+    const { error } = await createAdminClient().rpc('save_booth_config', { p_event:data.id, p_profile:user.id, p_version:0, p_enabled:enabled, p_map:mapPath, p_spaces:config.data.spaces, p_slots:genreSlots })
+    if (error) throw new Error(error.message)
+  } catch (error) {
+    await supabase.from('events').delete().eq('id',data.id)
+    if (uploaded.length) await supabase.storage.from('event-images').remove(uploaded)
+    throw new Error(error instanceof Error ? error.message : '保存できませんでした。入力内容を確認してください。')
   }
+  revalidateEvent(data.id)
   redirect(`/organizer/events/${data.id}`)
 }
 
@@ -133,14 +160,28 @@ export async function updateEvent(eventId: string, formData: FormData) {
   if (!payload.prefecture) throw new Error("都道府県を選択してください。")
   const { data: organizer } = await supabase.from('organizers').select('id').eq('profile_id', user.id).maybeSingle()
   if (!organizer) throw new Error('主催者プロフィールが見つかりません。')
+  const { data: current } = await supabase.from('events').select('*').eq('id',eventId).eq('organizer_id',organizer.id).maybeSingle()
+  if (!current) throw new Error('このイベントを編集する権限がありません。')
+  payload.status = current.status
+  const [{count:applications,error:ae},{count:bids,error:be}] = await Promise.all([
+    supabase.from('applications').select('id',{count:'exact',head:true}).eq('event_id',eventId),
+    supabase.from('booth_bids').select('id',{count:'exact',head:true}).eq('event_id',eventId),
+  ])
+  if (ae || be) throw new Error('応募状況を確認できませんでした。もう一度お試しください。')
+  if (applications || bids) {
+    for (const key of ['starts_at','ends_at','application_deadline_at','capacity','booth_fee_yen','status'] as const) {
+      if (payload[key] !== current[key] && !(key.endsWith('_at') && Date.parse(String(payload[key])) === Date.parse(String(current[key])))) throw new Error('応募受付後は日時・出店料・募集台数・締切・公開状態を変更できません。説明・画像・案内は編集できます。')
+    }
+  }
   await ensureEventPublicationEntitlement(supabase, organizer.id, eventId, payload.status, user)
   const coverPath = await uploadEventCover(supabase, eventId, formData)
-  const { error } = await supabase.from("events").update(coverPath ? { ...payload, cover_photo_path: coverPath } : payload).eq("id", eventId)
-  if (error) {
+  const update = { ...payload, operations_info:eventDetails(formData,current.operations_info ?? {}), ...(coverPath ? {cover_photo_path:coverPath} : {}) }
+  const { data:saved, error } = await supabase.from('events').update(update).eq('id',eventId).eq('organizer_id',organizer.id).eq('updated_at',current.updated_at).select('id').maybeSingle()
+  if (error || !saved) {
     if (coverPath) await supabase.storage.from('event-images').remove([coverPath])
-    throw new Error("イベントを更新できませんでした。")
+    throw new Error(error?.message || '別の操作で情報が更新されました。再読み込みして確認してください。')
   }
-  revalidatePath(`/organizer/events/${eventId}`)
+  revalidateEvent(eventId,current.slug)
   redirect(`/organizer/events/${eventId}`)
 }
 

@@ -2,7 +2,7 @@ import { eventSearchFilter } from './event-search'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { PublicEvent } from '@/components/festmap/PublicEventCard'
 
-const INTERNAL_EVENT_COLUMNS = 'id, slug, title, description, prefecture, address, starts_at, ends_at, application_deadline_at, booth_fee_yen, latitude, longitude, created_at'
+const INTERNAL_EVENT_COLUMNS = 'id, slug, title, description, prefecture, address, starts_at, ends_at, application_deadline_at, booth_fee_yen, latitude, longitude, created_at, cover_photo_path, capacity, has_power, has_water, operations_info, cancellation_policy, expected_visitors, booth_bidding_enabled'
 const EXTERNAL_EVENT_COLUMNS = 'id, slug, title, description, prefecture, address, starts_at, ends_at, official_url, latitude, longitude, created_at'
 
 type FestMapFilters = { prefecture?: string; query?: string; includeArchived?: boolean }

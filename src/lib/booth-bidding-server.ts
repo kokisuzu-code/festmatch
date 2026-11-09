@@ -5,7 +5,7 @@ import { boothMaximums, type BoothBid, type BoothSpace } from '@/lib/booth-biddi
 export async function getBoothBidding(eventId: string, vendorId?: string) {
   const admin = createAdminClient()
   const [{ data: spaces, error: se }, { data: bids, error: be }] = await Promise.all([
-    admin.from('event_spaces').select('id, label, genre, minimum_fee_yen, map_x, map_y, assigned_application_id').eq('event_id', eventId).order('label'),
+    admin.from('event_spaces').select('id, label, genre, minimum_fee_yen, map_x, map_y, map_width, map_height, assigned_application_id').eq('event_id', eventId).order('label'),
     admin.from('booth_bids').select('id, vendor_id, genre, amount_yen, amount_submitted_at, preferences, message, status, version, application_id').eq('event_id', eventId),
   ])
   if (se || be) throw new Error('区画応募の情報を読み込めませんでした。')

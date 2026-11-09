@@ -1,10 +1,12 @@
 import Link from "next/link"
+import { eventImageUrl, type EventDetails } from "@/lib/event-presentation"
 import { formatEventDate, eventStateLabel } from "@/lib/events"
 import { yen } from "@/lib/app"
 
 export type PublicEvent = {
   id: string; slug: string; title: string; description: string | null; prefecture: string; address: string | null
   starts_at: string; ends_at: string; application_deadline_at: string | null; booth_fee_yen: number | null
+  cover_photo_path?: string | null; capacity?: number | null; has_power?: boolean; has_water?: boolean; booth_bidding_enabled?: boolean; operations_info?: EventDetails | null; cancellation_policy?: string | null; expected_visitors?: number | null;
   is_external: boolean; official_url: string | null; latitude: number | null; longitude: number | null; created_at: string
 }
 
@@ -13,6 +15,8 @@ export default function PublicEventCard({ event }: { event: PublicEvent }) {
   const stateClass = stateLabel === "応募受付中" ? "is-open" : "is-closed"
   const body = (
     <div className="public-event-card-content">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {eventImageUrl(event.cover_photo_path) && <img src={eventImageUrl(event.cover_photo_path)!} alt={`${event.title}のポスター`} style={{width:'100%',maxHeight:280,objectFit:'contain',borderRadius:10,marginBottom:16}} />}
       <p className="eyebrow">{event.prefecture}{event.is_external ? " ・ 外部イベント" : ""}</p>
       <h2>{event.title}</h2>
       <p className="public-event-summary">
