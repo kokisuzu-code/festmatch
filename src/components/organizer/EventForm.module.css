@@ -94,3 +94,18 @@
   .preview { padding: 22px; }
   .preview h2 { font-size: 20px; }
 }
+
+/* Readable form controls on desktop and touch devices. */
+.pageHeader div > span, .formHeading p, .steps strong, .steps small, .infoNote p, .publishToggle small { font-size: 13px; }
+.formHeading h2 { font-size: 22px; }
+.formSection > label, .grid label, .infoNote strong, .primaryButton, .secondaryButton { font-size: 15px; }
+.formSection input:not([type='checkbox']), .formSection select, .formSection textarea { font-size: 16px; min-height: 46px; }
+.formSection input[type='file'] { height: auto; padding: 12px; }
+.primaryButton, .secondaryButton { min-height: 46px; }
+.coverUpload { height: 230px; background-size: contain !important; background-repeat: no-repeat; }
+.coverUpload strong { font-size: 16px; }.coverUpload small { font-size: 13px; }
+.slotWarning { padding: 16px; border-radius: 10px; font-size: 14px; line-height: 1.7; }
+.genreRow { display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 14px; padding: 8px 0; }
+.genreRow input { max-width: 100px; }
+.steps { position: sticky; top: 24px; }
+@media(max-width:760px) { .steps { position: static; }.steps small { display:none; }.steps strong { font-size: 12px; }.card { padding:16px; } }

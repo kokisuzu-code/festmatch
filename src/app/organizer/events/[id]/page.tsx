@@ -71,7 +71,7 @@ export default async function OrganizerEventDetail({ params, searchParams }: { p
     <div className="dashboard-stack">
       <section className="dashboard-hero">
         <div><h1>{event.title}</h1><p>{formatEventDate(event.starts_at)} から {formatEventDate(event.ends_at)}</p></div>
-        <div className="button-row"><Link className="button button-secondary" href={`/organizer/events/${id}/edit`}>編集</Link><Link className="button button-primary" href={`/organizer/events/${id}/chat`}>チャット</Link></div>
+        <div className="button-row"><Link className="button button-secondary" href={`/organizer/events/${id}/preview`}>出店者プレビュー</Link><Link className="button button-secondary" href={`/organizer/events/${id}/edit`}>編集</Link><Link className="button button-primary" href={`/organizer/events/${id}/chat`}>チャット</Link></div>
       </section>
       <section className="metric-grid">
         <div className="metric-card"><span>公開状態</span><strong>{event.status === 'published' ? '公開中' : '下書き'}</strong><small>{eventStateLabel(event)}</small></div>

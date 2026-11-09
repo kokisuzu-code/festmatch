@@ -4,24 +4,23 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { allocateBoothBids, bidFingerprint, type BoothBid, type BoothSpace, type GenreCap } from '@/lib/booth-bidding'
-import { VENDOR_GENRES, completeGenreSlots } from '@/lib/genres'
+import { completeGenreSlots } from '@/lib/genres'
 import { yen } from '@/lib/app'
 import BoothMap from './BoothMap'
+import BoothLayoutEditor from './BoothLayoutEditor'
 import styles from './bidding.module.css'
 
-function draftId() { return typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `draft-${Date.now()}-${Math.random().toString(36).slice(2)}` }
 
-type EventConfig = { id: string; booth_bidding_enabled: boolean; booth_map_path: string | null; booth_config_version: number; booth_bidding_finalized_at: string | null; application_deadline_at: string | null; capacity: number | null; status: string }
-export default function BoothManagement({ event, spaces: initialSpaces, slots: initialSlots, bids, mapUrl: initialMapUrl, names, mode, hasApplications }: { event: EventConfig; spaces: BoothSpace[]; slots: GenreCap[]; bids: BoothBid[]; mapUrl: string | null; names: Record<string, string>; mode: 'setup' | 'results'; hasApplications: boolean }) {
+type EventConfig = { id: string; booth_bidding_enabled: boolean; booth_map_path: string | null; booth_config_version: number; booth_bidding_finalized_at: string | null; application_deadline_at: string | null; capacity: number | null; status: string; booth_fee_yen?: number }
+export default function BoothManagement({ event, spaces: initialSpaces, slots: initialSlots, bids, mapUrl: initialMapUrl, names, mode, hasApplications, aiEnabled = false }: { event: EventConfig; spaces: BoothSpace[]; slots: GenreCap[]; bids: BoothBid[]; mapUrl: string | null; names: Record<string, string>; mode: 'setup' | 'results'; hasApplications: boolean; aiEnabled?: boolean }) {
   const router = useRouter()
   const [enabled, setEnabled] = useState(event.booth_bidding_enabled)
   const [mapPath, setMapPath] = useState(event.booth_map_path)
   const [mapUrl, setMapUrl] = useState(initialMapUrl)
-  const [spaces, setSpaces] = useState(initialSpaces)
+  const [spaces, setSpaces] = useState(initialSpaces.map(space => ({...space,minimum_fee_yen:space.minimum_fee_yen || Math.max(1000,Math.ceil((event.booth_fee_yen ?? 33000)/1000)*1000)})))
   const [slots, setSlots] = useState<GenreCap[]>(completeGenreSlots(initialSlots))
   const [focused, setFocused] = useState('')
-  const [placing, setPlacing] = useState(false)
-  const [movingId, setMovingId] = useState<string | null>(null)
+  const [genreEnabled, setGenreEnabled] = useState(initialSlots.length > 0)
   const [pending, setPending] = useState(false)
   const [notice, setNotice] = useState('')
   const [confirmed, setConfirmed] = useState(false)
@@ -46,7 +45,7 @@ export default function BoothManagement({ event, spaces: initialSpaces, slots: i
     setPending(true); setNotice('')
     try {
       if (enabled && (!mapPath || !spaces.length)) throw new Error('区画図を添付し、図面上に区画を1つ以上追加してください。')
-      const response = await fetch(url, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ version: event.booth_config_version, enabled, mapPath, spaces: enabled ? spaces.map(({ label, genre, minimum_fee_yen, map_x, map_y }) => ({ label, genre, minimum_fee_yen, map_x, map_y })) : [], slots: enabled ? slots : [] }) })
+      const response = await fetch(url, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ version: event.booth_config_version, enabled, mapPath, spaces: spaces.map(({ label, genre, minimum_fee_yen, map_x, map_y, map_width, map_height }) => ({ label, genre:genreEnabled ? genre : null, minimum_fee_yen, map_x, map_y, map_width, map_height })), slots: genreEnabled ? slots : [] }) })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error)
       setNotice('区画と募集条件を保存しました。'); router.refresh()
@@ -63,7 +62,6 @@ export default function BoothManagement({ event, spaces: initialSpaces, slots: i
     } catch (error) { setNotice(error instanceof Error ? error.message : '割当を確定できませんでした。') }
     finally { setPending(false) }
   }
-  function updateSpace(id: string, patch: Partial<BoothSpace>) { setSpaces(current => current.map(space => space.id === id ? { ...space, ...patch } : space)) }
 
   if (mode === 'results') return <section className="panel"><div className="section-heading"><div><h2>区画指定・入札応募</h2></div><Link href={`/organizer/events/${event.id}/edit#booth-bidding`}>区画図・募集条件を設定</Link></div>
     {!enabled ? <p className="panel-copy">区画図を添付し、最低額・募集ジャンル・区画位置を設定すると入札応募を利用できます。</p> : <>
@@ -72,18 +70,18 @@ export default function BoothManagement({ event, spaces: initialSpaces, slots: i
     <div className={styles.tableScroll}><table className={styles.table}><thead><tr><th>ジャンル</th><th>出店者</th><th>提示額</th><th>この金額を登録した日時</th><th>希望順位</th><th>{event.booth_bidding_finalized_at ? '確定結果' : '仮割当'}</th></tr></thead><tbody>{preview.map(bid => <tr key={bid.id}><td>{bid.genre}</td><td>{names[bid.vendor_id] ?? '出店者'}{bid.message && <p>{bid.message}</p>}</td><td>{yen(bid.amount_yen)}</td><td>{new Date(bid.amount_submitted_at).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</td><td>{bid.preferences.map(label).join(' → ')}</td><td>{event.booth_bidding_finalized_at ? bid.status === 'awarded' ? initialSpaces.find(space => space.assigned_application_id === bid.application_id)?.label ?? '確定済み' : '補欠' : bid.spaceId ? label(bid.spaceId) : '補欠'}</td></tr>)}</tbody></table></div>
     {!bids.length && <p className={styles.empty}>入札応募はまだありません。</p>}
     <p className={styles.note}>応募締切：{event.application_deadline_at ? new Date(event.application_deadline_at).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }) : '未設定'}（日本時間）</p>
-    {event.booth_bidding_finalized_at ? <p className={styles.notice}>割当確定済みです。採択された出店者は下の正式応募一覧から確認できます。</p> : <><label className={styles.check}><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} /><span>締切後の最新の割当結果を確認しました。確定後は提示額・区画・選考順を変更できません。</span></label><div className={styles.toolbar}><button className="button button-primary" disabled={pending || !confirmed || !bids.length || !event.application_deadline_at || Date.now()<Date.parse(event.application_deadline_at)} onClick={finalize} aria-busy={pending}>{pending ? '確定中…' : 'この割当で出店を確定する'}</button><button className="button button-secondary" disabled={pending} onClick={() => router.refresh()}>最新の応募で再計算</button></div></>}
+    {event.booth_bidding_finalized_at ? <p className={styles.notice}>割当確定済みです。採択された出店者は下の正式応募一覧から確認できます。</p> : <><label className={styles.check}><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} /><span>締切後の最新の割当結果を確認しました。確定後は提示額・区画・選考順を変更できません。</span></label><div className={styles.toolbar}><button type="button" className="button button-primary" disabled={pending || !confirmed || !bids.length || !event.application_deadline_at || Date.now()<Date.parse(event.application_deadline_at)} onClick={finalize} aria-busy={pending}>{pending ? '確定中…' : 'この割当で出店を確定する'}</button><button type="button" className="button button-secondary" disabled={pending} onClick={() => router.refresh()}>最新の応募で再計算</button></div></>}
     {notice && <p className={styles.notice} role="status">{notice}</p>}</>}
   </section>
 
-  return <section id="booth-bidding" className="panel"><div className="section-heading"><div><h2>区画図・入札応募の設定</h2></div></div><label className={styles.check}><input type="checkbox" checked={enabled} disabled={pending || frozen} onChange={e => setEnabled(e.target.checked)} /><span>区画指定・入札形式で募集する</span></label><p className={styles.note}>区画図の添付・応募締切・区画ごとの最低額・ジャンル・位置が必須です。応募受付後は募集条件を固定します。</p>
-  {frozen && <p className={styles.notice}>応募受付後のため募集条件は変更できません。割当結果はイベント詳細から確認できます。</p>}
-  {enabled && <div className={styles.setupGrid}><div><div className={styles.upload}><strong>{mapPath ? '✓ 区画図を添付済み' : '区画図を添付（必須）'}</strong><input aria-label="区画図の画像" type="file" accept="image/png,image/jpeg,image/webp" disabled={pending || frozen} onChange={e => upload(e.target.files?.[0])} /><p>PNG・JPEG・WebP、8MB以下。PDFは画像に書き出して添付してください。</p></div>
-  <div className={styles.toolbar}><button type="button" className="button button-secondary" disabled={pending || frozen || !mapUrl} onClick={() => { setMovingId(null); setPlacing(!placing) }}>{placing ? '配置モードを終了' : '＋ 図面を押して区画を追加'}</button><button type="button" className="button button-secondary" disabled={pending || frozen || !mapUrl} onClick={() => { const id = draftId(); setSpaces(current => [...current,{ id, label: `区画${current.length+1}`, genre: slots[0]?.genre ?? VENDOR_GENRES[0], minimum_fee_yen: 20000, map_x:50, map_y:50 }]); setFocused(id) }}>中央に区画を追加</button>{placing && <span className={styles.note}>区画の中心をクリックしてください。</span>}</div>
-  <BoothMap url={mapUrl} spaces={spaces} focused={focused} onSelect={setFocused} onPlace={placing && !frozen && !pending ? (x,y) => { if (movingId) { updateSpace(movingId,{map_x:x,map_y:y}); setMovingId(null); setPlacing(false); return } const id = draftId(); setSpaces(current => [...current,{ id, label: `区画${current.length+1}`, genre: slots[0]?.genre ?? VENDOR_GENRES[0], minimum_fee_yen: 20000, map_x:x, map_y:y }]); setFocused(id); setPlacing(false) } : undefined} />
-  <p className={styles.note}>番号を選んでから「位置を移動」を押すと、図面上で位置を変更できます。</p>
-  {spaces.map(space => <div key={space.id} className={styles.spaceRow} style={space.id === focused ? { borderColor: '#176145' } : undefined}><label>区画番号<input value={space.label} maxLength={80} disabled={pending || frozen} onChange={e => updateSpace(space.id,{ label:e.target.value })} /></label><label>募集ジャンル<select value={space.genre ?? ''} disabled={pending || frozen} onChange={e => updateSpace(space.id,{ genre:e.target.value })}><option value="">選択してください</option>{slots.map(slot => <option key={slot.genre}>{slot.genre}</option>)}</select></label><label>最低出店料（税込）<input type="number" min="1000" max="1000000" step="1000" value={space.minimum_fee_yen} disabled={pending || frozen} onChange={e => updateSpace(space.id,{ minimum_fee_yen:Number(e.target.value) })} /></label><label>横位置（%）<input type="number" min="0" max="100" step="0.01" value={space.map_x ?? 50} disabled={pending || frozen} onChange={e => updateSpace(space.id,{map_x:Number(e.target.value)})} /></label><label>縦位置（%）<input type="number" min="0" max="100" step="0.01" value={space.map_y ?? 50} disabled={pending || frozen} onChange={e => updateSpace(space.id,{map_y:Number(e.target.value)})} /></label><button type="button" disabled={pending || frozen} onClick={() => { setFocused(space.id); setPlacing(false) }}>図面で確認</button><button type="button" disabled={pending || frozen} onClick={() => { setFocused(space.id); setMovingId(space.id); setPlacing(true); setNotice(`図面上の新しい位置を押してください。${space.label}を移動します。`) }}>位置を移動</button><button type="button" disabled={pending || frozen} onClick={() => setSpaces(current => current.filter(item => item.id!==space.id))}>削除</button></div>)}
-  </div><div><h3>ジャンル別の採択上限</h3><p className={styles.note}>0店舗は募集なし。上限の合計はイベント全体の募集枠以下に設定してください。</p>{slots.map((slot,index) => <label className={styles.capRow} key={slot.genre}><span>{slot.genre}</span><input type="number" min="0" max="1000" step="1" disabled={pending || frozen} value={slot.capacity} onChange={e => setSlots(current => current.map((item,i) => i===index ? { ...item, capacity:Number(e.target.value) } : item))} /></label>)}<p className={styles.notice}>最高提示額を出店者画面に公開します。店舗名と他店の個別応募内容は出店者に公開しません。</p></div></div>}
-  <button className="button button-primary" disabled={pending || frozen} onClick={save} aria-busy={pending}>{pending ? '保存中…' : '区画図・募集条件を保存'}</button>{notice && <p className={styles.notice} role="status">{notice}</p>}
+  return <section id="booth-bidding" className="panel"><div className="section-heading"><h2>募集設定</h2></div>
+    <label className={styles.check}><input type="checkbox" checked={enabled} disabled={pending || frozen} onChange={e => setEnabled(e.target.checked)} /><span>区画指定・提示額での募集を利用する</span></label>
+    <p className={styles.note}>オフなら固定の出店料で募集します。区画図はどちらの募集方法でも添付できます。</p>
+    {frozen && <p className={styles.notice}>応募済みの出店者がいるため、区画・募集条件は固定しています。イベントの画像・説明・案内は上で編集できます。</p>}
+    <label className={styles.check}><input type="checkbox" checked={genreEnabled} disabled={pending || frozen} onChange={e => setGenreEnabled(e.target.checked)} /><span>ジャンル別に募集枠を設定する（任意）</span></label>
+    {genreEnabled && <div><h3>ジャンルごとの採択上限</h3><p className={styles.note}>0店舗は募集なし。上限の合計は全体の募集台数以下に設定してください。</p>{slots.map((slot,index) => <label className={styles.capRow} key={slot.genre}><span>{slot.genre}</span><input type="number" min="0" max="1000" disabled={pending || frozen} value={slot.capacity} onChange={e => setSlots(current => current.map((item,i) => i===index ? {...item,capacity:Number(e.target.value)} : item))} /></label>)}</div>}
+    <div className={styles.upload}><strong>{mapPath ? '区画図を添付済み' : `区画図を添付（${enabled ? '必須' : '任意'}）`}</strong><input aria-label="区画図の画像" type="file" accept="image/png,image/jpeg,image/webp" disabled={pending || frozen} onChange={e => upload(e.target.files?.[0])} /><p>PNG・JPEG・WebP、8MB以下。</p></div>
+    <BoothLayoutEditor spaces={spaces} onChange={setSpaces} mapUrl={mapUrl} genreEnabled={genreEnabled} defaultFee={Math.max(1000,Math.ceil((event.booth_fee_yen ?? 33000)/1000)*1000)} disabled={pending || frozen} eventId={event.id} aiEnabled={aiEnabled} />
+    <button type="button" className="button button-primary" disabled={pending || frozen} onClick={save} aria-busy={pending}>{pending ? '保存中…' : '募集設定・区画図を保存'}</button>{notice && <p className={styles.notice} role="status">{notice}</p>}
   </section>
 }
