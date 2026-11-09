@@ -65,7 +65,7 @@ export default function BoothManagement({ event, spaces: initialSpaces, slots: i
   }
   function updateSpace(id: string, patch: Partial<BoothSpace>) { setSpaces(current => current.map(space => space.id === id ? { ...space, ...patch } : space)) }
 
-  if (mode === 'results') return <section className="panel"><div className="section-heading"><div><p className="eyebrow">BOOTH BIDDING</p><h2>区画指定・入札応募</h2></div><Link href={`/organizer/events/${event.id}/edit#booth-bidding`}>区画図・募集条件を設定</Link></div>
+  if (mode === 'results') return <section className="panel"><div className="section-heading"><div><h2>区画指定・入札応募</h2></div><Link href={`/organizer/events/${event.id}/edit#booth-bidding`}>区画図・募集条件を設定</Link></div>
     {!enabled ? <p className="panel-copy">区画図を添付し、最低額・募集ジャンル・区画位置を設定すると入札応募を利用できます。</p> : <>
     <div className={styles.notice}>提示額の高い順で希望区画を割り当てます。同額では、その金額を先に提示した応募を優先します。出店料は提示額で確定します。</div>
     <BoothMap url={mapUrl} spaces={initialSpaces} focused={focused} onSelect={setFocused} />
@@ -76,7 +76,7 @@ export default function BoothManagement({ event, spaces: initialSpaces, slots: i
     {notice && <p className={styles.notice} role="status">{notice}</p>}</>}
   </section>
 
-  return <section id="booth-bidding" className="panel"><div className="section-heading"><div><p className="eyebrow">BOOTH APPLICATION SETUP</p><h2>区画図・入札応募の設定</h2></div></div><label className={styles.check}><input type="checkbox" checked={enabled} disabled={pending || frozen} onChange={e => setEnabled(e.target.checked)} /><span>区画指定・入札形式で募集する</span></label><p className={styles.note}>区画図の添付・応募締切・区画ごとの最低額・ジャンル・位置が必須です。応募受付後は募集条件を固定します。</p>
+  return <section id="booth-bidding" className="panel"><div className="section-heading"><div><h2>区画図・入札応募の設定</h2></div></div><label className={styles.check}><input type="checkbox" checked={enabled} disabled={pending || frozen} onChange={e => setEnabled(e.target.checked)} /><span>区画指定・入札形式で募集する</span></label><p className={styles.note}>区画図の添付・応募締切・区画ごとの最低額・ジャンル・位置が必須です。応募受付後は募集条件を固定します。</p>
   {frozen && <p className={styles.notice}>応募受付後のため募集条件は変更できません。割当結果はイベント詳細から確認できます。</p>}
   {enabled && <div className={styles.setupGrid}><div><div className={styles.upload}><strong>{mapPath ? '✓ 区画図を添付済み' : '区画図を添付（必須）'}</strong><input aria-label="区画図の画像" type="file" accept="image/png,image/jpeg,image/webp" disabled={pending || frozen} onChange={e => upload(e.target.files?.[0])} /><p>PNG・JPEG・WebP、8MB以下。PDFは画像に書き出して添付してください。</p></div>
   <div className={styles.toolbar}><button type="button" className="button button-secondary" disabled={pending || frozen || !mapUrl} onClick={() => { setMovingId(null); setPlacing(!placing) }}>{placing ? '配置モードを終了' : '＋ 図面を押して区画を追加'}</button><button type="button" className="button button-secondary" disabled={pending || frozen || !mapUrl} onClick={() => { const id = draftId(); setSpaces(current => [...current,{ id, label: `区画${current.length+1}`, genre: slots[0]?.genre ?? VENDOR_GENRES[0], minimum_fee_yen: 20000, map_x:50, map_y:50 }]); setFocused(id) }}>中央に区画を追加</button>{placing && <span className={styles.note}>区画の中心をクリックしてください。</span>}</div>
