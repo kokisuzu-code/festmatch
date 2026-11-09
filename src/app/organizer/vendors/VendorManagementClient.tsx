@@ -1,5 +1,6 @@
 'use client'
 
+import { applicationStatusLabel } from '@/lib/application-status'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
@@ -16,14 +17,6 @@ export type ManagedVendor = {
   status: string
   appliedAt: string
   spaceLabel: string | null
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: '審査待ち',
-  approved: '承認済み',
-  paid: '決済済み',
-  rejected: '見送り',
-  cancelled: 'キャンセル',
 }
 
 function formatDate(value: string | null) {
@@ -142,7 +135,7 @@ export default function VendorManagementClient({
                 </div>
                 <div role="cell">
                   <span className={`vendor-status vendor-status-${vendor.status}`}>
-                    {STATUS_LABELS[vendor.status] ?? vendor.status}
+                    {applicationStatusLabel(vendor.status)}
                   </span>
                 </div>
                 <div className="vendor-row-actions" role="cell">

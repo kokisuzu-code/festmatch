@@ -1,3 +1,4 @@
+import { applicationStatusLabel } from '@/lib/application-status'
 import Link from 'next/link'
 import BoothManagement from '@/components/bidding/BoothManagement'
 import { getBoothBidding, boothMapUrl } from '@/lib/booth-bidding-server'
@@ -54,7 +55,7 @@ export default async function OrganizerEventDetail({ params }: { params: Promise
   return (
     <div className="dashboard-stack">
       <section className="dashboard-hero">
-        <div><p className="eyebrow">EVENT OVERVIEW</p><h1>{event.title}</h1><p>{formatEventDate(event.starts_at)} から {formatEventDate(event.ends_at)}</p></div>
+        <div><h1>{event.title}</h1><p>{formatEventDate(event.starts_at)} から {formatEventDate(event.ends_at)}</p></div>
         <div className="button-row"><Link className="button button-secondary" href={`/organizer/events/${id}/edit`}>編集</Link><Link className="button button-primary" href={`/organizer/events/${id}/chat`}>チャット</Link></div>
       </section>
       <section className="metric-grid">
@@ -64,25 +65,25 @@ export default async function OrganizerEventDetail({ params }: { params: Promise
       </section>
       {event.status !== 'published' && !ended && (
         <section className="panel">
-          <div className="section-heading"><div><p className="eyebrow">PUBLICATION</p><h2>募集を公開する</h2></div></div>
+          <div className="section-heading"><div><h2>募集を公開する</h2></div></div>
           {canPublish ? <><p className="panel-copy">このイベントの公開条件を満たしています。公開後、ベンダーがFestMapから応募できるようになります。</p><div className="button-row"><PublishEventButton eventId={event.id} /></div></> : <><p className="panel-copy">年間契約ならすべてのイベントを公開できます。スポット契約は、このイベントごとに ¥250,000 を一括決済し、利用期間は決済日から最大3か月です。</p><div className="button-row"><SpotEventCheckoutButton eventId={event.id} /><Link className="button button-secondary" href="/organizer/settings">年間契約を確認する</Link></div></>}
         </section>
       )}
       {event.booth_bidding_enabled && <BoothManagement key={`${event.booth_config_version}:${event.booth_bidding_finalized_at}:${bidding.bids.map(bid => bid.version).join(',')}`} event={event} spaces={bidding.spaces} slots={genreSlots ?? []} bids={bidding.bids} mapUrl={boothMapUrl(event.booth_map_path)} names={Object.fromEntries((vendors ?? []).map(vendor => [vendor.id, vendor.name]))} mode="results" hasApplications={Boolean(applications?.length)} />}
       <section className="panel">
-        <div className="section-heading"><div><p className="eyebrow">APPLICATIONS</p><h2>応募管理</h2></div><span className="status">{ended ? '開催終了' : eventStateLabel(event)}</span></div>
+        <div className="section-heading"><div><h2>応募管理</h2></div><span className="status">{ended ? '開催終了' : eventStateLabel(event)}</span></div>
         {applications?.length ? <div className="application-list">{applications.map((application) => {
           const vendor = vendorById.get(application.vendor_id)
           const genre = application.vendor_genre_snapshot ?? vendor?.genre ?? null
           const slot = genre ? genreSlotByGenre.get(genre) : undefined
           const genreSlotFull = application.status === 'pending' && Boolean(slot && (approvedByGenre.get(slot.genre) ?? 0) >= slot.capacity)
           const assignedSpace = spaceByApplicationId.get(application.id)
-          return <article className="application-card" id={`application-${application.id}`} key={application.id}><div><strong>{vendor?.name ?? 'ベンダー'}</strong><span>{genre ?? 'ジャンル未設定'} ・ {new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium' }).format(new Date(application.created_at))}</span>{assignedSpace && <span>割当区画: {assignedSpace.label}</span>}{genreSlotFull && <span className="slot-full-note">{slot?.genre}枠は満了</span>}{application.message && <p>{application.message}</p>}</div>{ended ? <span className="status">{application.status}</span> : event.booth_bidding_enabled ? <span className="status">{application.status}（入札割当）</span> : <ApplicationDecision eventId={id} applicationId={application.id} status={application.status} vendorGenre={genre} spaces={spaces ?? []} assignedSpaceId={assignedSpace?.id ?? null} genreSlotFull={genreSlotFull} />}</article>
+          return <article className="application-card" id={`application-${application.id}`} key={application.id}><div><strong>{vendor?.name ?? 'ベンダー'}</strong><span>{genre ?? 'ジャンル未設定'} ・ {new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium' }).format(new Date(application.created_at))}</span>{assignedSpace && <span>割当区画: {assignedSpace.label}</span>}{genreSlotFull && <span className="slot-full-note">{slot?.genre}枠は満了</span>}{application.message && <p>{application.message}</p>}</div>{ended ? <span className="status">{applicationStatusLabel(application.status)}</span> : event.booth_bidding_enabled ? <span className="status">{applicationStatusLabel(application.status)}（入札割当）</span> : <ApplicationDecision eventId={id} applicationId={application.id} status={applicationStatusLabel(application.status)} vendorGenre={genre} spaces={spaces ?? []} assignedSpaceId={assignedSpace?.id ?? null} genreSlotFull={genreSlotFull} />}</article>
         })}</div> : <div className="empty-state"><h3>応募はまだありません</h3><p>公開イベントはベンダーの検索画面に表示されます。</p></div>}
       </section>
-      {(genreSlots?.length || spaces?.length) ? <section className="panel"><div className="section-heading"><div><p className="eyebrow">CAPACITY</p><h2>枠・区画の状況</h2></div><Link href={`/organizer/events/${id}/edit`}>編集</Link></div>{genreSlots?.length ? <div className="aggregate-grid">{genreSlots.map((slot) => { const used = approvedByGenre.get(slot.genre) ?? 0; const full = used >= slot.capacity; return <div className="metric-card" key={slot.id}><span>{slot.genre}</span><strong>{used} / {slot.capacity}</strong><small>{full ? '枠満了' : `残り ${slot.capacity - used} 枠`}</small></div> })}</div> : null}{spaces?.length ? <div className="event-list space-list">{spaces.map((space) => <div className="event-row" key={space.id}><div><strong>{space.label}</strong><span>{space.genre ? `${space.genre}向け` : 'ジャンル指定なし'}</span></div><span className="status">{space.assigned_application_id ? '割当済み' : '空き'}</span></div>)}</div> : null}</section> : null}
+      {(genreSlots?.length || spaces?.length) ? <section className="panel"><div className="section-heading"><div><h2>枠・区画の状況</h2></div><Link href={`/organizer/events/${id}/edit`}>編集</Link></div>{genreSlots?.length ? <div className="aggregate-grid">{genreSlots.map((slot) => { const used = approvedByGenre.get(slot.genre) ?? 0; const full = used >= slot.capacity; return <div className="metric-card" key={slot.id}><span>{slot.genre}</span><strong>{used} / {slot.capacity}</strong><small>{full ? '枠満了' : `残り ${slot.capacity - used} 枠`}</small></div> })}</div> : null}{spaces?.length ? <div className="event-list space-list">{spaces.map((space) => <div className="event-row" key={space.id}><div><strong>{space.label}</strong><span>{space.genre ? `${space.genre}向け` : 'ジャンル指定なし'}</span></div><span className="status">{space.assigned_application_id ? '割当済み' : '空き'}</span></div>)}</div> : null}</section> : null}
       <section className="panel">
-        <div className="section-heading"><div><p className="eyebrow">ANONYMIZED INSIGHTS</p><h2>ジャンル別統計</h2></div></div>
+        <div className="section-heading"><div><h2>ジャンル別統計</h2></div></div>
         {aggregates?.length ? <div className="aggregate-grid">{aggregates.map((aggregate) => <div className="metric-card" key={aggregate.genre}><span>{aggregate.genre}</span><strong>{yen(aggregate.avg_amount ?? 0)}</strong><small>{aggregate.vendor_count}社以上の匿名平均</small></div>)}</div> : <div className="empty-state"><p>3社以上の記録があるジャンルだけを匿名集計で表示します。</p></div>}
       </section>
     </div>

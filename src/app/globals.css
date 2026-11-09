@@ -876,3 +876,16 @@ body[data-navigation-pending="true"] a[href], body[data-navigation-pending="true
 .vendor-day-notice p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .vendor-day-notice time { font-size: 12px; }
 @media(max-width:600px) { .vendor-day-field { flex-wrap: wrap; } .vendor-day-field input { min-width: 200px; } }
+
+/* Row status text stays on one line beside controls of different heights. */
+.application-card .status,
+.event-row .status {
+  align-self: center;
+  width: max-content;
+  height: fit-content;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  white-space: nowrap;
+  line-height: 1.4;
+}

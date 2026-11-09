@@ -1,5 +1,6 @@
 'use client'
 
+import { applicationStatusLabel } from '@/lib/application-status'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { assignEventSpace, decideApplication } from '@/app/organizer/events/actions'
@@ -57,8 +58,8 @@ export default function ApplicationDecision({
   }
 
   if (status !== 'pending') {
-    if ((status !== 'approved' && status !== 'paid') || !spaces.length) return <span className="status">{status}</span>
-    return <div className="decision-actions assignment-control"><span className="status">{status}</span><label>区画<select value={selectedSpaceId} disabled={pending} onChange={(event) => setSelectedSpaceId(event.target.value)}><option value="">未割当</option>{compatibleSpaces.map((space) => <option key={space.id} value={space.id}>{space.label}{space.genre ? `（${space.genre}）` : ''}</option>)}</select></label><button className="button button-secondary" disabled={pending} aria-busy={pending} onClick={saveAssignment}>{pending ? '保存中…' : '区画を保存'}</button>{message && <small>{message}</small>}</div>
+    if ((status !== 'approved' && status !== 'paid') || !spaces.length) return <span className="status">{applicationStatusLabel(status)}</span>
+    return <div className="decision-actions assignment-control"><span className="status">{applicationStatusLabel(status)}</span><label>区画<select value={selectedSpaceId} disabled={pending} onChange={(event) => setSelectedSpaceId(event.target.value)}><option value="">未割当</option>{compatibleSpaces.map((space) => <option key={space.id} value={space.id}>{space.label}{space.genre ? `（${space.genre}）` : ''}</option>)}</select></label><button className="button button-secondary" disabled={pending} aria-busy={pending} onClick={saveAssignment}>{pending ? '保存中…' : '区画を保存'}</button>{message && <small>{message}</small>}</div>
   }
 
   return <div className="decision-actions">
