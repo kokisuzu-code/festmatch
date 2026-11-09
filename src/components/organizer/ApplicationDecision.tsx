@@ -14,6 +14,7 @@ export default function ApplicationDecision({
   vendorGenre,
   spaces,
   assignedSpaceId,
+  initialSpaceId,
   genreSlotFull,
 }: {
   eventId: string
@@ -21,11 +22,12 @@ export default function ApplicationDecision({
   status: string
   vendorGenre: string | null
   spaces: Space[]
+  initialSpaceId?: string
   assignedSpaceId: string | null
   genreSlotFull: boolean
 }) {
   const router = useRouter()
-  const [selectedSpaceId, setSelectedSpaceId] = useState(assignedSpaceId ?? '')
+  const [selectedSpaceId, setSelectedSpaceId] = useState(initialSpaceId ?? assignedSpaceId ?? '')
   const [message, setMessage] = useState('')
   const [pending, startTransition] = useTransition()
   const compatibleSpaces = spaces.filter((space) => (!space.genre || space.genre === vendorGenre) && (!space.assigned_application_id || space.assigned_application_id === applicationId))
