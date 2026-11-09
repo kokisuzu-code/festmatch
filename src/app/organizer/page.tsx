@@ -1,3 +1,4 @@
+import { hasInternalAccess } from '@/lib/internal-access'
 import Link from 'next/link'
 import { requireRole } from '@/lib/auth'
 import { yen } from '@/lib/app'
@@ -58,8 +59,9 @@ export default async function OrganizerPage() {
   const uniqueVendorCount = new Set(activeApplications.map((application) => application.vendor_id)).size
   const hasAnnualPlan = organizer?.billing_plan === 'annual' && organizer.billing_status === 'active'
   const activeSpotCount = spotContracts?.length ?? 0
-  const planName = hasAnnualPlan ? '年間契約' : activeSpotCount ? 'スポット契約' : '未契約'
-  const planDetail = hasAnnualPlan
+  const internal = hasInternalAccess(user)
+  const planName = internal ? '社内利用' : hasAnnualPlan ? '年間契約' : activeSpotCount ? 'スポット契約' : '未契約'
+  const planDetail = internal ? '無料・全イベント公開可' : hasAnnualPlan
     ? `${yen(120000)}/月`
     : activeSpotCount
       ? `${activeSpotCount}イベント・${yen(250000)}/イベント（一括・最大3か月）`

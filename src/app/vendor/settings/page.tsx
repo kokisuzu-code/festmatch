@@ -1,3 +1,4 @@
+import { hasInternalAccess } from '@/lib/internal-access'
 import { requireRole } from "@/lib/auth"
 import { VENDOR_PLANS } from "@/lib/app"
 import SubscriptionControls from "@/components/vendor/SubscriptionControls"
@@ -9,6 +10,7 @@ export const metadata = { title: "ベンダープロフィール", description: 
 export default async function VendorSettingsPage() {
   const { supabase, user } = await requireRole("vendor")
   const { data: vendor } = await supabase.from("vendors").select("id, name, genre, description, slug, photo_paths, subscription_tier").eq("profile_id", user.id).maybeSingle()
+  const internal = hasInternalAccess(user)
   const tier = (vendor?.subscription_tier ?? "free") as keyof typeof VENDOR_PLANS
   const photoPaths = Array.isArray(vendor?.photo_paths)
     ? vendor.photo_paths.filter((path): path is string => typeof path === "string")
@@ -34,10 +36,10 @@ export default async function VendorSettingsPage() {
     <section className="panel">
       <div className="section-heading">
         <div><p className="eyebrow">SUBSCRIPTION</p><h2>{VENDOR_PLANS[tier].label} プラン</h2></div>
-        <span className="status">{VENDOR_PLANS[tier].price === 0 ? "年額 ¥0" : `年額 ¥${VENDOR_PLANS[tier].price.toLocaleString()}`}</span>
+        <span className="status">{internal ? '社内利用・無料' : VENDOR_PLANS[tier].price === 0 ? "年額 ¥0" : `年額 ¥${VENDOR_PLANS[tier].price.toLocaleString()}`}</span>
       </div>
       <p className="panel-copy">どのプランでもイベントへの応募、出店、決済は利用できます。上位プランは応募手数料の割引と公開プロフィールの特典を提供します。</p>
-      <SubscriptionControls />
+      {!internal && <SubscriptionControls />}
     </section>
   </div>
 }

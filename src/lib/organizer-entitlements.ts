@@ -1,10 +1,13 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { hasInternalAccess } from '@/lib/internal-access'
+import type { SupabaseClient, User } from '@supabase/supabase-js'
 
 export async function hasEventPublicationEntitlement(
   supabase: SupabaseClient,
   organizerId: string,
   eventId: string,
+  user: User,
 ) {
+  if (hasInternalAccess(user)) return true
   const now = new Date().toISOString()
   const [{ data: organizer, error: organizerError }, { data: spot, error: spotError }] = await Promise.all([
     supabase

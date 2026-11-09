@@ -19,7 +19,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
   const { data: event } = await supabase.from('events').select('id, ends_at').eq('id', id).eq('organizer_id', organizer.id).maybeSingle()
   if (!event) return NextResponse.json({ error: 'イベントが見つかりません。' }, { status: 404 })
   if (isEventEnded(event)) return NextResponse.json({ error: '終了済みイベントは公開できません。' }, { status: 409 })
-  if (!await hasEventPublicationEntitlement(supabase, organizer.id, event.id)) {
+  if (!await hasEventPublicationEntitlement(supabase, organizer.id, event.id, user)) {
     return NextResponse.json({ error: '公開には年間契約、またはこのイベント用の有効なスポット契約が必要です。' }, { status: 409 })
   }
   const { error } = await supabase.from('events').update({ status: 'published' }).eq('id', id)

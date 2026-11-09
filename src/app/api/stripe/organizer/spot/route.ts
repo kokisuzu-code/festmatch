@@ -1,3 +1,4 @@
+import { hasInternalAccess } from '@/lib/internal-access'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getStripe, organizerSpotPriceId } from '@/lib/stripe'
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'ログインが必要です。' }, { status: 401 })
+  if (hasInternalAccess(user)) return NextResponse.json({ error: '社内利用は無料です。契約手続きは不要です。' }, { status: 409 })
 
   const { data: organizer } = await supabase.from('organizers').select('id, organization_name').eq('profile_id', user.id).maybeSingle()
   if (!organizer) return NextResponse.json({ error: '主催者プロフィールがありません。' }, { status: 403 })

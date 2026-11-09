@@ -1,5 +1,6 @@
 'use server'
 
+import { hasInternalAccess } from '@/lib/internal-access'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -62,6 +63,7 @@ export async function createInitialAccount(_: OnboardingState, formData: FormDat
           profile_id: user.id,
           name: displayName,
           genre,
+          ...(hasInternalAccess(user) ? { subscription_tier: 'pro' } : {}),
           slug: `${user.id.slice(0, 8)}-vendor`,
         }, { onConflict: 'profile_id' })
       if (error) return { error: 'ベンダープロフィールを作成できませんでした。もう一度お試しください。' }

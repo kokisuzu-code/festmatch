@@ -1,3 +1,4 @@
+import { hasInternalAccess } from '@/lib/internal-access'
 import { requireRole } from '@/lib/auth'
 import OrganizerBillingControls from '@/components/organizer/OrganizerBillingControls'
 import { yen } from '@/lib/app'
@@ -13,6 +14,7 @@ export default async function OrganizerSettingsPage() {
     .eq('profile_id', user.id)
     .maybeSingle()
 
+  const internal = hasInternalAccess(user)
   return (
     <div className="dashboard-stack">
       <section className="dashboard-hero"><div><p className="eyebrow">ORGANIZER SETTINGS</p><h1>主催者設定</h1><p>{organizer?.organization_name ?? '主催者'} の公開・請求設定を確認できます。</p></div></section>
@@ -27,12 +29,12 @@ export default async function OrganizerSettingsPage() {
       <section className="panel">
         <div className="section-heading"><div><p className="eyebrow">PLAN</p><h2>ご契約</h2></div></div>
         <p className="panel-copy">
-          {organizer?.billing_plan === 'annual'
+          {internal ? '社内利用・無料（全イベントを公開できます）' : organizer?.billing_plan === 'annual'
             ? `年間契約: ${yen(120000)}/月`
             : `年間契約またはスポット契約を選択できます。スポット契約はイベントごとに ${yen(250000)} を一括決済し、利用期間は最大3か月です。`}
-          {organizer?.billing_status ? `（${organizer.billing_status}）` : ''}
+          {!internal && organizer?.billing_status ? `（${organizer.billing_status}）` : ''}
         </p>
-        {!(organizer?.billing_plan === 'annual' && organizer.billing_status === 'active') && <OrganizerBillingControls />}
+        {!internal && !(organizer?.billing_plan === 'annual' && organizer.billing_status === 'active') && <OrganizerBillingControls />}
       </section>
     </div>
   )
