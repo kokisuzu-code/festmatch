@@ -1,3 +1,4 @@
+import { hasInternalAccess } from '@/lib/internal-access'
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getStripe, tierPriceId } from "@/lib/stripe"
@@ -9,6 +10,7 @@ export async function POST(request: Request) {
   if (tier !== "light" && tier !== "standard" && tier !== "pro") return NextResponse.json({ error: "プランを選択してください。" }, { status: 400 })
   const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 })
+  if (hasInternalAccess(user)) return NextResponse.json({ error: '社内利用は無料です。契約手続きは不要です。' }, { status: 409 })
   const { data: vendor } = await supabase.from("vendors").select("id, name").eq("profile_id", user.id).maybeSingle()
   if (!vendor) return NextResponse.json({ error: "ベンダープロフィールがありません。" }, { status: 403 })
   const stripe = getStripe(); if (!stripe) return NextResponse.json({ error: "Stripeが設定されていません。" }, { status: 503 })

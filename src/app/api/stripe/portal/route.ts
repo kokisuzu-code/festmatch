@@ -1,3 +1,4 @@
+import { hasInternalAccess } from '@/lib/internal-access'
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getStripe } from "@/lib/stripe"
@@ -7,6 +8,7 @@ import { getVendorBilling } from "@/lib/stripe/vendor-billing"
 export async function POST() {
   const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 })
+  if (hasInternalAccess(user)) return NextResponse.json({ error: '社内利用は無料です。契約手続きは不要です。' }, { status: 409 })
   const { data: vendor } = await supabase.from("vendors").select("id").eq("profile_id", user.id).maybeSingle()
   if (!vendor) return NextResponse.json({ error: "ベンダープロフィールがありません。" }, { status: 403 })
   const billing = await getVendorBilling(vendor.id)

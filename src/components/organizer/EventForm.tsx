@@ -203,7 +203,7 @@ export default function EventForm({ action, event }: { action: (formData: FormDa
                 </div>
               ))}
             </div>
-            {event ? <label className={styles.publishToggle}><input checked={published} name="status" onChange={(e) => setPublished(e.target.checked)} type="checkbox" value="published" /><span><strong>公開して募集を開始する</strong><small>公開には有効な年間契約またはスポット契約が必要です。</small></span></label> : <div className={styles.infoNote}><strong>まず下書きとして保存されます</strong><p>作成後のイベント詳細画面でジャンル別枠・出店区画を設定し、契約状況を確認してから公開できます。</p></div>}
+            {event ? <label className={styles.publishToggle}><input checked={published} name="status" onChange={(e) => setPublished(e.target.checked)} type="checkbox" value="published" /><span><strong>公開して募集を開始する</strong><small>社内利用または有効な契約がある場合に公開できます。</small></span></label> : <div className={styles.infoNote}><strong>まず下書きとして保存されます</strong><p>作成後のイベント詳細画面でジャンル別枠・出店区画を設定し、契約状況を確認してから公開できます。</p></div>}
           </div>
 
           <div className={styles.formSection} hidden={step !== 3}>

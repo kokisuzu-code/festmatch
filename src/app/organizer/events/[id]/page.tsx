@@ -22,7 +22,7 @@ export default async function OrganizerEventDetail({ params }: { params: Promise
   const { data: organizer } = await supabase.from('organizers').select('id').eq('profile_id', user.id).maybeSingle()
   if (!organizer || event.organizer_id !== organizer.id) notFound()
   const bidding = await getBoothBidding(id)
-  const canPublish = organizer ? await hasEventPublicationEntitlement(supabase, organizer.id, event.id) : false
+  const canPublish = organizer ? await hasEventPublicationEntitlement(supabase, organizer.id, event.id, user) : false
 
   const { data: applications } = await supabase
     .from('applications')

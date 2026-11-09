@@ -1,5 +1,6 @@
 'use server'
 
+import type { User } from "@supabase/supabase-js"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { requireRole } from "@/lib/auth"
@@ -89,9 +90,9 @@ async function uploadEventCover(
   return path
 }
 
-async function ensureEventPublicationEntitlement(supabase: Awaited<ReturnType<typeof requireRole>>['supabase'], organizerId: string, eventId: string, status: string) {
+async function ensureEventPublicationEntitlement(supabase: Awaited<ReturnType<typeof requireRole>>['supabase'], organizerId: string, eventId: string, status: string, user: User) {
   if (status !== 'published') return
-  if (!await hasEventPublicationEntitlement(supabase, organizerId, eventId)) {
+  if (!await hasEventPublicationEntitlement(supabase, organizerId, eventId, user)) {
     throw new Error('公開には年間契約、またはこのイベント用の有効なスポット契約が必要です。')
   }
 }
@@ -132,7 +133,7 @@ export async function updateEvent(eventId: string, formData: FormData) {
   if (!payload.prefecture) throw new Error("都道府県を選択してください。")
   const { data: organizer } = await supabase.from('organizers').select('id').eq('profile_id', user.id).maybeSingle()
   if (!organizer) throw new Error('主催者プロフィールが見つかりません。')
-  await ensureEventPublicationEntitlement(supabase, organizer.id, eventId, payload.status)
+  await ensureEventPublicationEntitlement(supabase, organizer.id, eventId, payload.status, user)
   const coverPath = await uploadEventCover(supabase, eventId, formData)
   const { error } = await supabase.from("events").update(coverPath ? { ...payload, cover_photo_path: coverPath } : payload).eq("id", eventId)
   if (error) {
@@ -147,7 +148,7 @@ export async function setEventPublished(eventId: string, isPublished: boolean) {
   const { supabase, user } = await requireRole("organizer")
   const { data: organizer } = await supabase.from('organizers').select('id').eq('profile_id', user.id).maybeSingle()
   if (!organizer) throw new Error('主催者プロフィールが見つかりません。')
-  await ensureEventPublicationEntitlement(supabase, organizer.id, eventId, isPublished ? 'published' : 'draft')
+  await ensureEventPublicationEntitlement(supabase, organizer.id, eventId, isPublished ? 'published' : 'draft', user)
   const { error } = await supabase.from("events").update({ status: isPublished ? 'published' : 'draft' }).eq("id", eventId)
   if (error) throw new Error("公開状態を更新できませんでした。")
   revalidatePath(`/organizer/events/${eventId}`); revalidatePath("/organizer/events")
