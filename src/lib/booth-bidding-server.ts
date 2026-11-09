@@ -14,5 +14,6 @@ export async function getBoothBidding(eventId: string, vendorId?: string) {
 }
 export function boothMapUrl(path: string | null) {
   if (!path) return null
+  if (/^\/event-maps\/[a-z0-9-]+\.(png|webp)$/.test(path)) return path
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/event-images/${path.split('/').map(encodeURIComponent).join('/')}`
 }
