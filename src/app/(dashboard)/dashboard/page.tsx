@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/BrandMark'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -265,7 +266,7 @@ async function VendorDashboard({ user, profile, supabase }: any) {
     <div className="min-h-screen bg-slate-900 pb-24">
       <header className="bg-slate-800 border-b border-slate-700 px-4 py-4 flex items-center justify-between sticky top-0 z-10">
         <div>
-          <h1 className="text-lg font-bold text-green-400">FestMatch</h1>
+          <h1><BrandLogo /></h1>
           <p className="text-xs text-slate-400">ベンダー</p>
         </div>
         <div className="flex items-center gap-3">

@@ -31,19 +31,6 @@
   z-index: 2;
 }
 
-.brandIcon {
-  align-items: center;
-  background: #ddf44c;
-  border-radius: 10px;
-  color: #171a18;
-  display: inline-flex;
-  font-size: 17px;
-  font-weight: 750;
-  height: 38px;
-  justify-content: center;
-  width: 38px;
-}
-
 .storyCopy {
   margin: auto 0;
   max-width: 520px;

@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/BrandMark'
 import Link from 'next/link'
 import styles from '@/app/(auth)/login/login.module.css'
 
@@ -18,8 +19,7 @@ export default function AuthShell({
     <main className={styles.page}>
       <section className={styles.story} aria-label="FestMatchの紹介">
         <Link className={styles.brand} href="/home" aria-label="FestMatch トップへ戻る">
-          <span className={styles.brandIcon}>F</span>
-          <span>FestMatch</span>
+          <BrandLogo />
         </Link>
 
         <div className={styles.storyCopy}>
@@ -39,8 +39,7 @@ export default function AuthShell({
       <section className={styles.access}>
         <div className={styles.accessTop}>
           <Link className={styles.mobileBrand} href="/home" aria-label="FestMatch トップへ戻る">
-            <span className={styles.brandIcon}>F</span>
-            <span>FestMatch</span>
+            <BrandLogo />
           </Link>
           <Link className={styles.homeLink} href="/home">
             <span aria-hidden="true">←</span>

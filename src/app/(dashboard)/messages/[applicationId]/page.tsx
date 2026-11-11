@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import { BrandLogo } from '@/components/BrandMark'
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -48,9 +49,9 @@ export default async function ChatPage({ params }: { params: Promise<{ applicati
       <div className="light-theme flex h-screen overflow-hidden bg-gray-50">
         {/* 主催者用サイドバー */}
         <div className="w-52 shrink-0 bg-white border-r border-gray-200 flex flex-col h-full">
-          <div className="px-5 py-4 border-b border-gray-100">
-            <span className="text-base font-bold text-gray-900 tracking-tight">FestMatch</span>
-            <span className="ml-2 text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">主催者</span>
+          <div className="flex flex-col items-start gap-2 px-5 py-4 border-b border-gray-100">
+            <BrandLogo />
+            <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">主催者</span>
           </div>
           <div className="flex-1 px-3 py-3">
             <Link href="/messages" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-50">

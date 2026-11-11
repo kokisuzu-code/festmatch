@@ -1,5 +1,6 @@
 'use client'
 
+import { BrandLogo } from '@/components/BrandMark'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -68,7 +69,7 @@ function DayWorkspace({ eventId, events, operatorName, onEventChange }: { eventI
 
   return <div className="day-console-page"><div className="app-shell">
     <aside className="sidebar">
-      <div className="brand"><span className="brand-mark">F</span><div><strong>FestMatch</strong><small>DAY CONTROL</small></div></div>
+      <div className="brand"><div><BrandLogo /><small>DAY CONTROL</small></div></div>
       <div className="event-mini"><span className="live-dot" /><div><b>当日運営</b><small>{event.title}</small></div></div>
       <nav aria-label="当日運営メニュー">{navItems.map((id, index) => <button key={id} aria-current={activeNav === id ? 'page' : undefined} className={activeNav === id ? 'active' : ''} onClick={() => jumpTo(id)}><span>{String(index + 1).padStart(2, '0')}</span>{workspaceMeta[id].title}{id === 'attention' && incidents.length > 0 && <em>{incidents.length}</em>}</button>)}</nav>
       <div className="sidebar-bottom"><Link href="/organizer">← 主催者ホームへ戻る</Link><div className="operator"><span>{operatorName.slice(0, 2)}</span><div><b>{operatorName}</b><small>主催者</small></div></div></div>
