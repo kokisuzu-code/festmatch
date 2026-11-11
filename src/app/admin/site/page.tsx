@@ -14,7 +14,7 @@ export default async function SiteEditorPage() {
     supabase.from('site_published').select('content, published_at').eq('page', 'home').maybeSingle(),
   ])
   return <main className="site-editor-page">
-    <header className="site-editor-header"><Link href="/admin">← 運営管理に戻る</Link><strong><BrandLogo /><span>公式HP編集</span></strong><Link href="/home" target="_blank">公開サイトを見る ↗</Link></header>
+    <header className="site-editor-header"><Link href="/admin">← 運営管理に戻る</Link><strong><BrandLogo /><span>公式HP編集</span></strong><Link href="/admin/site/festmap">FestMapを編集</Link><Link href="/home" target="_blank">公開サイトを見る ↗</Link></header>
     <SiteEditor initial={draft ? parseSiteContent(draft.content) : published ? parseSiteContent(published.content) : defaultSiteContent} lastSaved={draft?.updated_at ?? null} lastPublished={published?.published_at ?? null} />
   </main>
 }

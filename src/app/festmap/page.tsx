@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createPublicClient } from '@/lib/supabase/public'
 import { listFestMapEvents } from '@/lib/festmap'
+import { getPublishedFestMapDesign } from '@/lib/site/published-festmap'
 import PublicEventDirectory from '@/components/festmap/PublicEventDirectory'
 
 // q/prefecture の検索クエリに依存するため常に動的レンダリングになる
@@ -14,7 +15,11 @@ export const metadata: Metadata = {
 
 export default async function FestMapPage({ searchParams }: { searchParams: Promise<{ q?: string; prefecture?: string }> }) {
   const { q, prefecture } = await searchParams
-  const events = await listFestMapEvents(createPublicClient(), { query: q, prefecture })
+  const client = createPublicClient()
+  const [events, design] = await Promise.all([
+    listFestMapEvents(client, { query: q, prefecture }),
+    getPublishedFestMapDesign(client),
+  ])
 
-  return <PublicEventDirectory events={events} query={q} prefecture={prefecture} />
+  return <PublicEventDirectory design={design} events={events} query={q} prefecture={prefecture} />
 }

@@ -1,0 +1,13 @@
+.frame { container-type: inline-size; }
+.frame .intro { display: flex; flex-wrap: wrap; }
+.copy { flex: 1 1 24rem; min-width: 0; overflow-wrap: anywhere; }
+.frame .intro .type, .frame .search :is(input, select, button) { font-size: var(--desktop-size); }
+.frame .intro .type, .frame .search :is(input, select) { color: var(--text-color); }
+.frame .search { width: auto; max-width: 100%; flex-direction: row; flex-wrap: wrap; }
+.frame .search :is(input, select, button) { max-width: 100%; min-width: 0; }
+.frame .search button { white-space: normal; overflow-wrap: anywhere; }
+@container (max-width: 700px) {
+  .frame .intro { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .frame .search { width: 100%; flex-direction: column; }
+  .frame .intro .type, .frame .search :is(input, select, button) { font-size: var(--mobile-size); }
+}
