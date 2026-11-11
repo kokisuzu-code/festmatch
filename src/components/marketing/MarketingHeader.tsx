@@ -1,12 +1,11 @@
+import BrandMark from '@/components/BrandMark'
 import Link from "next/link";
 
 export default function MarketingHeader() {
   return (
     <header>
       <div className="container nav">
-        <div className="logo">
-          Fest<span className="dot">Match</span>
-        </div>
+        <BrandMark href="/home" />
         <nav className="nav-links">
           <Link href="/festmap">フェスを探す</Link>
           <a href="#host">主催者の方</a>

@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/BrandMark'
 import Link from "next/link";
 
 export default function FestMapHeader({ initialQuery }: { initialQuery?: string }) {
@@ -5,7 +6,7 @@ export default function FestMapHeader({ initialQuery }: { initialQuery?: string 
     <header>
       <div className="hwrap">
         <Link className="logo" href="/festmap">
-          Fest<span className="dot">Map</span>
+          <BrandLogo />
           <small>フェスマップ</small>
         </Link>
         <form className="hsearch" action="/festmap" method="get">

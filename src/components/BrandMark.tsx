@@ -1,5 +1,15 @@
-import Link from "next/link"
+import Image from 'next/image'
+import Link from 'next/link'
+import logo from './brand/festmatch.png'
 
-export default function BrandMark({ href = "/" }: { href?: string }) {
-  return <Link href={href} className="brand-mark" aria-label="FestMatch ホーム"><span>FestMatch</span><span className="brand-lantern" aria-hidden="true" /></Link>
+export function BrandLogo() {
+  return <Image className="festmatch-logo" src={logo} alt="FestMatch" unoptimized />
+}
+
+export default function BrandMark({ href = '/' }: { href?: string }) {
+  return (
+    <Link className="festmatch-home-link" href={href} aria-label="FestMatch ホーム">
+      <BrandLogo />
+    </Link>
+  )
 }

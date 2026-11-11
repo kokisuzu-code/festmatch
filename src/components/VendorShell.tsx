@@ -1,5 +1,6 @@
 'use client'
 
+import { BrandLogo } from '@/components/BrandMark'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
@@ -39,9 +40,8 @@ export default function VendorShell({
     <div className="organizer-console vendor-console">
       <aside className={`organizer-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="organizer-brand-row">
-          <Link className="organizer-brand" href="/vendor" onClick={() => setMobileOpen(false)}>
-            <span aria-hidden="true">F</span>
-            <strong>FestMatch</strong>
+          <Link aria-label="FestMatch 出店者ホーム" href="/vendor" onClick={() => setMobileOpen(false)}>
+            <BrandLogo />
           </Link>
           <button aria-label="メニューを閉じる" className="organizer-mobile-close" onClick={() => setMobileOpen(false)} type="button">×</button>
         </div>
