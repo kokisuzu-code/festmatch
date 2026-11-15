@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import Image from 'next/image'
 import { PREFECTURES } from '@/lib/prefectures'
 import type { FestMapDesign } from '@/lib/site/festmap-design'
 import styles from './DirectoryHeader.module.css'
@@ -20,6 +21,17 @@ function typography(style: FestMapDesign['title'] | FestMapDesign['search']) {
 
 export default function DirectoryHeader({ design, query = '', prefecture = '', regionalPage }: Props) {
   return <div className={styles.frame}>
+    <div className={styles.banner}>
+      <Image
+        src="/festmap-kitchen-car-banner.webp"
+        alt="黄色いキッチンカーと屋台が並ぶ、緑に囲まれたお祭りのイラスト"
+        width={1256}
+        height={412}
+        sizes="(max-width: 1200px) 100vw, 1200px"
+        className={styles.bannerImage}
+        priority
+      />
+    </div>
     <section className={`festmap-intro ${styles.intro}`}>
       <div className={styles.copy}>
         <p className={`eyebrow ${styles.type}`} style={typography(design.eyebrow)}>{design.eyebrow.text}</p>

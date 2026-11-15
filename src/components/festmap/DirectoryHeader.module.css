@@ -1,4 +1,6 @@
 .frame { container-type: inline-size; }
+.banner { margin: 0 0 1.5rem; overflow: hidden; border-radius: 1rem; background: #e1f0e3; }
+.bannerImage { display: block; width: 100%; height: auto; }
 .frame .intro { display: flex; flex-wrap: wrap; }
 .copy { flex: 1 1 24rem; min-width: 0; overflow-wrap: anywhere; }
 .frame .intro .type, .frame .search :is(input, select, button) { font-size: var(--desktop-size); }
