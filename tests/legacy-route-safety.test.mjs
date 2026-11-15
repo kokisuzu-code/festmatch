@@ -8,6 +8,7 @@ const developerPage = await readFile(new URL('../src/app/developer/page.tsx', im
 const organizerPreview = await readFile(new URL('../src/app/developer/organizer/page.tsx', import.meta.url), 'utf8')
 const vendorPreview = await readFile(new URL('../src/app/developer/vendor/page.tsx', import.meta.url), 'utf8')
 const rolePreview = await readFile(new URL('../src/components/developer/RolePreview.tsx', import.meta.url), 'utf8')
+const organizerDemo = await readFile(new URL('../src/components/developer/OrganizerPreview.tsx', import.meta.url), 'utf8')
 const legacyCron = await readFile(new URL('../src/app/api/cron/check-slots/route.ts', import.meta.url), 'utf8')
 const legacyNotification = await readFile(new URL('../src/app/api/notifications/broadcast/route.ts', import.meta.url), 'utf8')
 
@@ -19,6 +20,7 @@ test('legacy dashboard and development routes cannot become an alternate access 
   assert.match(organizerPreview, /RolePreview role="organizer"/)
   assert.match(vendorPreview, /RolePreview role="vendor"/)
   assert.doesNotMatch(rolePreview, /getCurrentProfile|createClient|createAdminClient|requireRole|use server/)
+  assert.doesNotMatch(organizerDemo, /getCurrentProfile|createClient|createAdminClient|requireRole|use server/)
 })
 
 test('retired automation endpoints return a route-level 410 response', () => {
