@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import BrandMark from "@/components/BrandMark"
+import DemoShell from "./DemoShell"
 import styles from "./OrganizerPreview.module.css"
 
 const events = [
@@ -26,70 +26,61 @@ export default function OrganizerPreview() {
   ]
 
   return (
-    <div className={styles.page}>
-      <header className={styles.masthead}>
-        <div className={styles.bar}>
-          <BrandMark />
-          <nav aria-label="デモのナビゲーション">
-            <Link href="/developer">デモ一覧</Link>
-            <Link href="/festmap">FestMap</Link>
-          </nav>
+    <DemoShell navigation={<>
+      <Link href="/developer">デモ一覧</Link>
+      <Link href="/festmap">FestMap</Link>
+    </>}>
+      <div className={styles.intro}>
+        <div>
+          <h1>イベント管理</h1>
+          <p>主催者デモ（サンプルデータ）</p>
         </div>
-      </header>
+        <Link className={styles.register} href="/signup?role=organizer">主催者として登録</Link>
+      </div>
 
-      <main className={styles.content}>
-        <div className={styles.intro}>
-          <div>
-            <h1>イベント管理</h1>
-            <p>主催者デモ（サンプルデータ）</p>
+      <dl className={styles.totals} aria-label="掲載イベントの集計">
+        {totals.map(({ label, count, unit }) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{count}<span>{unit}</span></dd>
           </div>
-          <Link className={styles.register} href="/signup?role=organizer">主催者として登録</Link>
+        ))}
+      </dl>
+
+      <section aria-labelledby="organizer-events">
+        <div className={styles.sectionHeading}>
+          <h2 id="organizer-events">開催イベント</h2>
+          <span>2026年8月時点</span>
         </div>
-
-        <dl className={styles.totals} aria-label="掲載イベントの集計">
-          {totals.map(({ label, count, unit }) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd>{count}<span>{unit}</span></dd>
-            </div>
-          ))}
-        </dl>
-
-        <section aria-labelledby="organizer-events">
-          <div className={styles.sectionHeading}>
-            <h2 id="organizer-events">開催イベント</h2>
-            <span>2026年8月時点</span>
-          </div>
-          <div className={styles.columns} aria-hidden="true">
-            <span>イベント名・開催日</span><span>公開状況</span><span>未確認の応募</span><span>空き区画</span>
-          </div>
-          <ul className={styles.events} role="list">
-            {events.map((event) => (
-              <li key={event.date} className={styles.event}>
-                <div className={styles.identity}>
-                  <Image className={styles.thumb} src={event.photo} width={72} height={54} sizes="72px" alt="" />
-                  <div>
-                    <h3>{event.title}</h3>
-                    <p><time dateTime={event.date}>{event.dateLabel}</time><span>{event.city}</span></p>
-                  </div>
+        <div className={styles.columns} aria-hidden="true">
+          <span>イベント名・開催日</span><span>公開状況</span><span>未確認の応募</span><span>空き区画</span>
+        </div>
+        <ul className={styles.events} role="list">
+          {events.map((event) => (
+            <li key={event.date} className={styles.event}>
+              <div className={styles.identity}>
+                <Image className={styles.thumb} src={event.photo} width={72} height={54} sizes="72px" alt="" />
+                <div>
+                  <h3>{event.title}</h3>
+                  <p><time dateTime={event.date}>{event.dateLabel}</time><span>{event.city}</span></p>
                 </div>
-                <span className={event.published ? styles.published : styles.draft}>
-                  {event.published ? "募集中" : "下書き"}
-                </span>
-                <dl className={styles.eventNumbers}>
-                  <div><dt>未確認の応募</dt><dd>{event.published ? `${event.pending}件` : "—"}</dd></div>
-                  <div><dt>空き区画</dt><dd>{event.published ? `${event.openBooths}区画` : "—"}</dd></div>
-                </dl>
-              </li>
-            ))}
-          </ul>
-        </section>
+              </div>
+              <span className={event.published ? styles.published : styles.draft}>
+                {event.published ? "募集中" : "下書き"}
+              </span>
+              <dl className={styles.eventNumbers}>
+                <div><dt>未確認の応募</dt><dd>{event.published ? `${event.pending}件` : "—"}</dd></div>
+                <div><dt>空き区画</dt><dd>{event.published ? `${event.openBooths}区画` : "—"}</dd></div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-        <footer className={styles.footer}>
-          <Link href="/developer">デモ一覧に戻る</Link>
-          <Link href="/developer/vendor">出店者デモを見る</Link>
-        </footer>
-      </main>
-    </div>
+      <footer className={styles.footer}>
+        <Link href="/developer">デモ一覧に戻る</Link>
+        <Link href="/developer/vendor">出店者デモを見る</Link>
+      </footer>
+    </DemoShell>
   )
 }
