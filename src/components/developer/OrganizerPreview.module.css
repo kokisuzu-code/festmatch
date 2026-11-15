@@ -1,73 +1,3 @@
-.page {
-  --ink: #23352e;
-  --muted: #54615b;
-  --line: #d8ded7;
-  --accent: #285b47;
-  --columns: minmax(0, 1fr) 6rem 7rem 5rem;
-  min-height: 100vh;
-  color: var(--ink);
-  background: #fbfbf8;
-  font-family: var(--font-noto-sans-jp), "Hiragino Sans", sans-serif;
-  font-feature-settings: normal;
-  font-size: .9375rem;
-  font-weight: 400;
-  line-height: 1.65;
-}
-
-.bar,
-.content {
-  width: min(59rem, calc(100% - 3rem));
-  margin-inline: auto;
-}
-
-.masthead {
-  color: #f8fbf8;
-  background: #102d29;
-}
-
-.bar {
-  min-height: 3.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.bar img {
-  width: 7.25rem;
-  height: auto;
-}
-
-.bar nav,
-.footer {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  font-size: .8125rem;
-}
-
-.bar a,
-.footer a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-}
-
-.page a:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-}
-
-.bar a:hover,
-.footer a:hover {
-  text-decoration: underline;
-  text-underline-offset: .25em;
-}
-
-.content {
-  padding-block: 2.5rem 1.25rem;
-}
-
 .intro,
 .sectionHeading {
   display: flex;
@@ -75,19 +5,6 @@
   justify-content: space-between;
   gap: 1rem;
 }
-
-.page h1,
-.page h2,
-.page h3 {
-  margin: 0;
-  font-weight: 500;
-  letter-spacing: 0;
-  line-height: 1.5;
-}
-
-.intro h1 { font-size: 1.625rem; }
-.sectionHeading h2 { font-size: 1.125rem; }
-.identity h3 { font-size: 1rem; }
 
 .intro p,
 .sectionHeading > span,
@@ -141,7 +58,7 @@
 .columns,
 .event {
   display: grid;
-  grid-template-columns: var(--columns);
+  grid-template-columns: minmax(0, 1fr) 6rem 7rem 5rem;
   align-items: center;
   gap: 1rem;
 }
@@ -229,19 +146,28 @@
 .eventNumbers dd { margin: 0; font-variant-numeric: tabular-nums; }
 
 .footer {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  font-size: .8125rem;
   justify-content: space-between;
   margin-top: 1.25rem;
   color: var(--accent);
 }
 
+.footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+  text-underline-offset: .25em;
+}
+
 @media (max-width: 42rem) {
-  .bar, .content { width: calc(100% - 2rem); }
-  .bar { min-height: 3.125rem; }
-  .bar img { width: 6.5rem; }
-  .bar nav { gap: 1rem; }
-  .content { padding-top: 1.5rem; }
   .intro { flex-wrap: wrap; gap: .75rem; }
-  .intro h1 { font-size: 1.375rem; }
   .totals { margin: 1rem 0 1.5rem; padding-block: .8rem; }
   .totals dd { font-size: 1.5rem; }
   .sectionHeading { margin: 0; padding-bottom: .65rem; border-bottom: 1px solid var(--line); }
